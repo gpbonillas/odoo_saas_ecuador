@@ -375,6 +375,16 @@ class TestHttpLayer(unittest.TestCase):
         self.assertEqual(status, 200, out)
         return out["token"]
 
+    def _req_raw(self, path):
+        """GET crudo: devuelve (status, content_type, body_text) para la
+        UI estática (que no es JSON)."""
+        try:
+            with urllib.request.urlopen(self.base + path, timeout=5) as resp:
+                ctype = resp.headers.get("Content-Type", "")
+                return resp.status, ctype, resp.read().decode("utf-8")
+        except urllib.error.HTTPError as exc:
+            return exc.code, exc.headers.get("Content-Type", ""), ""
+
     def test_healthz(self):
         status, out = self._req("/healthz")
         self.assertEqual(status, 200)
@@ -419,6 +429,75 @@ class TestHttpLayer(unittest.TestCase):
             "db": "tenantb", "login": "admin", "password": "pw-admin"})
         self.assertEqual(status, 200)
         self.assertIn("needs_data", out)
+
+    # -- UI estática (Option A, CHG-2026-012) ----------------------------
+    def test_root_serves_login_html(self):
+        status, ctype, body = self._req_raw("/")
+        self.assertEqual(status, 200)
+        self.assertIn("text/html", ctype)
+        self.assertIn("SOMATECH", body)
+        self.assertIn("login-form", body)
+
+    def test_static_assets_served_with_types(self):
+        status, ctype, body = self._req_raw("/app.css")
+        self.assertEqual(status, 200)
+        self.assertIn("text/css", ctype)
+        self.assertIn("--brand: #ff4d00", body)  # tokens D-10
+        status, ctype, body = self._req_raw("/app.js")
+        self.assertEqual(status, 200)
+        self.assertIn("javascript", ctype)
+        self.assertIn("BridgeApp", body)
+        status, ctype, body = self._req_raw("/app.html")
+        self.assertEqual(status, 200)
+        self.assertIn("view-chat", body)
+
+    def test_static_traversal_blocked(self):
+        for path in ("/../../etc/passwd", "/app.css/../bridge.py",
+                     "/%2e%2e/%2e%2e/etc/passwd", "/bridge.py", "/test_bridge.py"):
+            status, _, _ = self._req_raw(path)
+            self.assertEqual(status, 404, "traversal/no-whitelist pasó: %s" % path)
+
+    # -- Chat (P2 semilla, motor rules) ----------------------------------
+    def test_chat_requires_auth(self):
+        status, out = self._req("/api/chat", body={"message": "hola"})
+        self.assertEqual(status, 401)
+
+    def test_chat_missing_message_400(self):
+        status, out = self._req("/api/chat", token=self._login(),
+                                body={"message": "  "})
+        self.assertEqual(status, 400)
+
+    def test_chat_validates_ruc(self):
+        status, out = self._req("/api/chat", token=self._login(), body={
+            "message": "validar RUC 1793125212001"})
+        self.assertEqual(status, 200, out)
+        self.assertIn("VÁLIDO", out["reply"])
+        self.assertIn("1793125212001", out["reply"])
+        self.assertIn("validate_vat", out["attribution"])
+
+    def test_chat_validates_cedula_bare_number(self):
+        status, out = self._req("/api/chat", token=self._login(), body={
+            "message": "1713488185"})
+        self.assertEqual(status, 200, out)
+        self.assertIn("CEDULA", out["reply"])
+        self.assertIn("VÁLIDO", out["reply"])
+
+    def test_chat_rejects_bad_checksum(self):
+        # mutación sintética de un ID aprobado (práctica D-04: los tests
+        # usan mutaciones programáticas, no identidades reales). El dígito
+        # mutado va DENTRO de los 10 primeros (los últimos 3 son establecimiento
+        # y no entran al módulo 11 de la jurídica).
+        status, out = self._req("/api/chat", token=self._login(), body={
+            "message": "validar RUC 1893125212001"})
+        self.assertEqual(status, 200, out)
+        self.assertIn("NO válido", out["reply"])
+
+    def test_chat_help_when_no_id(self):
+        status, out = self._req("/api/chat", token=self._login(), body={
+            "message": "hola, ¿qué puedes hacer?"})
+        self.assertEqual(status, 200, out)
+        self.assertEqual(out["engine"], "rules")
+        self.assertIn("RUC", out["reply"])
 
 
 if __name__ == "__main__":

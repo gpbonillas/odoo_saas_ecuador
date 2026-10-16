@@ -25,6 +25,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import sys
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -35,6 +36,56 @@ from bridge import (  # noqa: E402
     BridgeAuthError, BridgeCore, BridgeError, TokenService,
 )
 import odoo_client  # noqa: E402
+import rules  # noqa: E402 — motor legal determinista del chat (AGT-03)
+
+# -- UI estática (Option A, CHG-2026-012): servida por la propia puerta ------
+WEB_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
+# Lista blanca: cero riesgo de path-traversal, cero archivos fuera de web/.
+STATIC_FILES = {
+    "": ("index.html", "text/html; charset=utf-8"),          # raíz = login
+    "index.html": ("index.html", "text/html; charset=utf-8"),
+    "app.html": ("app.html", "text/html; charset=utf-8"),
+    "app.css": ("app.css", "text/css; charset=utf-8"),
+    "app.js": ("app.js", "application/javascript; charset=utf-8"),
+}
+
+# -- Chat (P2 semilla): motor de reglas; LLM llega en P3 ---------------------
+_DIGIT_RE = re.compile(r"\b(\d{10,13})\b")
+_ID_KEYWORDS = (
+    "ruc", "cedula", "cédula", "validar", "valida", "valido",
+    "identificacion", "identificación", "contribuyente", "cliente",
+)
+
+
+def chat_reply(message):
+    """Respuesta determinista del panel de chat (AGT-03: no inventa)."""
+    text = (message or "").strip()
+    low = text.lower()
+    match = _DIGIT_RE.search(text)
+    if match and (text == match.group(1)
+                  or any(k in low for k in _ID_KEYWORDS)):
+        vat = match.group(1)
+        res = rules.validate_vat(vat)
+        if res["valid"]:
+            kind = (res["id_type"] or "").upper()
+            formula = "mod-10" if res["id_type"] == "cedula" else "mod-11/mod-10"
+            reply = "%s %s: dígito verificador VÁLIDO (%s del SRI)." % (
+                kind, vat, formula)
+        else:
+            reply = "%s: NO válido — %s." % (vat, "; ".join(res["errors"]))
+        return {
+            "reply": reply,
+            "engine": "rules",
+            "attribution": "via validate_vat · bridge → rules",
+        }
+    return {
+        "reply": "Puedo validar RUC y cédulas del SRI con el motor de reglas "
+                 "(ej: «validar RUC 1793125212001»). En P3 se conecta el agente "
+                 "con las herramientas del ERP. Si falta un dato legal, "
+                 "pregunto — nunca invento.",
+        "engine": "rules",
+        "attribution": "via help · bridge → rules",
+    }
 
 _log = logging.getLogger("bridge")
 logging.basicConfig(stream=sys.stderr, level=logging.INFO,
@@ -138,6 +189,10 @@ class BridgeHandler(BaseHTTPRequestHandler):
         parts = [p for p in parsed.path.split("/") if p]
         query = {k: v[0] for k, v in urllib.parse.parse_qs(parsed.query).items()}
         try:
+            # -- UI estática (whitelist: sin traversal, Option A P2) ------
+            if parsed.path in ("/", "/index.html", "/app.html",
+                               "/app.css", "/app.js"):
+                return self._serve_static(parsed.path)
             if parts == ["healthz"]:
                 return self._send(200, {"status": "ok", "service": "somatech-odoo-bridge"})
             if len(parts) == 3 and parts[:2] == ["api", "kpis"]:
@@ -166,11 +221,37 @@ class BridgeHandler(BaseHTTPRequestHandler):
                     return self._bad_request("Faltan campos: %s." % ", ".join(missing))
                 return self._send(200, self.core.login(
                     body["db"], body["login"], body["password"]))
+            if parts == ["api", "chat"]:
+                # Cualquier rol autenticado usa el chat (contexto de rol se
+                # inyecta en P3 con el agente LLM); el token sólo autentica.
+                self._token()  # valida Bearer (401 si falta/malformado)
+                body = self._json_body()
+                if not str(body.get("message") or "").strip():
+                    return self._bad_request("Falta 'message'.")
+                return self._send(200, chat_reply(body["message"]))
             self._not_found(parsed.path)
         except BridgeError as exc:
             self._error(exc)
         except Exception as exc:  # pragma: no cover - red
             self._error(exc)
+
+    def _serve_static(self, path):
+        """Sirve un archivo de la lista blanca STATIC_FILES (sin traversal)."""
+        name, content_type = STATIC_FILES[path.lstrip("/") or ""]
+        full = os.path.realpath(os.path.join(WEB_ROOT, name))
+        if not full.startswith(os.path.realpath(WEB_ROOT) + os.sep):
+            return self._not_found(path)  # defensa en profundidad
+        try:
+            with open(full, "rb") as fh:
+                payload = fh.read()
+        except OSError:
+            return self._not_found(path)
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(payload)))
+        self.send_header("Cache-Control", "no-cache")
+        self.end_headers()
+        self.wfile.write(payload)
 
     def _not_found(self, path):
         self._send(404, {"error": {"code": "not_found",

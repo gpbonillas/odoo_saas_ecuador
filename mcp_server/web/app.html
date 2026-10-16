@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SOMATECH · Operación</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <strong style="font-family:var(--hero);letter-spacing:-.02em">
+      SOMATECH<span class="brand"> · bridge</span>
+    </strong>
+    <span class="badge" id="whoami">—</span>
+    <span class="badge brand" id="role">—</span>
+    <span class="spacer"></span>
+    <button class="btn ghost" id="theme" title="Modo claro/oscuro">◐</button>
+    <button class="btn ghost" id="logout">Salir</button>
+  </header>
+
+  <nav class="tabs" id="nav"></nav>
+
+  <main>
+    <!-- Dashboard OPERACIÓN (lotes + gate de laboratorio) -->
+    <section id="view-ops" hidden>
+      <p class="micro">Escenario 1 · operación del día</p>
+      <h1>Operación</h1>
+      <div class="grid" id="ops-kpis"></div>
+      <h2 style="margin-top:22px">Alertas de calidad</h2>
+      <p class="kpi-sub">Lotes con análisis reprobado: no pueden salir del stock (FR-AG-03).</p>
+      <div id="ops-alerts"></div>
+    </section>
+
+    <!-- Dashboard GESTIÓN (ciclos + análisis) -->
+    <section id="view-gestion" hidden>
+      <p class="micro">Escenario 1 · estado del cultivo</p>
+      <h1>Gestión</h1>
+      <div class="grid" id="gestion-kpis"></div>
+      <h2 style="margin-top:22px">Ciclos</h2>
+      <div id="ciclos-table"></div>
+    </section>
+
+    <!-- Lotes: listado -->
+    <section id="view-lotes" hidden>
+      <p class="micro">Escenario 2 · lista → detalle</p>
+      <h1>Lotes</h1>
+      <div id="lotes-table"></div>
+    </section>
+
+    <!-- Lote: detalle con genealogía (sub-drill análisis) -->
+    <section id="view-lote" hidden>
+      <p class="micro">Detalle de lote · genealogía</p>
+      <h1 id="lote-title">—</h1>
+      <div id="lote-detail"></div>
+    </section>
+
+    <!-- Chat del agente -->
+    <section id="view-chat" hidden>
+      <p class="micro">Escenario 5.5 · agente con atribución de herramienta</p>
+      <h1>Agente</h1>
+      <p class="kpi-sub">Pregunta en lenguaje natural. Motor actual: reglas EC
+        deterministas (RUC/cédula); LLM llega en P3. Siempre pregunta lo que no
+        sabe — nunca inventa (AGT-03).</p>
+      <div class="chat-box">
+        <div class="chat-log" id="chat-log"></div>
+        <div class="quick" id="chat-quick"></div>
+        <form class="chat-input" id="chat-form">
+          <input id="chat-text" placeholder="Ej: validar RUC 1793125212001" autocomplete="off">
+          <button class="btn primary" type="submit">Enviar</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>BridgeApp.init();</script>
+</body>
+</html>

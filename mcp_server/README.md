@@ -81,7 +81,9 @@ python3 mcp_server/bridge_http.py --port 8090
 | `GET /api/kpis/<ent>` | — | KPIs agregados de la entidad |
 | `GET /api/list/<ent>` | `?limit&offset&<filtros>` | `{items, total, limit, offset}` (whitelist de campos, tope 100) |
 | `GET /api/detail/<ent>/<id>` | — | `{record}`; en `lotes` incluye sub-drill `analisis` |
+| `POST /api/chat` | `{"message"}` | chat semilla con motor `rules.py` (RUC/cédula) + pie de atribución; LLM = P3 |
 | `GET /healthz` | — | `{"status":"ok"}` |
+| `GET /` · `/app.html` | — | **UI** vanilla (login + 2 dashboards + lotes/detalle + chat; tokens D-10, sin CDN/build, whitelist anti-traversal) |
 
 Auth: `Authorization: Bearer <token>` (HMAC-SHA256, 8 h). El token porta el
 **tenant (`db`)** — toda lectura va a ese db (FR-BR-03). Roles por grupo Odoo
@@ -153,7 +155,7 @@ curl -s localhost:8090/api/detail/lotes/45 -H "Authorization: Bearer $T"
 
 ```bash
 python3 mcp_server/test_server.py     # 54 tests, sin Odoo
-python3 mcp_server/test_bridge.py     # 33 tests (bridge P1), sin Odoo
+python3 mcp_server/test_bridge.py     # 42 tests (bridge P1+P2), sin Odoo
 ```
 
 El test de handshake arranca `server.py` como subprocess, habla MCP real por

@@ -131,7 +131,7 @@ footers like `via trace_lot · bridge → Odoo`, and the platform's golden rule:
 
 | Option | Pros | Cons | Verdict |
 |---|---|---|---|
-| **A. Extend today's stdlib MCP gateway** (bridge = MCP + HTTP) | zero new deps, 54/54 suite, already front door | no web UI serving, stdlib limits | **P1 start** (bridge core = MCP contract) |
+| **A. Extend today's stdlib MCP gateway** (bridge = MCP + HTTP) | zero new deps, 54/54 suite, already front door | no web UI serving, stdlib limits | **DECIDIDO en P2 gate (CHG-2026-012): la puerta sirve la UI estática vanilla (login/2 dashboards/chat); Option B se re-evalúa en P5 con evidencia de carga** |
 | **B. Own Python service (own container/venv)** like FAME's Django/ninja | full REST + sessions + templating; isolated from Odoo container (live-mounted, no rebuild) | first "new tech" instance → needs D-06 gate evidence at P2 exit | **P2 candidate** for UI hosting |
 | **C. Odoo-native (website/JS)** | no extra service | drags vertical UI into L0; not crop-agnostic layering; D-09 violated | rejected |
 
@@ -191,3 +191,4 @@ service gets a hard memory budget carved from the cap (P2 sizing task).
 | Ver. | Date | Author | Change |
 |---|---|---|---|
 | 1.0 | 2026-10-16 | Platform | Initial: D-08 layer name, D-09 UI-on-top, D-10 design system; FAME demo analysis (§2/§7); FR-BR-01..12; layered architecture; P1–P5 plan. |
+| 1.1 | 2026-10-16 | Platform | P1 implementado (CHG-2026-010: auth+RBAC+lecturas 3 entidades, Option A). **P2 gate (CHG-2026-012): Option A confirmada** — la puerta sirve la UI vanilla (login + 2 dashboards + chat con motor rules); Option B queda como candidata P5. |

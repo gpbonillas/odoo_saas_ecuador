@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SOMATECH · Ingreso</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="hero-mark">S</div>
+      <h1>SOMATECH <span class="brand">·</span> Odoo Ecuador</h1>
+      <p class="micro">Puente de operación vertical — ingrese con su usuario Odoo</p>
+
+      <form id="login-form" autocomplete="on">
+        <label class="micro" for="db">Base (tenant)</label>
+        <input id="db" name="db" required placeholder="odooec">
+        <label class="micro" for="login">Usuario</label>
+        <input id="login" name="login" required autocomplete="username" placeholder="admin">
+        <label class="micro" for="password">Contraseña</label>
+        <input id="password" name="password" type="password" required
+               autocomplete="current-password" placeholder="••••••••">
+        <p class="error" id="login-error"></p>
+        <button class="btn primary" style="width:100%;margin-top:8px" type="submit">
+          Ingresar →
+        </button>
+      </form>
+
+      <div id="needs-data" hidden></div>
+      <p class="micro" style="margin-top:18px">
+        Sin datos inventados: si falta un dato legal, el sistema pregunta.
+      </p>
+    </div>
+  </div>
+  <script src="/app.js"></script>
+  <script>BridgeLogin.init();</script>
+</body>
+</html>

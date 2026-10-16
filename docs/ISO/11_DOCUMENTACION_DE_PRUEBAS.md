@@ -54,7 +54,7 @@ requieren ORM). La trazabilidad a requisitos está en ISO-EC-10 §5.
 > `test_iva_split_30_70`→`test_iva_full_to_sri_no_iess_split` (**iess_share=0.0**),
 > + `test_iva_bucket_dual_scale` (**17 casos** escala doble), + `test_ir_override_eliminated_rate`.
 
-### 3.1b Bridge P1 — `mcp_server/test_bridge.py` (33 tests, OK) · CHG-2026-010
+### 3.1b Bridge P1+P2 — `mcp_server/test_bridge.py` (42 tests, OK) · CHG-2026-010/012
 
 | Bloque | Tema | Estado |
 |---|---|---|
@@ -63,12 +63,14 @@ requieren ORM). La trazabilidad a requisitos está en ISO-EC-10 §5.
 | TestRbacMatrix | matriz rol→entidades **con negativos**: operario = 0 entidades, bodega sólo lotes, produccion sin analisis, rango más alto gana (FR-BR-02) | OK — 6 |
 | TestTenantIsolation | toda lectura usa el `db` portado por el token; fake truena si consulta otro tenant (FR-BR-03) | OK — 1 |
 | TestReadContracts | contratos `kpis`×3, whitelist de campos, paginación + tope 100, filtros, `detail` con drill de `analisis`, 404 (FR-BR-04) | OK — 10 |
-| TestHttpLayer | HTTP real en puerto efímero: login/kpis/list/detail, 401 sin token, 403 operario, 400 body, 404 ruta, `needs_data` (FR-BR-01..04) | OK — 8 |
+| TestHttpLayer | HTTP real en puerto efímero: login/kpis/list/detail, 401 sin token, 403 operario, 400 body, 404 ruta, `needs_data` (FR-BR-01..04) + **P2**: UI estática (login HTML, assets con tipos, **traversal bloqueado** ×5 rutas) y **chat** (401 sin token, 400 sin mensaje, RUC/cédula válido, checksum inválido por mutación sintética, ayuda) | OK — 17 |
 
 > **Smoke live (2026-10-16, CHG-2026-010):** `bridge_http.py` contra `odooec` real por JSON-RPC:
 > login admin → `role=admin, entities=[lotes,ciclos,analisis]` · `kpis` lotes `{"total":1,"por_estado_lab":{"passed":1},"bloqueados":0}` ·
 > `list` con whitelist real · **`detail/lotes/45` con sub-drill `analisis`** · filtro `lab_state=failed` → 0 · 401 sin token · 404 entidad desconocida ·
-> sin `needs_data` (CANNACHAIN `1793125212001` presente). Suite conjunta: **54 + 33 = 87 OK** (host).
+> sin `needs_data` (CANNACHAIN `1793125212001` presente). Suite conjunta: **54 + 42 = 96 OK** (host).
+>
+> **Smoke live P2 (2026-10-16, CHG-2026-012):** `GET /` sirve el login (`SOMATECH · Ingreso`, tokens D-10 `--brand: #ff4d00`), `GET /../../etc/passwd` ⇒ **404** (whitelist anti-traversal), chat live con token real: «validar RUC 1793125212001» ⇒ `VÁLIDO (mod-11/mod-10)` con pie `via validate_vat · bridge → rules`, ayuda sin ID. **Sizing D-06: proceso bridge completo = 22.3 MB RSS** (vs +150-400 MB de un servicio propio Option B) ⇒ gate P2 a favor de Option A.
 
 ### 3.2 Módulos Odoo (tests/unit + l10n_ec*/tests)
 
