@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_agro_crop_user,l10n_ec.agro.crop user,model_l10n_ec_agro_crop,base.group_user,1,0,0,0
+access_agro_crop_manager,l10n_ec.agro.crop manager,model_l10n_ec_agro_crop,mrp.group_mrp_manager,1,1,1,1
+access_agro_plot_user,l10n_ec.agro.plot user,model_l10n_ec_agro_plot,base.group_user,1,1,1,0
+access_agro_plot_manager,l10n_ec.agro.plot manager,model_l10n_ec_agro_plot,mrp.group_mrp_manager,1,1,1,1
+access_agro_cycle_user,l10n_ec.agro.cycle user,model_l10n_ec_agro_cycle,base.group_user,1,1,1,0
+access_agro_cycle_manager,l10n_ec.agro.cycle manager,model_l10n_ec_agro_cycle,mrp.group_mrp_manager,1,1,1,1
+access_agro_analysis_user,l10n_ec.agro.analysis user,model_l10n_ec_agro_analysis,base.group_user,1,1,1,0
+access_agro_analysis_manager,l10n_ec.agro.analysis manager,model_l10n_ec_agro_analysis,mrp.group_mrp_manager,1,1,1,1
+access_agro_trace_event_user,l10n_ec.agro.trace.event user,model_l10n_ec_agro_trace_event,base.group_user,1,0,1,0
+access_agro_trace_event_manager,l10n_ec.agro.trace.event manager,model_l10n_ec_agro_trace_event,mrp.group_mrp_manager,1,0,1,0

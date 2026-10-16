@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright 2026 Somatech.dev
+    License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl-3.0).
+
+    l10n_ec_agro — vistas mínimas (fase P1, esqueleto).
+    La UI completa de la vertical vive en SOMATECH-ODOO-BRIDGE (D-09);
+    aquí sólo se hace operable el módulo dentro de Odoo.
+-->
+<odoo>
+
+    <!-- ============================== CULTIVOS (catálogo) ============== -->
+    <record id="view_agro_crop_list" model="ir.ui.view">
+        <field name="name">l10n_ec.agro.crop.list</field>
+        <field name="model">l10n_ec.agro.crop</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================== PREDIOS =========================== -->
+    <record id="view_agro_plot_list" model="ir.ui.view">
+        <field name="name">l10n_ec.agro.plot.list</field>
+        <field name="model">l10n_ec.agro.plot</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="hectares"/>
+                <field name="location"/>
+                <field name="responsible_id" widget="many2one_avatar_user"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agro_plot_form" model="ir.ui.view">
+        <field name="name">l10n_ec.agro.plot.form</field>
+        <field name="model">l10n_ec.agro.plot</field>
+        <field name="arch" type="xml">
+            <form string="Predio">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Nombre del predio"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="hectares"/>
+                        </group>
+                        <group>
+                            <field name="location"/>
+                            <field name="responsible_id" widget="many2one_avatar_user"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Ciclos" name="cycles">
+                            <field name="cycle_ids"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================== CICLOS ============================ -->
+    <record id="view_agro_cycle_list" model="ir.ui.view">
+        <field name="name">l10n_ec.agro.cycle.list</field>
+        <field name="model">l10n_ec.agro.cycle</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="display_name"/>
+                <field name="crop_id"/>
+                <field name="variety"/>
+                <field name="sow_date"/>
+                <field name="expected_harvest_date"/>
+                <field name="actual_harvest_date"/>
+                <field name="state" widget="badge"
+                         decoration-success="state == 'growing'"
+                         decoration-info="state == 'planned'"
+                         decoration-warning="state == 'harvested'"
+                         decoration-muted="state == 'closed'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agro_cycle_form" model="ir.ui.view">
+        <field name="name">l10n_ec.agro.cycle.form</field>
+        <field name="model">l10n_ec.agro.cycle</field>
+        <field name="arch" type="xml">
+            <form string="Ciclo de cultivo">
+                <header>
+                    <button name="action_growing" type="object" string="En cultivo"
+                            class="btn-primary" invisible="state != 'planned'"/>
+                    <button name="action_harvested" type="object" string="Cosechar"
+                            class="btn-primary" invisible="state != 'growing'"/>
+                    <button name="action_closed" type="object" string="Cerrar"
+                            invisible="state != 'harvested'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="planned,growing,harvested,closed"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="plot_id"/>
+                            <field name="crop_id"/>
+                            <field name="variety"/>
+                        </group>
+                        <group>
+                            <field name="sow_date"/>
+                            <field name="expected_harvest_date"/>
+                            <field name="actual_harvest_date"/>
+                            <field name="display_name" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Lotes" name="lots">
+                            <field name="lot_ids"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================== ANÁLISIS ========================== -->
+    <record id="view_agro_analysis_list" model="ir.ui.view">
+        <field name="name">l10n_ec.agro.analysis.list</field>
+        <field name="model">l10n_ec.agro.analysis</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="lot_id"/>
+                <field name="analyte"/>
+                <field name="value"/>
+                <field name="unit"/>
+                <field name="limit"/>
+                <field name="passed" widget="badge"
+                         decoration-success="passed"
+                         decoration-danger="not passed"/>
+                <field name="lab_name"/>
+                <field name="analysis_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agro_analysis_form" model="ir.ui.view">
+        <field name="name">l10n_ec.agro.analysis.form</field>
+        <field name="model">l10n_ec.agro.analysis</field>
+        <field name="arch" type="xml">
+            <form string="Análisis de laboratorio">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="lot_id"/>
+                            <field name="product_id" readonly="1"/>
+                            <field name="analyte"/>
+                            <field name="value"/>
+                            <field name="unit"/>
+                            <field name="limit"/>
+                        </group>
+                        <group>
+                            <field name="passed" widget="badge"
+                                     decoration-success="passed"
+                                     decoration-danger="not passed"/>
+                            <field name="lab_name"/>
+                            <field name="analysis_date"/>
+                        </group>
+                    </group>
+                    <group string="Certificado">
+                        <field name="certificate" filename="certificado"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================== TRAZAS ============================ -->
+    <record id="view_agro_trace_event_list" model="ir.ui.view">
+        <field name="name">l10n_ec.agro.trace.event.list</field>
+        <field name="model">l10n_ec.agro.trace_event</field>
+        <field name="arch" type="xml">
+            <list create="true" edit="false" delete="false">
+                <field name="event_date"/>
+                <field name="lot_id"/>
+                <field name="stage"/>
+                <field name="qty"/>
+                <field name="partner_id"/>
+                <field name="comprobante"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agro_trace_event_form" model="ir.ui.view">
+        <field name="name">l10n_ec.agro.trace.event.form</field>
+        <field name="model">l10n_ec.agro.trace_event</field>
+        <field name="arch" type="xml">
+            <form string="Evento de trazabilidad" create="false" edit="false" delete="false">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="lot_id"/>
+                            <field name="stage"/>
+                            <field name="qty"/>
+                        </group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="comprobante"/>
+                            <field name="event_date"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================== LOTE (inherit) ==================== -->
+    <record id="view_stock_lot_form_agro" model="ir.ui.view">
+        <field name="name">stock.lot.form.agro</field>
+        <field name="model">stock.lot</field>
+        <field name="inherit_id" ref="stock.view_production_lot_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <notebook>
+                    <page string="Agro (trazabilidad)" name="l10n_ec_agro">
+                        <group>
+                            <group string="Cultivo">
+                                <field name="l10n_ec_crop_type"/>
+                                <field name="l10n_ec_variety"/>
+                                <field name="l10n_ec_cycle_id"/>
+                                <field name="l10n_ec_harvest_date"/>
+                            </group>
+                            <group string="Laboratorio y sanitary">
+                                <field name="l10n_ec_lab_state" widget="badge"
+                                         decoration-success="l10n_ec_lab_state == 'passed'"
+                                         decoration-danger="l10n_ec_lab_state == 'failed'"/>
+                                <field name="l10n_ec_sanitary_reg"/>
+                            </group>
+                        </group>
+                        <field name="l10n_ec_analysis_ids"/>
+                    </page>
+                </notebook>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================== ACCIONES / MENÚS ================== -->
+    <record id="action_agro_plot" model="ir.actions.act_window">
+        <field name="name">Predios</field>
+        <field name="res_model">l10n_ec.agro.plot</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_agro_cycle" model="ir.actions.act_window">
+        <field name="name">Ciclos</field>
+        <field name="res_model">l10n_ec.agro.cycle</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_agro_analysis" model="ir.actions.act_window">
+        <field name="name">Análisis</field>
+        <field name="res_model">l10n_ec.agro.analysis</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_agro_trace_event" model="ir.actions.act_window">
+        <field name="name">Trazas</field>
+        <field name="res_model">l10n_ec.agro.trace_event</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_agro_root" name="Agro" parent="mrp.menu_mrp_root" sequence="90"/>
+    <menuitem id="menu_agro_plot" name="Predios" parent="menu_agro_root"
+              action="action_agro_plot" sequence="10"/>
+    <menuitem id="menu_agro_cycle" name="Ciclos" parent="menu_agro_root"
+              action="action_agro_cycle" sequence="20"/>
+    <menuitem id="menu_agro_analysis" name="Análisis" parent="menu_agro_root"
+              action="action_agro_analysis" sequence="30"/>
+    <menuitem id="menu_agro_trace_event" name="Trazas" parent="menu_agro_root"
+              action="action_agro_trace_event" sequence="40"/>
+
+</odoo>

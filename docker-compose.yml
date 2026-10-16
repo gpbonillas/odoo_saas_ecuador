@@ -82,6 +82,7 @@ services:
     volumes:
       # ---- MODULES (live: edits are visible without rebuild) -----
       - ./l10n_ec:/mnt/extra-addons/l10n_ec
+      - ./l10n_ec_agro:/mnt/extra-addons/l10n_ec_agro
       - ./l10n_ec_asset:/mnt/extra-addons/l10n_ec_asset
       - ./l10n_ec_bank_transfer:/mnt/extra-addons/l10n_ec_bank_transfer
       - ./l10n_ec_base:/mnt/extra-addons/l10n_ec_base
@@ -102,6 +103,15 @@ services:
       - ./l10n_ec_vacation:/mnt/extra-addons/l10n_ec_vacation
       - ./l10n_ec_withholding:/mnt/extra-addons/l10n_ec_withholding
       - ./tests:/mnt/extra-addons/tests
+      # ---- OFFICIAL-MODULE SHADOW BLOCK (CHG-2026-008, ver infra/official_shadows/README.md)
+      # Odoo community ships its OWN l10n_ec / l10n_ec_stock / l10n_ec_website_sale
+      # in /opt/odoo/addons. Same names as ours => depending on the internal
+      # scan order (odoo.addons.__path__), the OFFICIAL manifest can win and
+      # drop our whole chain from the registry (unmet latam deps).
+      # Empty dirs (no __manifest__.py) are skipped by get_module_path().
+      - ./infra/official_shadows/l10n_ec:/opt/odoo/addons/l10n_ec:ro
+      - ./infra/official_shadows/l10n_ec_stock:/opt/odoo/addons/l10n_ec_stock:ro
+      - ./infra/official_shadows/l10n_ec_website_sale:/opt/odoo/addons/l10n_ec_website_sale:ro
       # ---- CONFIG (live: edit ./config/odoo.conf + restart odoo) ----
       - ./config/odoo.conf:/etc/odoo/odoo.conf:ro
       # ---- ENTRYPOINT (live: edit ./config/entrypoint.sh + restart) ---
