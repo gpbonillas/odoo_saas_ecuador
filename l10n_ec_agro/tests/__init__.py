@@ -7,3 +7,4 @@ from . import test_lot_fields
 from . import test_cycle
 from . import test_lab_gate
 from . import test_events_immutable
+from . import test_guardrails

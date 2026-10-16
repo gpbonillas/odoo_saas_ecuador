@@ -96,9 +96,10 @@ requieren ORM). La trazabilidad a requisitos está en ISO-EC-10 §5.
 | `l10n_ec_base/tests/test_identity.py` | 9 | IDs aprobados (D-04) + **equivalencia stdnum de `res.partner`** (CHG-2026-004) |
 | `l10n_ec_base/tests/test_sri_ruc_parser.py` | 7 | **Payload real SRI**: llaves nuevas, fechas anidadas, guard ACTIVO (CHG-2026-003) |
 | `l10n_ec_base/tests/test_chart_template.py` | 6 | Plan de cuentas EC |
-| `l10n_ec_agro/tests/*` (4 suites) | 25 | **Vertical AGRO** (CHG-2026-008): atributos de lote genéricos, ciclos, **gate de laboratorio dual-punto** (confirm + done), trazas append-only |
+| `l10n_ec_agro/tests/*` (5 suites) | 30 | **Vertical AGRO** (CHG-2026-008/011): atributos de lote genéricos, ciclos, **gate de laboratorio dual-punto** (confirm + done), trazas append-only, **guardrail FR-AG-14** (venta regulada sin `v.registro_sanitario` bloquea) |
+| `l10n_ec_vertical/tests/*` (2 suites) | 22 | **Loader de plantillas** (CHG-2026-011): catálogo+checksum golden, **idempotencia FR-AG-10** (re-aplicar ⇒ 0 creates), update de divergencias, params USER preservados, guardrails wizard (auto-enable caps, warn simple, `needs_data` cultivos) |
 | Otros unitarios (access_key, cf, invoice, pos, endpoints, validation) | 48 | Varios |
-| **Total módulos Odoo** | **~411** (364 + 22 de `l10n_ec_base` + 25 de `l10n_ec_agro`, recuento 2026-10-16) | — |
+| **Total módulos Odoo** | **~438** (364 + 22 de `l10n_ec_base` + 30 de `l10n_ec_agro` + 22 de `l10n_ec_vertical`, recuento 2026-10-16) | — |
 
 ## 4. Criterios de aceptación y evidencia
 

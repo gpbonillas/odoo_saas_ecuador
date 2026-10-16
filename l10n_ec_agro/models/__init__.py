@@ -10,3 +10,5 @@ from . import l10n_ec_agro_analysis
 from . import l10n_ec_agro_trace_event
 from . import stock_lot
 from . import stock_move
+from . import product_template
+from . import sale_order

@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_vertical_template_user,l10n_ec.vertical.template user,model_l10n_ec_vertical_template,base.group_user,1,0,0,0
+access_vertical_template_system,l10n_ec.vertical.template system,model_l10n_ec_vertical_template,base.group_system,1,1,1,1
+access_vertical_param_user,l10n_ec.vertical.param user,model_l10n_ec_vertical_param,base.group_user,1,0,0,0
+access_vertical_param_system,l10n_ec.vertical.param system,model_l10n_ec_vertical_param,base.group_system,1,1,1,1

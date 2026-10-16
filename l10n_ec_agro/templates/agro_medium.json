@@ -1,0 +1,31 @@
+{
+    "code": "agro/medium",
+    "vertical": "agro",
+    "size": "medium",
+    "version": "1.0.0",
+    "changelog": "P2: categorías genéricas agro + params base + caps del SRS-VERT §8. Nunca productos de tenant (ingesta en wizard).",
+    "caps": {
+        "cap.inv.stock": true,
+        "cap.inv.recipes": true,
+        "cap.purchase": true,
+        "cap.mrp": true,
+        "cap.quality": true,
+        "cap.stock.alerts": true
+    },
+    "params": {
+        "v.lotes": {"type": "bool", "value": true},
+        "v.analisis_lab": {"type": "bool", "value": true},
+        "v.genealogia": {"type": "select", "value": "seed_to_sale"},
+        "v.recall": {"type": "bool", "value": true}
+    },
+    "data": {
+        "product.category": [
+            {"key": "cat_insumos", "name": "Insumos & Fertilizantes"},
+            {"key": "cat_semillas", "name": "Semillas & Plantines"},
+            {"key": "cat_frescos", "name": "Cultivos Frescos"},
+            {"key": "cat_procesados", "name": "Cultivos Procesados"},
+            {"key": "cat_envasados", "name": "Envasados & Alimentarios"},
+            {"key": "cat_cosmeticos", "name": "Cosméticos & Sanitarios"}
+        ]
+    }
+}

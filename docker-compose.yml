@@ -100,6 +100,7 @@ services:
       - ./l10n_ec_sri:/mnt/extra-addons/l10n_ec_sri
       - ./l10n_ec_stock:/mnt/extra-addons/l10n_ec_stock
       - ./l10n_ec_sut:/mnt/extra-addons/l10n_ec_sut
+      - ./l10n_ec_vertical:/mnt/extra-addons/l10n_ec_vertical
       - ./l10n_ec_vacation:/mnt/extra-addons/l10n_ec_vacation
       - ./l10n_ec_withholding:/mnt/extra-addons/l10n_ec_withholding
       - ./tests:/mnt/extra-addons/tests

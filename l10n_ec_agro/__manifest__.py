@@ -6,7 +6,7 @@
 
 {
     "name": "Ecuador - Trazabilidad Agroalimentaria (Vertical)",
-    "version": "18.0.1.0.0",
+    "version": "18.0.1.1.0",
     "category": "Manufacturing/Vertical",
     "summary": "Trazabilidad seed-to-sale multi-cultivo (crop-agnóstico, D-05)",
     "description": """
@@ -27,11 +27,18 @@ Diseño: docs/srs/SRS_VERTICAL_AGRO_TRACEABILITY.md (§6).
   puede salir del stock interno.
 * Eventos de trazabilidad append-only (`l10n_ec.agro.trace_event`, FR-AG-05):
   sin `write`/`unlink` — inmutabilidad estilo AUD.
+* **P2**: plantilla vertical `templates/agro_medium.json` (categorías
+  genéricas + params base, cargadas por el loader `l10n_ec_vertical`,
+  FR-AG-10) y **guardrail FR-AG-14**: producto `l10n_ec_regulated` no se
+  vende sin el parámetro `v.registro_sanitario`.
     """,
     "author": "Somatech.dev",
     "website": "https://github.com/somatechlat/odoo_saas_ecuador",
     "license": "LGPL-3",
-    "depends": ["l10n_ec_base", "l10n_ec_stock", "l10n_ec_quality", "stock", "mrp"],
+    "depends": [
+        "l10n_ec_base", "l10n_ec_stock", "l10n_ec_quality",
+        "l10n_ec_vertical", "stock", "mrp", "sale",
+    ],
     "data": [
         "security/ir.model.access.csv",
         "views/l10n_ec_agro_views.xml",
