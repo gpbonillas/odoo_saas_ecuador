@@ -6,166 +6,39 @@
     DEMO DATA - Ecuador Localization
     ================================
 
-    ISOLATED demo data for testing ALL regulatory flows:
-    - Invoice flows with different taxpayer types
-    - Retention calculations
-    - Payroll computations
-    - Tax calendar validations
+    ISOLATED demo data for testing regulatory flows.
+
+    CHG-2026-006 (purga total de datos falsos): este archivo contiene EXCLUSIVA
+   MENTE identidades reales/aprobadas (decisión D-04):
+    - CANNACHAIN S.A.S. — RUC 1793125212001 (tenant demo, D-01)
+    - CADENA PEÑA ADRIAN RAFAEL — cédula 1713488185 y RUC natural
+      1713488185001 (ACTIVO): compra con cédula, vende con RUC activo (D-03)
+    - CONSUMIDOR FINAL — 9999999999999 (constante legal SRI)
+
+    Cualquier otro RUC/cédula en demo, tests o docs es un defecto (D-04).
 
     NOTE: This data loads ONLY when demo mode is enabled.
-    All RUCs are FICTIONAL for testing purposes.
 -->
 <odoo noupdate="1">
     <!-- ================================================================= -->
-    <!-- DEMO COMPANY - Test Company                                       -->
+    <!-- DEMO COMPANY - Real demo tenant (CANNACHAIN S.A.S., D-01)          -->
     <!-- ================================================================= -->
     <record id="demo_company_ec" model="res.company">
-        <field name="name">SOMATECH DEMO S.A.</field>
-        <field name="vat">1792146739001</field>
-        <field name="street">Av. República E7-123 y Almagro</field>
+        <field name="name">CANNACHAIN S.A.S.</field>
+        <field name="vat">1793125212001</field>
+        <field name="street">Av. República E7-197 y Almagro</field>
         <field name="city">Quito</field>
         <field name="country_id" ref="base.ec"/>
-        <field name="phone">+593 2 2567890</field>
-        <field name="email">demo@somatech.dev</field>
-        <field name="website">https://somatech.dev</field>
+        <field name="phone">+593 2 290 1234</field>
+        <field name="email">info@cannachain.ec</field>
+        <field name="website">https://cannachain.ec</field>
     </record>
 
     <!-- ================================================================= -->
-    <!-- CUSTOMERS - Different Taxpayer Types                              -->
+    <!-- CUSTOMERS - Real identities only (D-04)                            -->
     <!-- ================================================================= -->
 
-    <!-- Customer: Persona Natural -->
-    <record id="demo_customer_natural" model="res.partner">
-        <field name="name">JUAN CARLOS PÉREZ MENDOZA</field>
-        <field name="vat">1710034065</field>
-        <field name="l10n_ec_identifier_type">cedula</field>
-        <field name="l10n_ec_taxpayer_type">general</field>
-        <field name="street">Calle Principal 123</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">0991234567</field>
-        <field name="email">juan.perez@demo.ec</field>
-        <field name="customer_rank">1</field>
-        <field name="supplier_rank">0</field>
-        <field name="company_type">person</field>
-    </record>
-
-    <!-- Customer: Tercera Edad (65+ años - IVA Refund) -->
-    <record id="demo_customer_tercera_edad" model="res.partner">
-        <field name="name">LUIS ALBERTO GARCÍA MORENO</field>
-        <field name="vat">1701234567</field>
-        <field name="l10n_ec_identifier_type">cedula</field>
-        <field name="l10n_ec_taxpayer_type">general</field>
-        <field name="l10n_ec_tercera_edad" eval="True"/>
-        <field name="street">Av. El Inca N45-123</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">0998765432</field>
-        <field name="email">tercera.edad@demo.ec</field>
-        <field name="customer_rank">1</field>
-        <field name="supplier_rank">0</field>
-        <field name="company_type">person</field>
-    </record>
-
-    <!-- Customer: Persona con Discapacidad (IVA Refund up to 3 SBU) -->
-    <record id="demo_customer_discapacidad" model="res.partner">
-        <field name="name">ROSA MARÍA ANDRADE SILVA</field>
-        <field name="vat">1712345670</field>
-        <field name="l10n_ec_identifier_type">cedula</field>
-        <field name="l10n_ec_taxpayer_type">general</field>
-        <field name="l10n_ec_discapacidad" eval="True"/>
-        <field name="l10n_ec_discapacidad_porcentaje">45</field>
-        <field name="street">Sector El Batán</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">0987654321</field>
-        <field name="email">discapacidad@demo.ec</field>
-        <field name="customer_rank">1</field>
-        <field name="supplier_rank">0</field>
-        <field name="company_type">person</field>
-    </record>
-
-    <!-- Customer: Persona Natural Obligado Contabilidad -->
-    <record id="demo_customer_natural_obligado" model="res.partner">
-        <field name="name">MARÍA FERNANDA LÓPEZ GARCÍA</field>
-        <field name="vat">1720567890001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">general</field>
-        <field name="street">Av. 6 de Diciembre N34-567</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">0987654321</field>
-        <field name="email">maria.lopez@demo.ec</field>
-        <field name="customer_rank">1</field>
-        <field name="supplier_rank">0</field>
-        <field name="company_type">person</field>
-    </record>
-
-    <!-- Customer: Sociedad (Company) -->
-    <record id="demo_customer_sociedad" model="res.partner">
-        <field name="name">COMERCIALIZADORA DEL PACIFICO S.A.</field>
-        <field name="vat">1790016919001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">general</field>
-        <field name="street">Av. Francisco de Orellana, Edificio Trade Building</field>
-        <field name="city">Guayaquil</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">042234567</field>
-        <field name="email">ventas@comercializadora.demo.ec</field>
-        <field name="customer_rank">1</field>
-        <field name="supplier_rank">0</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- Customer: Contribuyente Especial -->
-    <record id="demo_customer_especial" model="res.partner">
-        <field name="name">DISTRIBUIDORA NACIONAL CIA. LTDA.</field>
-        <field name="vat">1791234567001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">special</field>
-        <field name="street">Av. Amazonas N24-123</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">022456789</field>
-        <field name="email">facturacion@distribuidora.demo.ec</field>
-        <field name="customer_rank">1</field>
-        <field name="supplier_rank">0</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- Customer: RIMPE Emprendedor -->
-    <record id="demo_customer_rimpe_e" model="res.partner">
-        <field name="name">ARTESANÍAS ANDINAS</field>
-        <field name="vat">0501234567001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">rimpe_e</field>
-        <field name="street">Barrio El Centro, Calle Sucre 45</field>
-        <field name="city">Latacunga</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">0998765432</field>
-        <field name="email">artesanias@demo.ec</field>
-        <field name="customer_rank">1</field>
-        <field name="supplier_rank">0</field>
-        <field name="company_type">person</field>
-    </record>
-
-    <!-- Customer: RIMPE Negocio Popular -->
-    <record id="demo_customer_rimpe_p" model="res.partner">
-        <field name="name">TIENDA DON PEDRO</field>
-        <field name="vat">0912345678001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">rimpe_p</field>
-        <field name="street">Mercado Central Local 234</field>
-        <field name="city">Guayaquil</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">0976543210</field>
-        <field name="email">tiendadonpedro@demo.ec</field>
-        <field name="customer_rank">1</field>
-        <field name="supplier_rank">0</field>
-        <field name="company_type">person</field>
-    </record>
-
-    <!-- Customer: Consumidor Final -->
+    <!-- Customer: Consumidor Final (constante legal SRI) -->
     <record id="demo_customer_final" model="res.partner">
         <field name="name">CONSUMIDOR FINAL</field>
         <field name="vat">9999999999999</field>
@@ -179,419 +52,35 @@
         <field name="company_type">person</field>
     </record>
 
-    <!-- Customer: Exportador Habitual -->
-    <record id="demo_customer_exporter" model="res.partner">
-        <field name="name">EXPORTADORA BANANERA DEL ECUADOR S.A.</field>
-        <field name="vat">0790123456001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">exporter</field>
-        <field name="street">Km 5 Vía Puerto Bolívar</field>
-        <field name="city">Machala</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">072934567</field>
-        <field name="email">exportaciones@bananera.demo.ec</field>
-        <field name="customer_rank">1</field>
-        <field name="supplier_rank">0</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- Customer: Institución Pública (Sector Público - They retain FROM you) -->
-    <record id="demo_customer_gobierno" model="res.partner">
-        <field name="name">MUNICIPIO DE QUITO</field>
-        <field name="vat">1760001550001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">special</field>
-        <field name="street">Av. Venezuela y Chile, Centro Histórico</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">023952300</field>
-        <field name="email">compras@quito.gob.ec</field>
-        <field name="customer_rank">1</field>
-        <field name="supplier_rank">0</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- Customer: Empresa Pública (RUC 3er dígito = 6) -->
-    <record id="demo_customer_empresa_publica" model="res.partner">
-        <field name="name">CORPORACIÓN NACIONAL DE TELECOMUNICACIONES EP</field>
-        <field name="vat">1768152130001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">special</field>
-        <field name="street">Av. Amazonas N32-12</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">1800268268</field>
-        <field name="email">compras@cnt.gob.ec</field>
-        <field name="customer_rank">1</field>
-        <field name="supplier_rank">0</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- ================================================================= -->
-    <!-- SPECIAL ENTITY TYPES - Tax Benefits                               -->
-    <!-- ================================================================= -->
-
-    <!-- Customer: Fundación sin fines de lucro (IR Exento - LORTI Art. 9 num. 5) -->
-    <record id="demo_customer_fundacion" model="res.partner">
-        <field name="name">FUNDACIÓN NIÑOS DEL ECUADOR</field>
-        <field name="vat">1791000001001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">nonprofit</field>
-        <field name="l10n_ec_entity_type">fundacion</field>
-        <field name="street">Av. Colón E4-105</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">022567890</field>
-        <field name="email">info@fundacion.demo.ec</field>
-        <field name="customer_rank">1</field>
-        <field name="supplier_rank">0</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- Customer: ONG Internacional (IR Exento - LORTI Art. 9 num. 3) -->
-    <record id="demo_customer_ong" model="res.partner">
-        <field name="name">UNICEF ECUADOR</field>
-        <field name="vat">1768000001001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">nonprofit</field>
-        <field name="l10n_ec_entity_type">ong</field>
-        <field name="street">Av. Amazonas N34-311</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">022460330</field>
-        <field name="email">quito@unicef.demo.org</field>
-        <field name="customer_rank">1</field>
-        <field name="supplier_rank">0</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- Customer: Cooperativa de Ahorro y Crédito (LOEPS - Régimen especial) -->
-    <record id="demo_customer_cooperativa" model="res.partner">
-        <field name="name">COOPERATIVA DE AHORRO Y CRÉDITO ANDALUCÍA</field>
-        <field name="vat">1790123456001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">general</field>
-        <field name="l10n_ec_entity_type">cooperativa</field>
-        <field name="street">Av. 10 de Agosto N23-145</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">022234567</field>
-        <field name="email">info@cooperativa.demo.ec</field>
-        <field name="customer_rank">1</field>
-        <field name="supplier_rank">0</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- Customer: ZEDE - Zona Especial Desarrollo (IVA 0% - COPCI Art. 34-47) -->
-    <record id="demo_customer_zede" model="res.partner">
-        <field name="name">INDUSTRIA ZEDE YACHAY S.A.</field>
-        <field name="vat">1792500001001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">zede</field>
-        <field name="l10n_ec_entity_type">zede</field>
-        <field name="street">Ciudad del Conocimiento Yachay</field>
-        <field name="city">Urcuquí</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">062999000</field>
-        <field name="email">industria@zede.demo.ec</field>
-        <field name="customer_rank">1</field>
-        <field name="supplier_rank">0</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- Customer: Nueva Empresa (Exoneración 3 años - LORTI Art. 9.1 bis) -->
-    <record id="demo_customer_nueva_empresa" model="res.partner">
-        <field name="name">STARTUP TECH INNOVACIÓN S.A.S.</field>
-        <field name="vat">1793000001001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">general</field>
-        <field name="l10n_ec_entity_type">sas</field>
-        <field name="l10n_ec_nueva_empresa" eval="True"/>
-        <field name="l10n_ec_fecha_constitucion">2024-06-15</field>
-        <field name="street">La Floresta, Calle Toledo 234</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">0999888777</field>
-        <field name="email">hola@startup.demo.ec</field>
-        <field name="customer_rank">1</field>
-        <field name="supplier_rank">0</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- Customer: Artesano Calificado (IVA 0% - LORTI Art. 56) -->
-    <record id="demo_customer_artesano" model="res.partner">
-        <field name="name">JOSÉ MANUEL TALLER ARTESANAL</field>
-        <field name="vat">1705678901001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">general</field>
-        <field name="l10n_ec_artesano_calificado" eval="True"/>
-        <field name="street">La Mariscal, Calle Foch</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">0987123456</field>
-        <field name="email">artesano@demo.ec</field>
-        <field name="customer_rank">1</field>
-        <field name="supplier_rank">1</field>
-        <field name="company_type">person</field>
-    </record>
-
-    <!-- ================================================================= -->
-    <!-- SUPPLIERS - Different Types for Retention Testing                 -->
-    <!-- ================================================================= -->
-
-    <!-- Supplier: Persona Natural Profesional (Honorarios 10%) -->
-    <record id="demo_supplier_profesional" model="res.partner">
-        <field name="name">DR. ROBERTO TORRES VILLAVICENCIO</field>
-        <field name="vat">1712345678001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">general</field>
-        <field name="street">Edificio Profesional, Of. 501</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">0999876543</field>
-        <field name="email">dr.torres@demo.ec</field>
-        <field name="customer_rank">0</field>
-        <field name="supplier_rank">1</field>
-        <field name="company_type">person</field>
-    </record>
-
-    <!-- Supplier: Sociedad Comercial (Bienes 1%) -->
-    <record id="demo_supplier_comercial" model="res.partner">
-        <field name="name">IMPORTADORA ANDINA S.A.</field>
-        <field name="vat">1790987654001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">general</field>
-        <field name="street">Zona Industrial, Calle E 4-56</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">022678901</field>
-        <field name="email">compras@importadora.demo.ec</field>
-        <field name="customer_rank">0</field>
-        <field name="supplier_rank">1</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- Supplier: Contribuyente Especial (30%/70% IVA) -->
-    <record id="demo_supplier_especial" model="res.partner">
-        <field name="name">PROVEEDORA ESTATAL S.A.</field>
-        <field name="vat">1760001550001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">special</field>
-        <field name="street">Av. Patria E4-35 y 9 de Octubre</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">022987654</field>
-        <field name="email">proveedora@demo.ec</field>
-        <field name="customer_rank">0</field>
-        <field name="supplier_rank">1</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- Supplier: No tiene RUC (Liquidación de Compra 100%) -->
-    <record id="demo_supplier_informal" model="res.partner">
-        <field name="name">PEDRO JOSÉ CAMPOVERDE</field>
-        <field name="vat">0501987654</field>
+    <!-- Customer: Persona natural con cédula - compra (D-03) -->
+    <record id="demo_customer_cadena_pena" model="res.partner">
+        <field name="name">CADENA PEÑA ADRIAN RAFAEL</field>
+        <field name="vat">1713488185</field>
         <field name="l10n_ec_identifier_type">cedula</field>
         <field name="l10n_ec_taxpayer_type">general</field>
-        <field name="street">Comunidad Zumbahua</field>
-        <field name="city">Pujilí</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">0987111222</field>
-        <field name="customer_rank">0</field>
-        <field name="supplier_rank">1</field>
-        <field name="company_type">person</field>
-    </record>
-
-    <!-- Supplier: Arrendamiento Inmueble (1.75% IR) -->
-    <record id="demo_supplier_arrendador" model="res.partner">
-        <field name="name">INMOBILIARIA COSTA AZUL CIA. LTDA.</field>
-        <field name="vat">0991234567001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">general</field>
-        <field name="street">Malecón 2000, Torre A, Of. 1201</field>
-        <field name="city">Guayaquil</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">042876543</field>
-        <field name="email">arriendos@costaazul.demo.ec</field>
-        <field name="customer_rank">0</field>
-        <field name="supplier_rank">1</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- Supplier: Transporte (1% IR) -->
-    <record id="demo_supplier_transporte" model="res.partner">
-        <field name="name">TRANSPORTES NACIONALES S.A.</field>
-        <field name="vat">1391234567001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">general</field>
-        <field name="street">Terminal Terrestre, Local 45</field>
-        <field name="city">Portoviejo</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">052654321</field>
-        <field name="email">fletes@transporte.demo.ec</field>
-        <field name="customer_rank">0</field>
-        <field name="supplier_rank">1</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- Supplier: Government Contractor (UAF Required) -->
-    <record id="demo_supplier_gobierno" model="res.partner">
-        <field name="name">CONSTRUCTORA DEL ESTADO S.A.</field>
-        <field name="vat">1792999888001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">general</field>
-        <field name="l10n_ec_government_contractor" eval="True"/>
-        <field name="street">Av. Naciones Unidas E2-45</field>
+        <field name="street">Av. República E7-197 y Almagro</field>
         <field name="city">Quito</field>
         <field name="country_id" ref="base.ec"/>
-        <field name="phone">022111222</field>
-        <field name="email">contratos@constructora.demo.ec</field>
-        <field name="customer_rank">0</field>
-        <field name="supplier_rank">1</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- Supplier: Seguros y Reaseguros (322 - 1% IR) -->
-    <record id="demo_supplier_seguros" model="res.partner">
-        <field name="name">SEGUROS EQUINOCCIAL S.A.</field>
-        <field name="vat">1790011461001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">general</field>
-        <field name="street">Av. Los Shyris N35-174</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">023970100</field>
-        <field name="email">polizas@seguros.demo.ec</field>
-        <field name="customer_rank">0</field>
-        <field name="supplier_rank">1</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- Supplier: Banco / Institución Financiera (323 - 2% IR) -->
-    <record id="demo_supplier_banco" model="res.partner">
-        <field name="name">BANCO PICHINCHA C.A.</field>
-        <field name="vat">1790010014001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">special</field>
-        <field name="street">Av. Amazonas N36-152</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">023999999</field>
-        <field name="email">empresas@pichincha.demo.ec</field>
-        <field name="customer_rank">0</field>
-        <field name="supplier_rank">1</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- Supplier: Publicidad y Comunicación (309 - 1% IR) -->
-    <record id="demo_supplier_publicidad" model="res.partner">
-        <field name="name">AGENCIA DE PUBLICIDAD CREATIVA S.A.</field>
-        <field name="vat">1792345678001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">general</field>
-        <field name="street">La Floresta, Calle Lisboa 234</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">022234567</field>
-        <field name="email">contacto@publicidad.demo.ec</field>
-        <field name="customer_rank">0</field>
-        <field name="supplier_rank">1</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- Supplier: Notario (303 - 10% IR - Profesional) -->
-    <record id="demo_supplier_notario" model="res.partner">
-        <field name="name">DR. NOTARIO VIGÉSIMO PRIMERO DEL CANTÓN QUITO</field>
-        <field name="vat">1701234567001</field>
-        <field name="l10n_ec_identifier_type">ruc</field>
-        <field name="l10n_ec_taxpayer_type">general</field>
-        <field name="street">Av. 10 de Agosto N45-67</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">022987654</field>
-        <field name="email">notaria21@demo.ec</field>
-        <field name="customer_rank">0</field>
-        <field name="supplier_rank">1</field>
-        <field name="company_type">person</field>
-    </record>
-
-    <!-- ================================================================= -->
-    <!-- EMPLOYEES - For Payroll Testing                                   -->
-    <!-- ================================================================= -->
-
-    <!-- Employee: Sierra Region (Décimo Cuarto August) -->
-    <record id="demo_employee_sierra" model="res.partner">
-        <field name="name">CARLOS ANDRÉS MORALES SÁNCHEZ</field>
-        <field name="vat">1723456789</field>
-        <field name="l10n_ec_identifier_type">cedula</field>
-        <field name="street">Sector La Carolina</field>
-        <field name="city">Quito</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">0991122334</field>
-        <field name="email">carlos.morales@demo.ec</field>
-        <field name="company_type">person</field>
-        <field name="employee" eval="True"/>
-    </record>
-
-    <!-- Employee: Costa Region (Décimo Cuarto March) -->
-    <record id="demo_employee_costa" model="res.partner">
-        <field name="name">ANA LUCÍA VERA ZAMBRANO</field>
-        <field name="vat">0923456789</field>
-        <field name="l10n_ec_identifier_type">cedula</field>
-        <field name="street">Cdla. Kennedy Norte</field>
-        <field name="city">Guayaquil</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">0985544332</field>
-        <field name="email">ana.vera@demo.ec</field>
-        <field name="company_type">person</field>
-        <field name="employee" eval="True"/>
-    </record>
-
-    <!-- Employee: Galápagos (Insular - Different benefits) -->
-    <record id="demo_employee_galapagos" model="res.partner">
-        <field name="name">DARWIN ANDRÉS CRUZ VALENCIA</field>
-        <field name="vat">2012345678</field>
-        <field name="l10n_ec_identifier_type">cedula</field>
-        <field name="street">Puerto Ayora, Calle Charles Darwin</field>
-        <field name="city">Santa Cruz</field>
-        <field name="country_id" ref="base.ec"/>
-        <field name="phone">0952233445</field>
-        <field name="email">darwin.cruz@demo.ec</field>
-        <field name="company_type">person</field>
-        <field name="employee" eval="True"/>
-    </record>
-
-    <!-- ================================================================= -->
-    <!-- FOREIGN PARTNERS - For ISD Testing                                -->
-    <!-- ================================================================= -->
-
-    <!-- Foreign Supplier: USA -->
-    <record id="demo_supplier_usa" model="res.partner">
-        <field name="name">TECH SUPPLIES INC.</field>
-        <field name="vat">US123456789</field>
-        <field name="l10n_ec_identifier_type">pasaporte</field>
-        <field name="street">1234 Innovation Drive</field>
-        <field name="city">San Francisco</field>
-        <field name="country_id" ref="base.us"/>
-        <field name="phone">+1 415 555 1234</field>
-        <field name="email">sales@techsupplies.demo.com</field>
-        <field name="customer_rank">0</field>
-        <field name="supplier_rank">1</field>
-        <field name="company_type">company</field>
-    </record>
-
-    <!-- Foreign Customer: Colombia -->
-    <record id="demo_customer_colombia" model="res.partner">
-        <field name="name">DISTRIBUCIONES BOGOTÁ LTDA.</field>
-        <field name="vat">900123456</field>
-        <field name="l10n_ec_identifier_type">pasaporte</field>
-        <field name="street">Cra 7 No 45-23</field>
-        <field name="city">Bogotá</field>
-        <field name="country_id" ref="base.co"/>
-        <field name="phone">+57 1 2345678</field>
-        <field name="email">compras@bogota.demo.co</field>
         <field name="customer_rank">1</field>
         <field name="supplier_rank">0</field>
-        <field name="company_type">company</field>
+        <field name="company_type">person</field>
+    </record>
+
+    <!-- ================================================================= -->
+    <!-- SUPPLIERS - Real identities only (D-04)                            -->
+    <!-- ================================================================= -->
+
+    <!-- Supplier: Persona natural con RUC activo - vende (D-03) -->
+    <record id="demo_supplier_cadena_pena" model="res.partner">
+        <field name="name">CADENA PEÑA ADRIAN RAFAEL</field>
+        <field name="vat">1713488185001</field>
+        <field name="l10n_ec_identifier_type">ruc</field>
+        <field name="l10n_ec_taxpayer_type">general</field>
+        <field name="street">Av. República E7-197 y Almagro</field>
+        <field name="city">Quito</field>
+        <field name="country_id" ref="base.ec"/>
+        <field name="customer_rank">0</field>
+        <field name="supplier_rank">1</field>
+        <field name="company_type">person</field>
     </record>
 </odoo>

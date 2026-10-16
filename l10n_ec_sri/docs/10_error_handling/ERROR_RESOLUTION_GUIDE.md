@@ -163,7 +163,7 @@ def check_sri_errors(self):
 ### 6.1 Log Format
 ```
 [2026-01-22 10:30:45] [ERROR] [SRI] Invoice INV/2026/0001
-  Access Key: 2201202601179123456700120010010000000011234567811
+  Access Key: 2201202601179312521200120010010000000011234567811
   Error Code: 45
   Message: ERROR EN ESTRUCTURA XML
   Details: Element 'fechaEmision' invalid format

@@ -31,53 +31,12 @@
         </function>
 
         <!-- ================================================================
-             ECUADORIAN CUSTOMERS (Valid RUC format)
+             ECUADORIAN CUSTOMERS (CHG-2026-006: sólo identidades
+             reales/aprobadas — D-04. Partners de demo falsos eliminados;
+             el resto vive en l10n_ec_base/demo/l10n_ec_demo_partners.xml)
              ================================================================ -->
 
-        <!-- Proveedor - Sociedad -->
-        <record id="partner_importadora_xyz" model="res.partner">
-            <field name="name">IMPORTADORA XYZ CIA. LTDA.</field>
-            <field name="vat">1792345678001</field>
-            <field name="company_type">company</field>
-            <field name="street">Av. Amazonas N35-123</field>
-            <field name="city">Quito</field>
-            <field name="country_id" ref="base.ec"/>
-            <field name="phone">+593 2 345 6789</field>
-            <field name="email">ventas@importadoraxyz.ec</field>
-            <field name="supplier_rank">1</field>
-            <field name="lang">es_EC</field>
-            <field name="tz">America/Guayaquil</field>
-        </record>
-
-        <!-- Cliente - Contribuyente Especial -->
-        <record id="partner_consorcio_andino" model="res.partner">
-            <field name="name">CONSORCIO ANDINO S.A.</field>
-            <field name="vat">0991234567001</field>
-            <field name="company_type">company</field>
-            <field name="street">Av. 9 de Octubre 1234</field>
-            <field name="city">Guayaquil</field>
-            <field name="country_id" ref="base.ec"/>
-            <field name="phone">+593 4 234 5678</field>
-            <field name="email">compras@consorcioandino.com.ec</field>
-            <field name="customer_rank">1</field>
-            <field name="lang">es_EC</field>
-        </record>
-
-        <!-- Cliente - RIMPE Emprendedor -->
-        <record id="partner_maria_garcia" model="res.partner">
-            <field name="name">María Fernanda García Pérez</field>
-            <field name="vat">1712345678001</field>
-            <field name="company_type">person</field>
-            <field name="street">Calle Primera N1-234</field>
-            <field name="city">Quito</field>
-            <field name="country_id" ref="base.ec"/>
-            <field name="phone">+593 9 8765 4321</field>
-            <field name="email">maria.garcia@gmail.com</field>
-            <field name="customer_rank">1</field>
-            <field name="lang">es_EC</field>
-        </record>
-
-        <!-- Consumidor Final -->
+        <!-- Consumidor Final (constante legal SRI) -->
         <record id="partner_consumidor_final" model="res.partner">
             <field name="name">CONSUMIDOR FINAL</field>
             <field name="vat">9999999999999</field>
@@ -86,34 +45,6 @@
             <field name="city">Ecuador</field>
             <field name="country_id" ref="base.ec"/>
             <field name="customer_rank">1</field>
-            <field name="lang">es_EC</field>
-        </record>
-
-        <!-- Cliente Persona Natural -->
-        <record id="partner_carlos_morales" model="res.partner">
-            <field name="name">Carlos Andrés Morales López</field>
-            <field name="vat">0912345678</field>
-            <field name="company_type">person</field>
-            <field name="street">Urdesa Central, Mz. 5 Villa 12</field>
-            <field name="city">Guayaquil</field>
-            <field name="country_id" ref="base.ec"/>
-            <field name="phone">+593 9 8123 4567</field>
-            <field name="email">carlos.morales@hotmail.com</field>
-            <field name="customer_rank">1</field>
-            <field name="lang">es_EC</field>
-        </record>
-
-        <!-- Proveedor Tecnología -->
-        <record id="partner_tech_solutions" model="res.partner">
-            <field name="name">TECH SOLUTIONS ECUADOR S.A.</field>
-            <field name="vat">1793456789001</field>
-            <field name="company_type">company</field>
-            <field name="street">Av. 12 de Octubre N25-789</field>
-            <field name="city">Quito</field>
-            <field name="country_id" ref="base.ec"/>
-            <field name="phone">+593 2 456 7890</field>
-            <field name="email">info@techsolutions.ec</field>
-            <field name="supplier_rank">1</field>
             <field name="lang">es_EC</field>
         </record>
 

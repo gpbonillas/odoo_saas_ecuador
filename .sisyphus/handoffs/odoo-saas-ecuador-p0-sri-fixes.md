@@ -80,8 +80,8 @@ templates. Report table + REMAINING BLOCKERS at the end.
   `test_sri_tax_codes.py` (mapping incl. 15->"4", 5->"5", 0->"0",
   no-objeto->"6", exento->"7", ICE, fallbacks, aggregates, tax_map),
   `test_liquidacion_compra.py` (detection, bill doc type 03/01, LC/factura/NC
-  XML structure). Valid partner vats for l10n_ec_base's quirky validator:
-  cedula "1312345679", natural RUC "1312345679001", company RUC "1792146755001".
+  XML structure). Valid partner vats (sólo IDs aprobados D-04, CHG-2026-006):
+  cedula "1713488185", natural RUC "1713488185001", company RUC "1793125212001".
 
 ## Verification evidence (all run this session)
 - `python3 -m py_compile` on every touched/new .py: OK.
@@ -108,8 +108,8 @@ templates. Report table + REMAINING BLOCKERS at the end.
 3. l10n_ec_edi + l10n_ec_sri both define account.move.action_send_sri;
    l10n_ec_sri (loaded later, no super()) shadows l10n_ec_edi's version.
    Both paths now work (render_xml delegates), but consolidation needed.
-4. Existing shared tests use invalid vats ("1712345678001",
-   "1792146739001") that fail l10n_ec_base's _check_l10n_ec_vat —
+4. Existing shared tests used invalid vats (RUCs falsos, purgados en
+   CHG-2026-006) that fail l10n_ec_base's _check_l10n_ec_vat —
    pre-existing, l10n_ec_base/agent C scope.
 5. Certificate content bytes/b64 question: l10n_ec_certificate.action_validate
    b64decodes content but sri_signer.sign_xml only b64decodes str (Binary

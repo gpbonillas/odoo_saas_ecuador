@@ -119,7 +119,7 @@ AI: Buscando cliente LA FAVORITA SAS... ✓
     Buscando producto arroz... ✓ (Arroz Diana 50kg, código: ARROZ-001)
 
     Creando factura:
-    • Cliente: LA FAVORITA SAS (RUC: 1791234567001)
+    • Cliente: LA FAVORITA SAS (RUC: 1793125212001)
     • Línea: Arroz Diana 50kg x 100 @ $45.00 = $4,500.00
     • Subtotal: $4,500.00
     • IVA 15%: $675.00
@@ -135,7 +135,7 @@ AI: Confirmando factura FAC-001-001-000000234...
     Enviando al SRI...
 
     ✅ AUTORIZADO
-    Número de autorización: 2201202601179123456700120010010000002341234567811
+    Número de autorización: 2201202601179312521200120010010000002341234567811
 
     ¿Envío el RIDE por WhatsApp a LA FAVORITA SAS?
 

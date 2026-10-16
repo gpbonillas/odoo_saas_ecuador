@@ -55,7 +55,7 @@ PLAN_BANKS = (
 def _header():
     return BatchHeader(
         company_name="ACME COMERCIAL ECUADOR CIA. LTDA.",
-        company_vat="1790017001001",
+        company_vat="1793125212001",
         payment_date=date(2026, 10, 15),
         batch_reference="NOMINA OCTUBRE",
     )
@@ -64,8 +64,8 @@ def _header():
 def _lines():
     return [
         # 'BBBB-CUENTA' so the IB/CENPE interbank layout is also satisfied
-        PaymentLine("Juan Perez", "1712345678", "0019-1234567890", 450.50, "ahorro"),
-        PaymentLine("Maria Lopez", "0987654321", "0019-2200123456", 1000.00, "corriente",
+        PaymentLine("Juan Perez", "1713488185", "0019-1234567890", 450.50, "ahorro"),
+        PaymentLine("Maria Lopez", "1713488185001", "0019-0123456789", 1000.00, "corriente",
                     reference="REC-002"),
     ]
 
@@ -100,7 +100,7 @@ class TestEveryLayout(unittest.TestCase):
                 "%s: expected header + %d details + footer" % (code, len(lines)),
             )
             # Header carries RUC + payment date (compact or dd/mm/yyyy)
-            self.assertIn("1790017001001", records[0], code)
+            self.assertIn("1793125212001", records[0], code)
             self.assertTrue(
                 "20261015" in records[0] or "15/10/2026" in records[0],
                 "%s: header missing payment date: %s" % (code, records[0]),
@@ -133,19 +133,19 @@ class TestEveryLayout(unittest.TestCase):
 
 class TestValidation(unittest.TestCase):
     """Audit item 1b: missing data must ABORT with a clear error,
-    never emit placeholder accounts like '0000000000'."""
+    never emit placeholder accounts like '0'*10 (todo ceros)."""
 
     def test_no_placeholder_account_in_any_layout(self):
-        bad = [PaymentLine("Sin Cuenta", "1712345678", "", 50.0)]
+        bad = [PaymentLine("Sin Cuenta", "1713488185", "", 50.0)]
         for code in available_bank_codes():
             gen = get_generator(code)
             with self.assertRaises(BankFileError, msg=code):
                 content = gen.generate(_header(), bad)
-                self.assertNotIn("0000000000", content, code)
+                self.assertNotIn("0" * 10, content, code)
 
     def test_empty_account_error_message_lists_beneficiary(self):
         gen = get_generator("pichincha")
-        bad = [PaymentLine("Pedro Sin Cuenta", "1712345678", "", 50.0)]
+        bad = [PaymentLine("Pedro Sin Cuenta", "1713488185", "", 50.0)]
         with self.assertRaises(BankFileError) as ctx:
             gen.generate(_header(), bad)
         self.assertIn("Pedro Sin Cuenta", str(ctx.exception))
@@ -153,13 +153,13 @@ class TestValidation(unittest.TestCase):
 
     def test_zero_amount_rejected(self):
         gen = get_generator("pichincha")
-        bad = [PaymentLine("Juan", "1712345678", "1234567890", 0.0)]
+        bad = [PaymentLine("Juan", "1713488185", "1234567890", 0.0)]
         with self.assertRaises(BankFileError):
             gen.generate(_header(), bad)
 
     def test_short_account_rejected(self):
         gen = get_generator("generic")
-        bad = [PaymentLine("Juan", "1712345678", "123", 10.0)]
+        bad = [PaymentLine("Juan", "1713488185", "123", 10.0)]
         with self.assertRaises(BankFileError):
             gen.generate(_header(), bad)
 
@@ -182,7 +182,7 @@ class TestValidation(unittest.TestCase):
 
     def test_duplicate_lines_flagged(self):
         gen = get_generator("pichincha")
-        line = PaymentLine("Juan", "1712345678", "1234567890", 25.0)
+        line = PaymentLine("Juan", "1713488185", "1234567890", 25.0)
         with self.assertRaises(BankFileError) as ctx:
             gen.generate(_header(), [line, line])
         self.assertIn("duplicada", str(ctx.exception))
@@ -222,7 +222,7 @@ class TestInterbank(unittest.TestCase):
 
     def test_missing_bank_code_rejected(self):
         gen = get_generator("ib")
-        bad = [PaymentLine("Juan", "1712345678", "1234567890", 10.0)]
+        bad = [PaymentLine("Juan", "1713488185", "1234567890", 10.0)]
         with self.assertRaises(BankFileError) as ctx:
             gen.generate(_header(), bad)
         self.assertIn("CODIGO_BANCO", str(ctx.exception))
@@ -234,7 +234,7 @@ class TestInterbank(unittest.TestCase):
 
     def test_valid_ib_file(self):
         gen = get_generator("ib")
-        lines = [PaymentLine("Juan", "1712345678", "0019-1234567890", 10.0)]
+        lines = [PaymentLine("Juan", "1713488185", "0019-1234567890", 10.0)]
         content = gen.generate(_header(), lines)
         detail = content.split(gen.newline)[1]
         self.assertTrue(detail.startswith("IB0019"), detail)

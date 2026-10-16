@@ -107,7 +107,7 @@ Usuario: "Sí"
 AI Agent:
   1. action_post() → genera clave de acceso
   2. Firma XAdES → envía a SRI
-  3. "✅ AUTORIZADO. Número: 2201202601..."
+  3. "✅ AUTORIZADO. Número: 22012026011793125212001..."
   4. "¿Envío RIDE por WhatsApp al cliente?"
 ```
 

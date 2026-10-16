@@ -652,8 +652,8 @@ erDiagram
         <tipoEmision>1</tipoEmision>
         <razonSocial>EMPRESA EJEMPLO S.A.</razonSocial>
         <nombreComercial>EMPRESA EJEMPLO</nombreComercial>
-        <ruc>1792123456001</ruc>
-        <claveAcceso>2201202601179212345600110010010000000011234567819</claveAcceso>
+        <ruc>1793125212001</ruc>
+        <claveAcceso>2201202601179312521200110010010000000011234567819</claveAcceso>
         <codDoc>01</codDoc>
         <estab>001</estab>
         <ptoEmi>001</ptoEmi>
@@ -666,7 +666,7 @@ erDiagram
         <obligadoContabilidad>SI</obligadoContabilidad>
         <tipoIdentificacionComprador>04</tipoIdentificacionComprador>
         <razonSocialComprador>CLIENTE EJEMPLO</razonSocialComprador>
-        <identificacionComprador>1791234567001</identificacionComprador>
+        <identificacionComprador>1793125212001</identificacionComprador>
         <totalSinImpuestos>100.00</totalSinImpuestos>
         <totalDescuento>0.00</totalDescuento>
         <totalConImpuestos>

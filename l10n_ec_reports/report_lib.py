@@ -171,7 +171,7 @@ def split_document_number(number):
 #   'doc_name': 'Factura',
 #   'move_type': 'out_invoice',       # out_invoice/out_refund/in_invoice/in_refund
 #   'tp_id': '04',                    # SRI counterparty identifier type
-#   'identificacion': '1791234567001',
+#   'identificacion': '1793125212001',
 #   'razon_social': 'Cliente S.A.',
 #   'clave_acceso': '49 digits....',  # SRI access key (nullable)
 #   'estab': '001', 'pto': '001', 'secuencial': '000000123',

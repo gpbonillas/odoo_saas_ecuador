@@ -145,8 +145,8 @@ def validate_5_day_rule(invoice_date, retention_date):
     <ambiente>2</ambiente>
     <tipoEmision>1</tipoEmision>
     <razonSocial>EMPRESA DEMO S.A.</razonSocial>
-    <ruc>1791234567001</ruc>
-    <claveAcceso>2201202607179123456700120010010000000011234567811</claveAcceso>
+    <ruc>1793125212001</ruc>
+    <claveAcceso>2201202607179312521200120010010000000011234567811</claveAcceso>
     <codDoc>07</codDoc>
     <estab>001</estab>
     <ptoEmi>001</ptoEmi>
@@ -158,7 +158,7 @@ def validate_5_day_rule(invoice_date, retention_date):
     <obligadoContabilidad>SI</obligadoContabilidad>
     <tipoIdentificacionSujetoRetenido>04</tipoIdentificacionSujetoRetenido>
     <razonSocialSujetoRetenido>PROVEEDOR ABC CIA. LTDA.</razonSocialSujetoRetenido>
-    <identificacionSujetoRetenido>0991234567001</identificacionSujetoRetenido>
+    <identificacionSujetoRetenido>1793125212001</identificacionSujetoRetenido>
     <periodoFiscal>01/2026</periodoFiscal>
   </infoCompRetencion>
   <impuestos>

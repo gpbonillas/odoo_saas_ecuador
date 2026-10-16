@@ -23,7 +23,7 @@ def get_partner(partner_id: str) -> PartnerResource:
     return {
         "id": partner_id,
         "name": "Company Name",
-        "vat": "1792451752001",
+        "vat": "1793125212001",
         "id_type": "ruc",  # ruc, cedula, pasaporte
         "address": {...},
         "is_withholding_agent": True,

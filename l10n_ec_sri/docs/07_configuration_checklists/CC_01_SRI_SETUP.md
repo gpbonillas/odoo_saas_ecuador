@@ -150,8 +150,8 @@
 ### 6.2 Tax Authority Partners
 | # | Partner | VAT | Purpose |
 |:--|:--------|:----|:--------|
-| 6.2.1 | SRI | 1760013210001 | Tax filings |
-| 6.2.2 | IESS | 1760002050001 | Social security |
+| 6.2.1 | SRI | 1793125212001 | Tax filings |
+| 6.2.2 | IESS | 1793125212001 | Social security |
 
 ---
 

@@ -25,15 +25,15 @@
 |:----------|:--------------|
 | **Priority** | P1 - Critical |
 | **Precondition** | User has partner creation rights |
-| **Test Data** | RUC: 1791234567001 |
+| **Test Data** | RUC: 1793125212001 |
 | **Steps** | 1. Go to Contacts → Create |
 | | 2. Enter name: "Test Company" |
 | | 3. Select ID Type: RUC |
-| | 4. Enter RUC: 1791234567001 |
+| | 4. Enter RUC: 1793125212001 |
 | | 5. Save |
 | **Expected Result** | Partner created successfully |
 | **Acceptance Criteria** | - No validation error |
-| | - `partner.vat = '1791234567001'` |
+| | - `partner.vat = '1793125212001'` |
 | | - `partner.l10n_ec_vat_validation` is empty |
 
 ### TC-PV-002: Invalid RUC Rejection
@@ -41,7 +41,7 @@
 |:----------|:--------------|
 | **Priority** | P1 - Critical |
 | **Precondition** | User has partner creation rights |
-| **Test Data** | RUC: 1791234567000 (invalid check digit) |
+| **Test Data** | RUC: 1234567890123 (invalid check digit) |
 | **Steps** | 1. Create partner with invalid RUC |
 | | 2. Attempt to save |
 | **Expected Result** | Validation error displayed |
@@ -52,13 +52,13 @@
 | Attribute | Specification |
 |:----------|:--------------|
 | **Priority** | P1 - Critical |
-| **Test Data** | Cédula: 1712345678 |
+| **Test Data** | Cédula: 1713488185 |
 | **Steps** | 1. Create partner with ID Type: DNI |
-| | 2. Enter Cédula: 1712345678 |
+| | 2. Enter Cédula: 1713488185 |
 | | 3. Save |
 | **Expected Result** | Partner created |
 | **Acceptance Criteria** | - `len(partner.vat) == 10` |
-| | - `stdnum.ec.ci.is_valid('1712345678')` |
+| | - `stdnum.ec.ci.is_valid('1713488185')` |
 
 ### TC-PV-004: Invalid Cédula Length
 | Attribute | Specification |
@@ -86,7 +86,7 @@
 | **Priority** | P1 - Critical |
 | **Precondition** | - Customer with valid RUC exists |
 | | - Product with 15% IVA tax exists |
-| **Test Data** | - Customer: Test Corp (RUC: 0991234567001) |
+| **Test Data** | - Customer: Test Corp (RUC: 1793125212001) |
 | | - Product: Widget, $100, Qty: 10 |
 | **Steps** | 1. Create Customer Invoice |
 | | 2. Select customer |

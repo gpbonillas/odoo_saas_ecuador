@@ -142,7 +142,7 @@ class TestSRIService(unittest.TestCase):
             )
 
             # Use a fake but valid-format access key
-            fake_access_key = "2101202501179000000000110010010000000011234567813"
+            fake_access_key = "2101202501179312521200110010010000000011234567813"
 
             response = client.service.autorizacionComprobante(
                 claveAccesoComprobante=fake_access_key

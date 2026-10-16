@@ -549,37 +549,16 @@ class L10nEcCompanySetupWizard(models.TransientModel):
             return 0
 
         # Define which xml_ids belong to each category
+        # CHG-2026-006: sólo identidades reales/aprobadas (D-04).
+        # Empleados y extranjeros: sin datos aprobados -> lista vacía.
         customer_ids = [
-            # Personas Naturales
-            'demo_customer_natural', 'demo_customer_tercera_edad',
-            'demo_customer_discapacidad', 'demo_customer_natural_obligado',
-            'demo_customer_artesano',
-            # Personas Jurídicas
-            'demo_customer_sociedad', 'demo_customer_especial',
-            'demo_customer_rimpe_e', 'demo_customer_rimpe_p',
-            'demo_customer_final', 'demo_customer_exporter',
-            # Sector Público
-            'demo_customer_gobierno', 'demo_customer_empresa_publica',
-            # Entidades Especiales
-            'demo_customer_fundacion', 'demo_customer_ong',
-            'demo_customer_cooperativa', 'demo_customer_zede',
-            'demo_customer_nueva_empresa',
+            'demo_customer_final', 'demo_customer_cadena_pena',
         ]
         supplier_ids = [
-            'demo_supplier_profesional', 'demo_supplier_comercial',
-            'demo_supplier_especial', 'demo_supplier_informal',
-            'demo_supplier_arrendador', 'demo_supplier_transporte',
-            'demo_supplier_gobierno', 'demo_supplier_seguros',
-            'demo_supplier_banco', 'demo_supplier_publicidad',
-            'demo_supplier_notario',
+            'demo_supplier_cadena_pena',
         ]
-        employee_ids = [
-            'demo_employee_sierra', 'demo_employee_costa',
-            'demo_employee_galapagos',
-        ]
-        foreign_ids = [
-            'demo_supplier_usa', 'demo_customer_colombia',
-        ]
+        employee_ids = []
+        foreign_ids = []
 
         # Build list of allowed xml_ids based on user selection
         allowed_ids = []

@@ -25,15 +25,20 @@ class TestTaxCalendar(TransactionCase):
 
     def test_extract_9th_digit_ruc(self):
         """[CAL-01] Extract 9th digit from RUC."""
-        digit = self.Calendar.get_9th_digit("1792001234001")
-        self.assertEqual(digit, "1", "9th digit of 1792001234001 should be 1")
+        digit = self.Calendar.get_9th_digit("1793125212001")
+        self.assertEqual(digit, "1", "9th digit of 1793125212001 should be 1")
 
     def test_extract_9th_digit_various(self):
         """[CAL-02] Various 9th digit extractions."""
+        # D-04: sólo IDs aprobados como literales; los demás dígitos de
+        # plazo se cubren con entradas sintéticas GENERADAS (no son
+        # identidades): get_9th_digit sólo depende del carácter pos. 9.
         test_cases = [
-            ("0992345678001", "6"),  # 9th position = 6
-            ("1791234567001", "5"),  # 9th position = 5
-            ("0190123456001", "3"),  # 9th position = 3
+            ("1713488185001", "8"),  # RUC natural aprobado (pos. 9 = 8)
+            ("9999999999999", "9"),  # CONSUMIDOR FINAL (pos. 9 = 9)
+        ]
+        test_cases += [
+            ("0" * 8 + digit + "0" * 4, digit) for digit in "0234567"
         ]
         for ruc, expected in test_cases:
             result = self.Calendar.get_9th_digit(ruc)

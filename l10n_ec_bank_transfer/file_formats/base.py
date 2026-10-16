@@ -19,9 +19,9 @@ before real upload.
 Usage:
     from file_formats import BatchHeader, PaymentLine, get_generator
 
-    header = BatchHeader(company_name="ACME", company_vat="1790000001001",
+    header = BatchHeader(company_name="CANNACHAIN", company_vat="1793125212001",
                          payment_date=date(2026, 10, 15), batch_reference="NOMINA OCT")
-    lines = [PaymentLine("Juan Perez", "1712345678", "1234567890", 450.50)]
+    lines = [PaymentLine("CADENA PEÑA ADRIAN RAFAEL", "1713488185", "1234567890", 450.50)]
     txt = get_generator("pichincha").generate(header, lines)
 """
 from datetime import date as _date

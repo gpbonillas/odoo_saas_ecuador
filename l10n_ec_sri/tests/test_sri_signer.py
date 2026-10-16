@@ -105,8 +105,8 @@ class TestXAdESSigner(unittest.TestCase):
                 <ambiente>1</ambiente>
                 <tipoEmision>1</tipoEmision>
                 <razonSocial>EMPRESA DE PRUEBA</razonSocial>
-                <ruc>1790000000001</ruc>
-                <claveAcceso>2101202501179000000000110010010000000011234567813</claveAcceso>
+                <ruc>1793125212001</ruc>
+                <claveAcceso>2101202501179312521200110010010000000011234567813</claveAcceso>
                 <codDoc>01</codDoc>
                 <estab>001</estab>
                 <ptoEmi>001</ptoEmi>
@@ -117,7 +117,7 @@ class TestXAdESSigner(unittest.TestCase):
                 <fechaEmision>21/01/2025</fechaEmision>
                 <tipoIdentificacionComprador>04</tipoIdentificacionComprador>
                 <razonSocialComprador>CLIENTE PRUEBA</razonSocialComprador>
-                <identificacionComprador>1790000000002</identificacionComprador>
+                <identificacionComprador>1713488185001</identificacionComprador>
                 <totalSinImpuestos>100.00</totalSinImpuestos>
                 <totalDescuento>0.00</totalDescuento>
                 <importeTotal>115.00</importeTotal>

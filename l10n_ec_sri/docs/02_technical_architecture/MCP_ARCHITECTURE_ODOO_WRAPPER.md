@@ -363,7 +363,7 @@ Agent uses:
 2. For each: SendToSRITool.execute({"invoice_id": id})
 
 Agent Response: "I've sent 5 invoices to SRI:
-- INV/2026/0015: ✓ AUTHORIZED (Access Key: 2201202601...)
+- INV/2026/0015: ✓ AUTHORIZED (Access Key: 22012026011793125212001...)
 - INV/2026/0016: ✓ AUTHORIZED
 - INV/2026/0017: ✗ REJECTED (Error: Invalid RUC)
 - INV/2026/0018: ✓ AUTHORIZED

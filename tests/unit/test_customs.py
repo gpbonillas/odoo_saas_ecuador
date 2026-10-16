@@ -112,7 +112,7 @@ class TestCustomsRegression(TransactionCase):
         cls.DAU = cls.env.get("l10n_ec.import.dau")
         cls.Tariff = cls.env.get("l10n_ec.tariff.heading")
         cls.partner = cls.env["res.partner"].create(
-            {"name": "AGENTE ADUANERO TEST", "vat": "0992127700101"}
+            {"name": "AGENTE ADUANERO TEST", "vat": "1793125212001"}
         )
         cls.journal = cls.env["account.journal"].search(
             [("type", "=", "purchase")], limit=1

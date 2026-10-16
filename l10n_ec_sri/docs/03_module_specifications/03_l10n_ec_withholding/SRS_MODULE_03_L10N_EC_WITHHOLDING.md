@@ -156,7 +156,7 @@ def _compute_total(self):
         <obligadoContabilidad>SI</obligadoContabilidad>
         <tipoIdentificacionSujetoRetenido>04</tipoIdentificacionSujetoRetenido>
         <razonSocialSujetoRetenido>Proveedor XYZ</razonSocialSujetoRetenido>
-        <identificacionSujetoRetenido>1791234567001</identificacionSujetoRetenido>
+        <identificacionSujetoRetenido>1793125212001</identificacionSujetoRetenido>
         <periodoFiscal>01/2026</periodoFiscal>
     </infoCompRetencion>
     <docsSustento>
@@ -166,7 +166,7 @@ def _compute_total(self):
             <numDocSustento>001-001-000000123</numDocSustento>
             <fechaEmisionDocSustento>20/01/2026</fechaEmisionDocSustento>
             <fechaRegistroContable>22/01/2026</fechaRegistroContable>
-            <numAutDocSustento>2201202601...</numAutDocSustento>
+            <numAutDocSustento>22012026011793125212001...</numAutDocSustento>
             <pagoLocExt>01</pagoLocExt>
             <totalSinImpuestos>1000.00</totalSinImpuestos>
             <importeTotal>1150.00</importeTotal>

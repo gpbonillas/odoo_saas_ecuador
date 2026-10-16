@@ -43,9 +43,9 @@ Implement the `l10n_ec_base` module for Odoo 18.0 to serve as the foundation for
 ### Automated Tests (PyTest)
 I will create a standard Odoo test suite in `tests/test_l10n_ec_base.py`.
 - **RUC Validation Test**:
-    - Create partner with valid RUC (1791251237001) -> Assert Success.
+    - Create partner with valid RUC (1793125212001) -> Assert Success.
     - Create partner with invalid RUC -> Assert `ValidationError`.
-    - Create partner with valid Cedula (1710034065) -> Assert Success.
+    - Create partner with valid Cedula (1713488185) -> Assert Success.
 - **Tax Creation Test**:
     - Install module -> Check `account.tax` for "IVA 15%".
 - **CoA Installation Test**:

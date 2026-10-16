@@ -137,8 +137,8 @@ This module extends the Odoo Inventory module. When goods leave a warehouse, a l
         <ambiente>2</ambiente>
         <tipoEmision>1</tipoEmision>
         <razonSocial>Mi Empresa S.A.</razonSocial>
-        <ruc>1791234567001</ruc>
-        <claveAcceso>2201202606179123456700110010010000000011234567811</claveAcceso>
+        <ruc>1793125212001</ruc>
+        <claveAcceso>2201202606179312521200110010010000000011234567811</claveAcceso>
         <codDoc>06</codDoc>
         <estab>001</estab>
         <ptoEmi>001</ptoEmi>
@@ -150,7 +150,7 @@ This module extends the Odoo Inventory module. When goods leave a warehouse, a l
         <dirPartida>Bodega Central, Quito</dirPartida>
         <razonSocialTransportista>Transportes ABC S.A.</razonSocialTransportista>
         <tipoIdentificacionTransportista>04</tipoIdentificacionTransportista>
-        <rucTransportista>1792345678001</rucTransportista>
+        <rucTransportista>1793125212001</rucTransportista>
         <rise>NO</rise>
         <obligadoContabilidad>SI</obligadoContabilidad>
         <contribuyenteEspecial>No</contribuyenteEspecial>
@@ -160,7 +160,7 @@ This module extends the Odoo Inventory module. When goods leave a warehouse, a l
     </infoGuiaRemision>
     <destinatarios>
         <destinatario>
-            <identificacionDestinatario>1798765432001</identificacionDestinatario>
+            <identificacionDestinatario>1793125212001</identificacionDestinatario>
             <razonSocialDestinatario>Cliente XYZ S.A.</razonSocialDestinatario>
             <dirDestinatario>Calle Secundaria 456, Guayaquil</dirDestinatario>
             <motivoTraslado>Venta</motivoTraslado>
@@ -169,7 +169,7 @@ This module extends the Odoo Inventory module. When goods leave a warehouse, a l
             <ruta>Quito - Guayaquil</ruta>
             <codDocSustento>01</codDocSustento>
             <numDocSustento>001-001-000000123</numDocSustento>
-            <numAutDocSustento>2201202601...</numAutDocSustento>
+            <numAutDocSustento>22012026011793125212001...</numAutDocSustento>
             <fechaEmisionDocSustento>22/01/2026</fechaEmisionDocSustento>
             <detalles>
                 <detalle>
@@ -183,7 +183,7 @@ This module extends the Odoo Inventory module. When goods leave a warehouse, a l
     </destinatarios>
     <infoAdicional>
         <campoAdicional nombre="Conductor">Juan Pérez</campoAdicional>
-        <campoAdicional nombre="CedulaConductor">1712345678</campoAdicional>
+        <campoAdicional nombre="CedulaConductor">1713488185</campoAdicional>
     </infoAdicional>
 </guiaRemision>
 ```

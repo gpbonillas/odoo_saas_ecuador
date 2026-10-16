@@ -18,7 +18,7 @@ class L10nEcSriXml(models.AbstractModel):
         Format:
         [0:8]   Date (DDMMYYYY)
         [8:10]  Doc Type (01)
-        [10:23] RUC (1234567890001)
+        [10:23] RUC (1793125212001)
         [23:24] Environment (1 or 2)
         [24:27] Establishment (001)
         [27:30] Emission Point (001)

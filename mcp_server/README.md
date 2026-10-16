@@ -95,7 +95,7 @@ docker compose run --rm mcp
 
 ## Ejemplos de prompts (en español, para el agente)
 
-- *«Detecta el contribuyente del RUC 1792368647001 y dime si es agente de
+- *«Detecta el contribuyente del RUC 1793125212001 y dime si es agente de
   retención.»* → `detect_taxpayer`
 - *«Hazme una factura para este cliente»* → el agente debe primero
   `get_client_data` (o `detect_taxpayer` con el RUC que le dio el usuario) y

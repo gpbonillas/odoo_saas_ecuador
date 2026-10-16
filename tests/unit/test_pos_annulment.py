@@ -68,7 +68,7 @@ class TestPosAnnulment(TransactionCase):
         if not self.PO:
             self.skipTest("l10n_ec_pos not installed")
         partner = self.env["res.partner"].create(
-            {"name": "CLIENTE POS", "vat": "0992127700101"}
+            {"name": "CLIENTE POS", "vat": "1793125212001"}
         )
         order = self._order("authorized", self.now - timedelta(days=2), partner)
         annulable, reason = order._l10n_ec_is_annulable()
@@ -79,7 +79,7 @@ class TestPosAnnulment(TransactionCase):
         if not self.PO:
             self.skipTest("l10n_ec_pos not installed")
         partner = self.env["res.partner"].create(
-            {"name": "CLIENTE POS VIEJO", "vat": "0987654321001"}
+            {"name": "CLIENTE POS VIEJO", "vat": "1713488185001"}
         )
         old = self.now - timedelta(days=90)
         order = self._order("authorized", old, partner)

@@ -56,6 +56,12 @@ requieren ORM). La trazabilidad a requisitos está en ISO-EC-10 §5.
 
 ### 3.2 Módulos Odoo (tests/unit + l10n_ec*/tests)
 
+> **Nota CHG-2026-006:** los tests de `l10n_ec_sri/tests/*` heredan `unittest.TestCase`
+> (no los recoge el cargador de Odoo — se ejecutan directos, §6 e):
+> `test_xml_generator` 4 OK · `test_sri_service` OK (transporte mockeado) ·
+> `test_sri_signer` requiere fixture ausente (§5). `l10n_ec_reports/tests/__init__.py`
+> no importa nada a propósito: su suite es la standalone `tests/unit/test_reports_ats.py`.
+
 | Archivo | Tests | Tema |
 |---|---|---|
 | `tests/unit/test_reports_ats.py` | 71 | Libros, formularios, ATS |
@@ -85,10 +91,22 @@ requieren ORM). La trazabilidad a requisitos está en ISO-EC-10 §5.
 * **A1b — Módulos Odoo:** `l10n_ec_base` verde en BD `odooec`
   (evidencia 2026-10-16: `odoo.tests.stats: l10n_ec_base: 30 tests` ×2 corridas, **0 FAIL**;
   22 tests post-install: identity 9 + parser SRI 7 + chart 6).
+* **A1c — Pureza de datos (CHG-2026-006):** scan repo-wide de IDs fiscales = **0 falsos**
+  (sólo IDs aprobados D-04 + literales justificados no-identidad: sentinela de
+  autorización `9999999999`, placeholders de cuenta `0000000000`, bytes de memoria,
+  EAN-13, teléfonos); comando en §6 (c).
+* **A1d — Regresión de unidades (`tests/unit` vs baseline congelado):** tras la purge
+  (2026-10-16) → `run=275 fail=6 err=22 skip=15` (baseline 8/24) — **0 fallos nuevos,
+  4 preexistentes corregidos** (`test_sri_validation.test_01/test_04`,
+  `test_tax_calendar.test_extract_9th_digit_*`).
+* **A1e — Barrido completo (CHG-2026-007):** `-u l10n_ec_base,l10n_ec,l10n_ec_sri,
+  l10n_ec_reports,l10n_ec_bank_transfer --test-enable --test-tags …` →
+  **`odoo.tests.result: 0 failed, 0 error(s)`** (§6 d).
 * **A2 — Constantes legales:** cada constante con resolución+fecha+URL (ISO-EC-10 §2);
   lo no confirmado se marca `NO_VERIFICADO` (nunca se inventa).
-* **A3 — Instalación:** los 20 módulos `l10n_ec*` pasan a `installed` sin `CRITICAL`/`ERROR`
-  en el log (`ir_module_module.state`).
+* **A3 — Instalación:** **20 de 21** módulos `l10n_ec*` en `installed`
+  (falta `l10n_ec_website_sale`) sin `CRITICAL`/`ERROR` en el log
+  (`ir_module_module.state`, verificado 2026-10-16).
 * **A4 — Regresión:** tras cada cambio regulatorio se re-ejecuta la suite afectada (ver ISO-EC-04).
 
 ## 5. Huecos de prueba conocidos (deuda documentada)
@@ -96,8 +114,9 @@ requieren ORM). La trazabilidad a requisitos está en ISO-EC-10 §5.
 | Hueco | Impacto | Plan |
 |---|---|---|
 | ~~**`TestStdnumEquivalence` inexistente**~~ | — | **CERRADO 2026-10-16 (CHG-2026-005):** clase creada en `test_server.py`, corpus 22,727 → 0 en contenedor; ver §3.1 |
+| Fixture `l10n_ec_sri/tests/certificates/test_certificate.p12` ausente del repo (nunca trackeado) | Medio (`TestXAdESSigner` no ejecuta — preexistente, no regression de CHG-006) | Fixture auto-firmado de desarrollo trackeable ó migrar el test a `odoo.tests.common` con cert generado en `setUpClass` |
 | Pruebas E2E de firma→SRI (celcer) | Alto (producción) | Instalar módulos y correr flujo completo en contenedor |
-| Pruebas de módulos Odoo en BD limpia | Medio (bajó de Alto: `l10n_ec_base` ya corre en BD real) | `--test-enable` sobre las 20 suites (depende de instalación completa) |
+| Pruebas de módulos Odoo en BD limpia | **Bajo** (2026-10-16: barrido de 5 módulos en `odooec` = **0 failed / 0 errors**; sólo falta BD recién creada de cero) | `-i` en BD nueva con `--test-enable` |
 | Fuzzing de firma XAdES / claves | Medio | l10n_ec_security (planificado) |
 | Cobertura de techo IESS 25×SBU | Bajo | Resolución pendiente (NO_VERIFICADO, ISO-EC-10 §6) |
 
@@ -116,4 +135,38 @@ docker compose exec -T odoo sh -c "cd /tmp && python3 mcp_server_ec/test_server.
 docker compose run --rm odoo -d odooec -u l10n_ec_base \
   --test-enable --test-tags /l10n_ec_base \
   --stop-after-init    # evidencia: odoo.tests.stats ... l10n_ec_base … 0 FAIL
+
+# (b') Barrido de 5 módulos (CHG-2026-006/007). OJO: --test-enable fuerza el spawn
+#      del daemon HTTP (server.py start()), así que --no-http no basta: mover el puerto.
+docker compose exec -T odoo /opt/odoo/odoo-bin -d odooec --db_host=db --db_port=5432 \
+  --db_user=odoo --db_password="$POSTGRES_PASSWORD" \
+  --addons-path=/mnt/extra-addons,/opt/odoo/addons,/opt/odoo/odoo/addons \
+  -u l10n_ec_base,l10n_ec,l10n_ec_sri,l10n_ec_reports,l10n_ec_bank_transfer \
+  --test-enable --test-tags /l10n_ec_base,/l10n_ec,/l10n_ec_sri,/l10n_ec_reports,/l10n_ec_bank_transfer \
+  --stop-after-init --no-http --http-port=8199 --max-cron-threads=0
+  # evidencia: odoo.tests.result: 0 failed, 0 error(s)
+
+# (c) Pureza de IDs fiscales (CHG-2026-006) — espera: RESIDUAL = 0
+python3 - <<'PY'
+import re, pathlib
+A = {"1713488185","1713488185001","1793125212001","9999999999999","1716341274"}
+L = {"0123456789","1234567890","123456789","9876543210","0000000000000","1234567890123","1111111111111"}
+J = {"0000000000","9999999999","4294967296","3221225472","7890123456789","0991234567","0987654321"}
+pat = re.compile(r"(?<!\d)(\d{13}|\d{10})(?!\d)"); n = 0
+for f in pathlib.Path(".").rglob("*"):
+    if f.suffix not in {".xml",".py",".csv",".md"} or not f.is_file() or "__pycache__" in str(f): continue
+    for i, l in enumerate(f.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+        for m in pat.finditer(l):
+            if m.group(1) not in A | L | J:
+                n += 1; print(f"{f}:{i}: {m.group(1)}")
+print("RESIDUAL =", n)
+PY
+
+# (d) Unidades Odoo (tests/unit) — runner en shell (TransactionCase necesita registro)
+#     baseline congelado: run=275 fail=8 err=24 skip=15
+#     2026-10-16 post-purge: run=275 fail=6 err=22 skip=15 (0 nuevos, 4 corregidos)
+
+# (e) Suites de l10n_ec_sri (unittest.TestCase puro, fuera del cargador de Odoo)
+python3 l10n_ec_sri/tests/test_xml_generator.py   # Ran 4 … OK
+python3 l10n_ec_sri/tests/test_sri_service.py     # OK (transporte mockeado)
 ```

@@ -18,7 +18,7 @@ class TestCompanySetupWizard(common.TransactionCase):
 
     def _make_wizard(self, **overrides):
         vals = {
-            "company_ruc": "1790016919001",
+            "company_ruc": "1793125212001",
             "company_name": "PRUEBA SRI S.A.",
             "sri_environment": "test",
             "obligado_contabilidad": True,
@@ -81,9 +81,9 @@ class TestCompanySetupWizard(common.TransactionCase):
         self.assertEqual(wizard._guess_regimen(), "contribuyente_especial")
 
     def test_person_type_from_ruc(self):
-        wizard = self._make_wizard(company_ruc="1710034065001")
+        wizard = self._make_wizard(company_ruc="1713488185001")
         wizard._onchange_company_ruc()  # sin red: sólo deduce tipo de persona
-        # 3er dígito '0' → persona natural
+        # 3er dígito '1' → persona natural
         self.assertEqual(wizard.person_type, "natural")
 
 

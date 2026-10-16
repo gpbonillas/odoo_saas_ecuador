@@ -205,8 +205,8 @@ def validate_xml(self) -> bool:
     <tipoEmision>1</tipoEmision>
     <razonSocial>EMPRESA DEMO S.A.</razonSocial>
     <nombreComercial>EMPRESA DEMO</nombreComercial>
-    <ruc>1791234567001</ruc>
-    <claveAcceso>2201202601179123456700120010010000000011234567811</claveAcceso>
+    <ruc>1793125212001</ruc>
+    <claveAcceso>2201202601179312521200120010010000000011234567811</claveAcceso>
     <codDoc>01</codDoc>
     <estab>001</estab>
     <ptoEmi>001</ptoEmi>
@@ -218,7 +218,7 @@ def validate_xml(self) -> bool:
     <obligadoContabilidad>SI</obligadoContabilidad>
     <tipoIdentificacionComprador>04</tipoIdentificacionComprador>
     <razonSocialComprador>CLIENTE EJEMPLO CIA. LTDA.</razonSocialComprador>
-    <identificacionComprador>0991234567001</identificacionComprador>
+    <identificacionComprador>1793125212001</identificacionComprador>
     <totalSinImpuestos>1000.00</totalSinImpuestos>
     <totalDescuento>0.00</totalDescuento>
     <totalConImpuestos>

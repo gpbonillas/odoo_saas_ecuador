@@ -93,11 +93,13 @@
             <field name="value">https://srienlinea.sri.gob.ec/sri-catastro-sujeto-servicio-internet/rest/ConsolidadoContribuyente/obtenerPorNumerosRuc</field>
         </record>
 
-        <!-- Current Environment Setting -->
-        <record id="l10n_ec_sri_environment" model="ir.config_parameter">
-            <field name="key">l10n_ec.sri_environment</field>
-            <field name="value">test</field>
-        </record>
+        <!-- Current Environment Setting
+             CHG-2026-007: registro ICP legado ELIMINADO. El ambiente es un
+             atributo POR EMPRESA (res.company.l10n_ec_sri_environment,
+             default="test" en l10n_ec_edi); los ICP globales se migran en
+             l10n_ec_base post_init_hook y se limpian en uninstall. El test
+             TestCompanySetupWizard.test_configure_writes_company_not_config_params
+             exige que este parámetro global NO exista. -->
 
         <!-- Auto-send to SRI on Invoice Post (2026 requirement: immediate) -->
         <record id="l10n_ec_auto_send_sri" model="ir.config_parameter">

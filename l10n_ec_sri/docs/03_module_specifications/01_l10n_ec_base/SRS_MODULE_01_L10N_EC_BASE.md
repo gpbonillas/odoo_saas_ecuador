@@ -237,9 +237,9 @@ None (internal Odoo module).
 | Test ID | Description | Expected Result |
 |:---|:---|:---|
 | **T-001** | Install CoA on fresh database | All accounts created |
-| **T-002** | Enter valid RUC (1791251237001) | Partner saves successfully |
+| **T-002** | Enter valid RUC (1793125212001) | Partner saves successfully |
 | **T-003** | Enter invalid RUC (1234567890123) | Validation error displayed |
-| **T-004** | Enter valid Cédula (1710034065) | Partner saves successfully |
+| **T-004** | Enter valid Cédula (1713488185) | Partner saves successfully |
 
 ---
 

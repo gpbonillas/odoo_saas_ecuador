@@ -21,8 +21,8 @@
 
 ```csv
 cedula,nombres,apellidos,fecha_nacimiento,fecha_ingreso,cargo,salario,tipo_contrato,region,email,telefono
-1712345678,Juan Carlos,Pérez López,1985-03-15,2024-01-15,Vendedor,500.00,indefinido,sierra,juan@empresa.com,0991234567
-1798765432,María José,García Suárez,1990-07-22,2024-02-01,Cajera,482.00,indefinido,costa,maria@empresa.com,0987654321
+1713488185,Juan Carlos,Pérez López,1985-03-15,2024-01-15,Vendedor,500.00,indefinido,sierra,juan@empresa.com,0991234567
+1713488185,María José,García Suárez,1990-07-22,2024-02-01,Cajera,482.00,indefinido,costa,maria@empresa.com,0987654321
 ```
 
 **Validations:**

@@ -41,7 +41,7 @@ class TestInvoiceEmission(TransactionCase):
                     "name": "Test Company Ecuador",
                     "country_id": cls.ecuador.id,
                     "currency_id": cls.env.ref("base.USD").id,
-                    "vat": "1792146739001",
+                    "vat": "1793125212001",
                 }
             )
 
@@ -54,7 +54,7 @@ class TestInvoiceEmission(TransactionCase):
         cls.partner = cls.env["res.partner"].create(
             {
                 "name": "Cliente Prueba Ecuador",
-                "vat": "1712345678001",
+                "vat": "1713488185001",
                 "country_id": cls.ecuador.id,
                 "l10n_ec_identifier_type": "ruc",
             }

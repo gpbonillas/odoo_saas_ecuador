@@ -62,9 +62,9 @@ async def post_invoice(
     """
     return {
         "status": "posted",
-        "clave_acceso": "2201202601...",
+        "clave_acceso": "22012026011793125212001...",
         "sri_status": "AUTORIZADO",
-        "numero_autorizacion": "2201202601..."
+        "numero_autorizacion": "22012026011793125212001..."
     }
 ```
 

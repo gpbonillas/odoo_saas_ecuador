@@ -110,13 +110,13 @@ class TestSriTaxAggregates(TransactionCase):
         cls.company.write(
             {
                 "country_id": cls.env.ref("base.ec").id,
-                "vat": "1790017045001",
+                "vat": "1793125212001",
             }
         )
         cls.partner = cls.env["res.partner"].create(
             {
                 "name": "Cliente Aggregates",
-                "vat": "1312345679",
+                "vat": "1713488185",
                 "country_id": cls.env.ref("base.ec").id,
                 "l10n_ec_identifier_type": "cedula",
             }

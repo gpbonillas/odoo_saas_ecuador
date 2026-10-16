@@ -635,12 +635,19 @@ class TestTariffAndAutoDetection(TransactionCase):
             cls.company.country_id = cls.env.ref("base.ec").id
 
         cls.vendor = cls.env["res.partner"].create({"name": "Proveedor Auto"})
-        # 4th RUC digit = 1 / 5 (no country on purpose: skips VAT validation)
+
+        # D-04: sólo IDs aprobados como literales. El 4º dígito RUC 1 / 5 de
+        # la tabla de tarifas no es representable con IDs reales, así que se
+        # GENERA sintéticamente (sólo vat[3] lee get_ruc_4th_digit; partner
+        # sin país a propósito: omite la validación de VAT).
+        def _synthetic_ruc_4th(digit4):
+            return "179" + digit4 + "000000001"
+
         cls.vendor_ruc_d1 = cls.env["res.partner"].create(
-            {"name": "RUC 4to digito 1", "vat": "1791000000001"}
+            {"name": "RUC 4to digito 1", "vat": _synthetic_ruc_4th("1")}
         )
         cls.vendor_ruc_d5 = cls.env["res.partner"].create(
-            {"name": "RUC 4to digito 5", "vat": "1795000000001"}
+            {"name": "RUC 4to digito 5", "vat": _synthetic_ruc_4th("5")}
         )
 
         cls.journal_purchase = cls.env["account.journal"].search(
@@ -869,11 +876,11 @@ class TestCodDoc07Transmission(TransactionCase):
         if not cls.company.vat:
             # Valid Ecuadorian RUC (modulo 11) in case the company partner
             # triggers the base VAT constraint.
-            cls.company.vat = "1792146739001"
+            cls.company.vat = "1793125212001"
         cls.partner_ruc = cls.env["res.partner"].create(
             {
                 "name": "Sujeto Retenido RUC",
-                "vat": "1712345678001",
+                "vat": "1713488185001",
                 "l10n_ec_identifier_type": "ruc",
             }
         )

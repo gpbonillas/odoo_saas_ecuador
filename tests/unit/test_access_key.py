@@ -45,7 +45,7 @@ class TestAccessKey(unittest.TestCase):
         params = {
             "invoice_date": date(2026, 10, 15),
             "doc_type": "01",
-            "ruc": "1790017045001",
+            "ruc": "1793125212001",
             "environment": "2",
             "establishment": "001",
             "emission_point": "001",
@@ -64,7 +64,7 @@ class TestAccessKey(unittest.TestCase):
         key = self._generate()
         self.assertEqual(key[0:8], "15102026")  # DDMMYYYY
         self.assertEqual(key[8:10], "01")  # doc type
-        self.assertEqual(key[10:23], "1790017045001")  # RUC
+        self.assertEqual(key[10:23], "1793125212001")  # RUC
         self.assertEqual(key[23:24], "2")  # environment (production)
         self.assertEqual(key[24:27], "001")  # establishment
         self.assertEqual(key[27:30], "001")  # emission point

@@ -40,7 +40,7 @@ class TestSriValidation(TransactionCase):
         partner = self.env["res.partner"].create(
             {
                 "name": "Persona Natural",
-                "vat": "1712345678001",  # Valid format
+                "vat": "1713488185001",  # Valid format (3rd digit 1)
                 "country_id": self.ecuador.id,
                 "l10n_ec_identifier_type": "ruc",
             }
@@ -54,7 +54,7 @@ class TestSriValidation(TransactionCase):
         partner = self.env["res.partner"].create(
             {
                 "name": "Sociedad Privada",
-                "vat": "1792146739001",  # Valid format (9 as 3rd digit)
+                "vat": "1793125212001",  # Valid format (9 as 3rd digit)
                 "country_id": self.ecuador.id,
                 "l10n_ec_identifier_type": "ruc",
             }
@@ -79,7 +79,7 @@ class TestSriValidation(TransactionCase):
         partner = self.env["res.partner"].create(
             {
                 "name": "Persona con Cédula",
-                "vat": "1712345678",  # 10 digits
+                "vat": "1713488185",  # 10 digits
                 "country_id": self.ecuador.id,
                 "l10n_ec_identifier_type": "cedula",
             }
@@ -138,7 +138,7 @@ class TestSriValidation(TransactionCase):
             key = AccessKey.generate(
                 invoice_date=date.today(),
                 doc_type="01",  # Factura
-                ruc="1792146739001",
+                ruc="1793125212001",
                 environment="1",
                 establishment="001",
                 emission_point="001",

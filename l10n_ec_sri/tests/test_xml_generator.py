@@ -43,7 +43,7 @@ class TestXMLGenerator(unittest.TestCase):
 
         # Test Case 1: Known valid access key (without check digit)
         # Format: DDMMAAAA + TT + RUC(13) + AMBIENTE + SERIE(6) + NUMERO(9) + CODIGO(8) + TIPO
-        base_key = "210120250117900000000011001001000000001123456781"
+        base_key = "210120250117931252120011001001000000001123456781"
         # This is 48 digits
 
         self.assertEqual(
@@ -68,7 +68,7 @@ class TestXMLGenerator(unittest.TestCase):
         # Components
         invoice_date = date(2025, 1, 21)
         doc_type = "01"  # Factura
-        ruc = "1790000000001"
+        ruc = "1793125212001"
         environment = "1"  # Test
         serie = "001001"
         sequential = "000000001"
@@ -102,8 +102,8 @@ class TestXMLGenerator(unittest.TestCase):
         Verify RUC validation patterns (13 digits, check digit).
         """
         valid_rucs = [
-            "1790000000001",  # Standard company RUC
-            "1791000000001",  # Another valid pattern
+            "1793125212001",  # Approved company RUC (jurídica)
+            "1713488185001",  # Approved natural-person RUC
             "9999999999999",  # Consumidor Final
         ]
 
@@ -131,8 +131,8 @@ class TestXMLGenerator(unittest.TestCase):
                 <tipoEmision>1</tipoEmision>
                 <razonSocial>EMPRESA PRUEBA</razonSocial>
                 <nombreComercial>EMPRESA PRUEBA</nombreComercial>
-                <ruc>1790000000001</ruc>
-                <claveAcceso>2101202501179000000000110010010000000011234567813</claveAcceso>
+                <ruc>1793125212001</ruc>
+                <claveAcceso>2101202501179312521200110010010000000011234567813</claveAcceso>
                 <codDoc>01</codDoc>
                 <estab>001</estab>
                 <ptoEmi>001</ptoEmi>
@@ -145,7 +145,7 @@ class TestXMLGenerator(unittest.TestCase):
                 <obligadoContabilidad>SI</obligadoContabilidad>
                 <tipoIdentificacionComprador>04</tipoIdentificacionComprador>
                 <razonSocialComprador>CLIENTE PRUEBA</razonSocialComprador>
-                <identificacionComprador>1790000000002</identificacionComprador>
+                <identificacionComprador>1713488185001</identificacionComprador>
                 <totalSinImpuestos>100.00</totalSinImpuestos>
                 <totalDescuento>0.00</totalDescuento>
                 <totalConImpuestos>

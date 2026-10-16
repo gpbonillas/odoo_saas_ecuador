@@ -20,10 +20,10 @@ from lxml import etree
 from odoo.tests import tagged, TransactionCase
 
 # Vats validated against l10n_ec_base's _validate_ec_document:
-CEDULA = "1312345679"  # natural person (cédula) -> NOT obligated
-RUC_NATURAL = "1312345679001"  # natural-person RUC (3rd digit 1) -> NOT obligated
-RUC_COMPANY = "1792146755001"  # private-company RUC (3rd digit 9) -> obligated
-COMPANY_RUC = "1790017045001"
+CEDULA = "1713488185"  # natural person (cédula) -> NOT obligated
+RUC_NATURAL = "1713488185001"  # natural-person RUC (3rd digit 1) -> NOT obligated
+RUC_COMPANY = "1793125212001"  # private-company RUC (3rd digit 9) -> obligated
+COMPANY_RUC = "1793125212001"
 
 
 @tagged("post_install", "-at_install", "l10n_ec")

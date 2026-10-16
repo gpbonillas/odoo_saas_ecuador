@@ -52,7 +52,7 @@ The module SHALL generate:
 ```xml
 <ats version="1.0">
     <TipoIDInformante>R</TipoIDInformante>
-    <IdInformante>1791234567001</IdInformante>
+    <IdInformante>1793125212001</IdInformante>
     <razonSocial>MI EMPRESA S.A.</razonSocial>
     <Anio>2026</Anio>
     <Mes>01</Mes>
@@ -63,7 +63,7 @@ The module SHALL generate:
         <detalleCompras>
             <codSustento>01</codSustento>
             <tpIdProv>01</tpIdProv>
-            <idProv>1792345678001</idProv>
+            <idProv>1793125212001</idProv>
             <tipoComprobante>01</tipoComprobante>
             <parteRel>NO</parteRel>
             <fechaRegistro>22/01/2026</fechaRegistro>
@@ -71,7 +71,7 @@ The module SHALL generate:
             <puntoEmision>001</puntoEmision>
             <secuencial>000000123</secuencial>
             <fechaEmision>20/01/2026</fechaEmision>
-            <autorizacion>2001202601179234567800110010010000001231234567811</autorizacion>
+            <autorizacion>2001202601179312521200110010010000001231234567811</autorizacion>
             <baseNoGraIva>0.00</baseNoGraIva>
             <baseImponible>1000.00</baseImponible>
             <baseImpGrav>1000.00</baseImpGrav>
@@ -103,7 +103,7 @@ The module SHALL generate:
     <ventas>
         <detalleVentas>
             <tpIdCliente>04</tpIdCliente>
-            <idCliente>1798765432001</idCliente>
+            <idCliente>1793125212001</idCliente>
             <parteRelVtas>NO</parteRelVtas>
             <tipoComprobante>18</tipoComprobante>
             <tipoEmision>E</tipoEmision>

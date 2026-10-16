@@ -62,12 +62,14 @@
         </record>
 
         <!-- ================================================================== -->
-        <!-- SUPPLIERS (Real Ecuador Distributors - RUCs to be verified) -->
+        <!-- SUPPLIERS (Real Ecuador Distributors)                               -->
+        <!-- CHG-2026-006: RUCs falsos eliminados.                               -->
+        <!-- [VERIFY: fuente] completar cada RUC real contra SRI (consultar_ruc)  -->
+        <!-- antes de usar estos proveedores en cualquier entorno.                -->
         <!-- ================================================================== -->
         <record id="template_supplier_arca" model="l10n_ec.business.template.supplier">
             <field name="template_id" ref="business_template_tienda_barrio"/>
             <field name="name">Arca Continental Ecuador S.A.</field>
-            <field name="ruc">1790012345001</field>
             <field name="taxpayer_type">special</field>
             <field name="supply_category">Bebidas (Coca-Cola, Sprite, Fanta)</field>
             <field name="for_simple">False</field>
@@ -77,7 +79,6 @@
         <record id="template_supplier_cerveceria" model="l10n_ec.business.template.supplier">
             <field name="template_id" ref="business_template_tienda_barrio"/>
             <field name="name">Cervecería Nacional CN S.A.</field>
-            <field name="ruc">1790013579001</field>
             <field name="taxpayer_type">special</field>
             <field name="supply_category">Cervezas y Agua</field>
             <field name="for_simple">False</field>
@@ -87,7 +88,6 @@
         <record id="template_supplier_nestle" model="l10n_ec.business.template.supplier">
             <field name="template_id" ref="business_template_tienda_barrio"/>
             <field name="name">Nestlé Ecuador S.A.</field>
-            <field name="ruc">1790014680001</field>
             <field name="taxpayer_type">special</field>
             <field name="supply_category">Lácteos, Chocolates, Café</field>
             <field name="for_simple">False</field>
@@ -97,7 +97,6 @@
         <record id="template_supplier_pronaca" model="l10n_ec.business.template.supplier">
             <field name="template_id" ref="business_template_tienda_barrio"/>
             <field name="name">Pronaca S.A.</field>
-            <field name="ruc">1790015791001</field>
             <field name="taxpayer_type">special</field>
             <field name="supply_category">Embutidos, Conservas</field>
             <field name="for_simple">False</field>

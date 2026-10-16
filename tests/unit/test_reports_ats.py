@@ -51,9 +51,9 @@ def raw_invoice(**overrides):
         "doc_name": "FACTURA",
         "move_type": "out_invoice",
         "tp_id": "04",
-        "identificacion": "1791234567001",
+        "identificacion": "1793125212001",
         "razon_social": "CLIENTE EJEMPLO S.A.",
-        "clave_acceso": "1791234567001011010000000000000000000001234567891",
+        "clave_acceso": "1793125212001011010000000000000000000001234567891",
         "estab": "001",
         "pto": "001",
         "secuencial": "000000001",
@@ -146,7 +146,7 @@ def purchases_set():
         id=10,
         move_type="in_invoice",
         tp_id="02",
-        identificacion="1712345678001",
+        identificacion="1793125212001",
         razon_social="PROVEEDOR S.A.",
         doc_code="01",
         secuencial="000000101",
@@ -162,14 +162,14 @@ def purchases_set():
              "base": 1000.0, "percent": 30.0, "amount": 300.0,
              "numero": "001-001-000000123", "fecha": "2026-01-20",
              "autorizacion": "1234567890", "partner": "PROVEEDOR S.A.",
-             "identificacion": "1712345678001",
+             "identificacion": "1793125212001",
              "comprobante": "001-001-000000101",
              "fecha_factura": "2026-01-15"},
             {"kind": "ir", "code": "312", "name": "Transferencia de bienes",
              "base": 1000.0, "percent": 1.75, "amount": 17.5,
              "numero": "001-001-000000123", "fecha": "2026-01-20",
              "autorizacion": "1234567890", "partner": "PROVEEDOR S.A.",
-             "identificacion": "1712345678001",
+             "identificacion": "1793125212001",
              "comprobante": "001-001-000000101",
              "fecha_factura": "2026-01-15"},
         ],
@@ -178,7 +178,7 @@ def purchases_set():
         id=11,
         move_type="in_invoice",
         tp_id="02",
-        identificacion="0912345678001",
+        identificacion="1713488185001",
         razon_social="SERVICIOS ECUA S.A.",
         doc_code="01",
         secuencial="000000102",
@@ -198,19 +198,19 @@ def retention_rows():
          "base": 1000.0, "percent": 1.75, "amount": 17.5,
          "numero": "001-001-000000123", "fecha": "2026-01-20",
          "autorizacion": "1234567890", "partner": "PROVEEDOR S.A.",
-         "identificacion": "1712345678001", "comprobante": "001-001-000000101",
+         "identificacion": "1793125212001", "comprobante": "001-001-000000101",
          "fecha_factura": "2026-01-15"},
         {"kind": "ir", "code": "304", "name": "Servicios predomina el intelecto",
          "base": 2000.0, "percent": 11.5, "amount": 230.0,
          "numero": "001-001-000000124", "fecha": "2026-01-25",
-         "autorizacion": "1234567891", "partner": "CONSULTORES CIA. LTDA.",
-         "identificacion": "1798765432001", "comprobante": "001-001-000000102",
+         "autorizacion": "1234567890", "partner": "CONSULTORES CIA. LTDA.",
+         "identificacion": "1713488185001", "comprobante": "001-001-000000102",
          "fecha_factura": "2026-01-22"},
         {"kind": "iva", "code": "723", "name": "Retencion IVA 70%",
          "base": 2000.0, "percent": 70.0, "amount": 1400.0,
          "numero": "001-001-000000124", "fecha": "2026-01-25",
-         "autorizacion": "1234567891", "partner": "CONSULTORES CIA. LTDA.",
-         "identificacion": "1798765432001", "comprobante": "001-001-000000102",
+         "autorizacion": "1234567890", "partner": "CONSULTORES CIA. LTDA.",
+         "identificacion": "1713488185001", "comprobante": "001-001-000000102",
          "fecha_factura": "2026-01-22"},
     ]
 
@@ -303,7 +303,7 @@ class TestForm104(unittest.TestCase):
     def test_saldo_a_favor_when_purchases_exceed(self):
         big_purchase = raw_invoice(
             id=99, move_type="in_invoice", tp_id="02",
-            identificacion="1712345678001", razon_social="PROVEEDOR S.A.",
+            identificacion="1793125212001", razon_social="PROVEEDOR S.A.",
             secuencial="000000999", lines=[line(10000.0, [15.0])],
             tax_lines=[{"group": "IVA 15%", "balance": 1500.0,
                         "ice": False, "ret_kind": None}],
@@ -425,10 +425,10 @@ class TestForm107(unittest.TestCase):
 class TestForm108(unittest.TestCase):
     def test_credit_notes_totals(self):
         nc = [
-            {"fecha": "2026-01-10", "identificacion": "1791234567001",
+            {"fecha": "2026-01-10", "identificacion": "1793125212001",
              "razon_social": "CLIENTE A", "doc_code": "04",
              "clave_acceso": "1" * 49, "total": -345.0},
-            {"fecha": "2026-01-12", "identificacion": "1791234567002",
+            {"fecha": "2026-01-12", "identificacion": "1713488185001",
              "razon_social": "CLIENTE B", "doc_code": "04",
              "clave_acceso": "2" * 49, "total": -115.0},
         ]
@@ -735,7 +735,7 @@ class TestATS(unittest.TestCase):
         ventas = [lib.invoice_report_row(r) for r in sales_set()]
         compras = [lib.invoice_report_row(r) for r in purchases_set()]
         header = {"year": "2026", "month": "01", "entity": "001",
-                  "company_name": "MI EMPRESA S.A.", "vat": "1791234567001"}
+                  "company_name": "MI EMPRESA S.A.", "vat": "1793125212001"}
         return lib.ats_build(header, ventas, compras,
                              kwargs.get("cancelled", []),
                              kwargs.get("retentions", retention_rows()),
@@ -757,8 +757,8 @@ class TestATS(unittest.TestCase):
         keys = {(v["tpIdCliente"], v["idCliente"], v["tipoComprobante"])
                 for v in payload["ventas"]}
         # credit note (doc 04) is its own group
-        self.assertIn(("04", "1791234567001", "01"), keys)
-        self.assertIn(("04", "1791234567001", "04"), keys)
+        self.assertIn(("04", "1793125212001", "01"), keys)
+        self.assertIn(("04", "1793125212001", "04"), keys)
         nc = [v for v in payload["ventas"] if v["tipoComprobante"] == "04"][0]
         self.assertAlmostEqual(nc["montoIva"], -45.0, places=2)
         self.assertAlmostEqual(nc["baseImpGrav"], -300.0, places=2)
@@ -842,7 +842,7 @@ class TestATS(unittest.TestCase):
     def test_empty_sections_are_empty_lists(self):
         payload = lib.ats_build(
             {"year": "2026", "month": "02", "entity": "001",
-             "company_name": "X", "vat": "1791234567001"},
+             "company_name": "X", "vat": "1793125212001"},
             [], [], [], [], [],
         )
         for key in ("ventas", "compras", "anulados", "exportaciones",
@@ -863,7 +863,7 @@ class TestATSValidation(unittest.TestCase):
 
     def test_missing_sustento_reported(self):
         compra = lib.invoice_report_row(raw_invoice(
-            move_type="in_invoice", tp_id="02", identificacion="1712345678001",
+            move_type="in_invoice", tp_id="02", identificacion="1793125212001",
             sustento="", secuencial="000000500",
             clave_acceso="", autorizacion="",
             lines=[line(100.0, [15.0])],
@@ -873,7 +873,7 @@ class TestATSValidation(unittest.TestCase):
 
     def test_missing_access_key_reported(self):
         compra = lib.invoice_report_row(raw_invoice(
-            move_type="in_invoice", tp_id="02", identificacion="1712345678001",
+            move_type="in_invoice", tp_id="02", identificacion="1793125212001",
             sustento="01", secuencial="000000501",
             clave_acceso="", autorizacion="",
             lines=[line(100.0, [15.0])],
