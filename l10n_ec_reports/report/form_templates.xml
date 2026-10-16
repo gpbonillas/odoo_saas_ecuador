@@ -1,83 +1,237 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  QWeb templates for the SRI forms.
+
+  Two parameterized bodies:
+    * report_form_sections_body - 101 / 102 / 104 / 107 (section-based)
+    * report_form_rows_body     - 103 / 108 / Gastos Personales (rows)
+
+  Every value comes from l10n_ec.form.wizard.get_form_data(), whose math
+  is delegated to report_lib (pure python, unit-tested).
+  Casilleros per SRS_MODULE_09 sections 3.2 / 3.3.
+-->
 <odoo>
-    <data>
-        <template id="report_form_103">
-            <t t-call="web.html_container">
-                <t t-call="web.external_layout">
-                    <div class="page">
-                        <h2>Form 103: Withholding Tax Declarations (Draft)</h2>
-                        <p><strong>Period:</strong> <span t-esc="data['period']"/></p>
 
-                        <table class="table table-sm table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Code</th>
-                                    <th>Description (Concept)</th>
-                                    <th class="text-right">Tax Base</th>
-                                    <th class="text-right">Rate %</th>
-                                    <th class="text-right">Retained Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr t-foreach="data['retentions']" t-as="r">
-                                    <td><span t-esc="r['code']"/></td>
-                                    <td><span t-esc="r['name']"/></td>
-                                    <td class="text-right"><span t-esc="r['base']" t-options='{"widget": "monetary", "display_currency": company.currency_id}'/></td>
-                                    <td class="text-right"><span t-esc="r['percent']"/>%</td>
-                                    <td class="text-right"><span t-esc="r['amount']" t-options='{"widget": "monetary", "display_currency": company.currency_id}'/></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+    <!-- ==================================================================
+         Shared header for every form - expects `data` already set by the
+         caller (so get_form_data() runs exactly once per render)
+         ================================================================== -->
+    <template id="report_form_header">
+        <t t-set="layout_document_title">
+            <span t-esc="data.get('title')"/>
+        </t>
+        <h2>
+            <span t-esc="o.company_id.name"/> — <span t-esc="data.get('title')"/>
+        </h2>
+        <p>
+            <strong>RUC:</strong> <span t-esc="o.company_id.vat or 'N/A'"/>
+             | <strong>Periodo:</strong> <span t-esc="data.get('period')"/>
+             | <strong>Generado:</strong>
+            <span t-esc="datetime.datetime.now().strftime('%Y-%m-%d %H:%M')"/>
+        </p>
+    </template>
+
+    <!-- ==================================================================
+         Section-based body: 101 / 102 / 104 / 107
+         ================================================================== -->
+    <template id="report_form_sections_body">
+        <div class="page">
+            <t t-call="l10n_ec_reports.report_form_header"/>
+
+            <t t-foreach="data.get('sections') or []" t-as="section">
+                <h3><span t-esc="section['title']"/></h3>
+                <table class="table table-sm table-bordered">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">Casillero</th>
+                            <th>Concepto</th>
+                            <th class="text-right" style="width: 18%;">Valor</th>
+                            <th style="width: 27%;">Nota</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="section.get('lines') or []" t-as="line">
+                            <td><span t-esc="line.get('code')"/></td>
+                            <td><span t-esc="line.get('label')"/></td>
+                            <td class="text-right">
+                                <span t-esc="o.fmt_cell(line.get('amount'))"/>
+                            </td>
+                            <td><span t-esc="line.get('note')"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </t>
+
+            <!-- Result summary box (key figures repeated for the filer) -->
+            <table class="table table-sm table-bordered" t-if="data.get('saldo') is not None">
+                <tbody>
+                    <tr t-if="data.get('debito') is not None">
+                        <td>Debito tributario (480 + ICE)</td>
+                        <td class="text-right"><span t-esc="o.fmt_cell(data.get('debito'))"/></td>
+                    </tr>
+                    <tr t-if="data.get('credito') is not None">
+                        <td>Credito tributario (520 + ICE + 601)</td>
+                        <td class="text-right"><span t-esc="o.fmt_cell(data.get('credito'))"/></td>
+                    </tr>
+                    <tr t-if="data.get('base_imponible') is not None">
+                        <td>Base imponible</td>
+                        <td class="text-right"><span t-esc="o.fmt_cell(data.get('base_imponible'))"/></td>
+                    </tr>
+                    <tr t-if="data.get('impuesto') is not None">
+                        <td>Impuesto causado</td>
+                        <td class="text-right"><span t-esc="o.fmt_cell(data.get('impuesto'))"/></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Saldo <span t-esc="data.get('saldo_tipo')"/></strong>
+                        </td>
+                        <td class="text-right">
+                            <strong><span t-esc="o.fmt_cell(data.get('saldo'))"/></strong>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p t-if="data.get('iva_rate')">
+                Tarifa IVA general: <span t-esc="o.fmt_cell(round(data['iva_rate'] * 100, 2))"/>%
+            </p>
+        </div>
+    </template>
+
+    <!-- ==================================================================
+         Rows-based body: 103 / 108 / Gastos Personales
+         ================================================================== -->
+    <template id="report_form_rows_body">
+        <t t-set="data" t-value="o.get_form_data()"/>
+        <t t-set="columns" t-value="data.get('columns') or []"/>
+        <t t-set="rows" t-value="data.get('rows') or []"/>
+        <t t-set="totals" t-value="data.get('totals') or {}"/>
+        <div class="page">
+            <t t-call="l10n_ec_reports.report_form_header"/>
+
+            <table class="table table-sm table-bordered" t-if="rows">
+                <thead>
+                    <tr>
+                        <th t-foreach="columns" t-as="col">
+                            <span t-esc="col[1]"/>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr t-foreach="rows" t-as="row">
+                        <td t-foreach="columns" t-as="col">
+                            <span t-esc="o.fmt_cell(row.get(col[0]))"/>
+                        </td>
+                    </tr>
+                </tbody>
+                <tfoot t-if="totals">
+                    <tr class="fw-bold">
+                        <t t-foreach="o.fmt_totals(totals, columns)" t-as="tot">
+                            <td>
+                                <span t-esc="tot[0]"/>: <span t-esc="tot[1]"/>
+                            </td>
+                        </t>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <p t-if="not rows">
+                Sin datos para el periodo seleccionado.
+            </p>
+
+            <!-- Gastos personales: cap configuration warnings -->
+            <div t-if="data.get('unconfigured')" class="alert alert-warning">
+                <strong>Caps no configurados:</strong>
+                <span t-esc="', '.join(data['unconfigured'])"/>. Configure los parmetros
+                <code>l10n_ec.gastos_personales.cap.&lt;categoria&gt;_smmlv</code>
+                para limitar la deduccion de estas categorias (SBU:
+                <span t-esc="o.fmt_cell(data.get('sbu'))"/>).
+            </div>
+
+            <div t-if="data.get('sbu') and not data.get('unconfigured')">
+                <p>
+                    <strong>Salario Basico Unificado (SBU):</strong>
+                    <span t-esc="o.fmt_cell(data.get('sbu'))"/>
+                     | <strong>Gasto proyectado:</strong>
+                    <span t-esc="o.fmt_cell(data.get('total_spent'))"/>
+                     | <strong>Deducible:</strong>
+                    <span t-esc="o.fmt_cell(data.get('total_deducible'))"/>
+                </p>
+            </div>
+        </div>
+    </template>
+
+    <!-- ==================================================================
+         Thin wrappers - one unique report_name per form
+         ================================================================== -->
+    <template id="report_form_101">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-call="l10n_ec_reports.report_form_sections_body"/>
                 </t>
             </t>
-        </template>
+        </t>
+    </template>
 
-        <template id="report_form_104">
-            <t t-call="web.html_container">
+    <template id="report_form_102">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
                 <t t-call="web.external_layout">
-                    <div class="page">
-                        <h2>Form 104: IVA &amp; ICE Declarations (Draft)</h2>
-                        <p><strong>Period:</strong> <span t-esc="data['period']"/></p>
-
-                        <h3>Sales</h3>
-                        <table class="table table-sm table-bordered">
-                            <tr>
-                                <td>Local Sales (Excludes Fixed Assets)</td>
-                                <td class="text-right"><span t-esc="data['sales_base']" t-options='{"widget": "monetary", "display_currency": company.currency_id}'/></td>
-                            </tr>
-                            <tr>
-                                <td>Total IVA Generated</td>
-                                <td class="text-right"><span t-esc="data['sales_iva']" t-options='{"widget": "monetary", "display_currency": company.currency_id}'/></td>
-                            </tr>
-                        </table>
-
-                        <h3>Purchases</h3>
-                        <table class="table table-sm table-bordered">
-                            <tr>
-                                <td>Local Purchases (Inventory/Services)</td>
-                                <td class="text-right"><span t-esc="data['purchases_base']" t-options='{"widget": "monetary", "display_currency": company.currency_id}'/></td>
-                            </tr>
-                             <tr>
-                                <td>Total IVA Input</td>
-                                <td class="text-right"><span t-esc="data['purchases_iva']" t-options='{"widget": "monetary", "display_currency": company.currency_id}'/></td>
-                            </tr>
-                        </table>
-
-                        <h3>ICE (Consumos Especiales)</h3>
-                        <table class="table table-sm table-bordered">
-                            <tr>
-                                <td>Total ICE Payable (Sales)</td>
-                                <td class="text-right"><span t-esc="data['ice_payable']" t-options='{"widget": "monetary", "display_currency": company.currency_id}'/></td>
-                            </tr>
-                             <tr>
-                                <td>ICE Tax Credit (Purchases)</td>
-                                <td class="text-right"><span t-esc="data['ice_credit']" t-options='{"widget": "monetary", "display_currency": company.currency_id}'/></td>
-                            </tr>
-                        </table>
-                    </div>
+                    <t t-call="l10n_ec_reports.report_form_sections_body"/>
                 </t>
             </t>
-        </template>
-    </data>
+        </t>
+    </template>
+
+    <template id="report_form_103">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-call="l10n_ec_reports.report_form_rows_body"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_form_104">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-call="l10n_ec_reports.report_form_sections_body"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_form_107">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-call="l10n_ec_reports.report_form_sections_body"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_form_108">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-call="l10n_ec_reports.report_form_rows_body"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_form_gastos_personales">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-call="l10n_ec_reports.report_form_rows_body"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
 </odoo>

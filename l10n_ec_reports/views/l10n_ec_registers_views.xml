@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Mercantile registers: Libro de Socios (shares/quotas) and Libro de Actas
+  (assemblies / board minutes).  Tree + form views, window actions, the
+  sequence data used to number each entry and their Ecuador menu items.
+-->
+<odoo>
+    <data>
+
+        <!-- ==================== LIBRO DE SOCIOS ===================== -->
+        <record id="view_l10n_ec_partner_share_tree" model="ir.ui.view">
+            <field name="name">l10n_ec.partner.share.tree</field>
+            <field name="model">l10n_ec.partner.share</field>
+            <field name="arch" type="xml">
+                <list string="Libro de Socios"
+                      decoration-muted="state == 'draft'"
+                      sample="1">
+                    <field name="name"/>
+                    <field name="date"/>
+                    <field name="partner_id"/>
+                    <field name="share_type"/>
+                    <field name="share_count"/>
+                    <field name="nominal_value" sum="Valor nominal"/>
+                    <field name="total_value" sum="Valor total"/>
+                    <field name="operation"/>
+                    <field name="state"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_l10n_ec_partner_share_form" model="ir.ui.view">
+            <field name="name">l10n_ec.partner.share.form</field>
+            <field name="model">l10n_ec.partner.share</field>
+            <field name="arch" type="xml">
+                <form string="Registro de Acciones / Cuotas">
+                    <header>
+                        <button name="action_post" string="Registrar"
+                                type="object" class="btn-primary"
+                                invisible="state != 'draft'"/>
+                        <button name="action_draft" string="Volver a Borrador"
+                                type="object" class="btn-secondary"
+                                invisible="state != 'posted'"/>
+                        <field name="state" widget="statusbar"
+                               statusbar_visible="draft,posted"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name"/>
+                            <h1><field name="name" readonly="1"/></h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="date"/>
+                                <field name="partner_id"/>
+                                <field name="share_type"/>
+                            </group>
+                            <group>
+                                <field name="share_count"/>
+                                <field name="nominal_value"/>
+                                <field name="total_value"/>
+                                <field name="operation"/>
+                                <field name="currency_id" invisible="1"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Observaciones">
+                                <field name="notes" nolabel="1" placeholder="Observaciones del registro societario..."/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_l10n_ec_partner_share" model="ir.actions.act_window">
+            <field name="name">Libro de Socios</field>
+            <field name="res_model">l10n_ec.partner.share</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem id="menu_l10n_ec_partner_share"
+                  name="Libro de Socios"
+                  parent="l10n_ec_base.menu_l10n_ec_root"
+                  action="action_l10n_ec_partner_share"
+                  sequence="40"/>
+
+        <!-- ==================== LIBRO DE ACTAS ====================== -->
+        <record id="view_l10n_ec_assembly_minute_tree" model="ir.ui.view">
+            <field name="name">l10n_ec.assembly.minute.tree</field>
+            <field name="model">l10n_ec.assembly.minute</field>
+            <field name="arch" type="xml">
+                <list string="Libro de Actas"
+                      decoration-muted="state == 'draft'"
+                      sample="1">
+                    <field name="name"/>
+                    <field name="date"/>
+                    <field name="assembly_type"/>
+                    <field name="place"/>
+                    <field name="president"/>
+                    <field name="state"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_l10n_ec_assembly_minute_form" model="ir.ui.view">
+            <field name="name">l10n_ec.assembly.minute.form</field>
+            <field name="model">l10n_ec.assembly.minute</field>
+            <field name="arch" type="xml">
+                <form string="Acta de Junta / Asamblea">
+                    <header>
+                        <button name="action_post" string="Aprobar"
+                                type="object" class="btn-primary"
+                                invisible="state != 'draft'"/>
+                        <button name="action_draft" string="Volver a Borrador"
+                                type="object" class="btn-secondary"
+                                invisible="state != 'posted'"/>
+                        <field name="state" widget="statusbar"
+                               statusbar_visible="draft,posted"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name"/>
+                            <h1><field name="name" readonly="1"/></h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="date"/>
+                                <field name="assembly_type"/>
+                                <field name="place"/>
+                            </group>
+                            <group>
+                                <field name="president"/>
+                                <field name="secretary"/>
+                                <field name="document_count" invisible="1"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Asistentes">
+                                <field name="attendees" nolabel="1"
+                                       placeholder="Un nombre por linea (socios / directores)..."/>
+                            </page>
+                            <page string="Acuerdos">
+                                <field name="agreements" nolabel="1"
+                                       placeholder="Puntos tratados y acuerdos adoptados..."/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_l10n_ec_assembly_minute" model="ir.actions.act_window">
+            <field name="name">Libro de Actas</field>
+            <field name="res_model">l10n_ec.assembly.minute</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem id="menu_l10n_ec_assembly_minute"
+                  name="Libro de Actas"
+                  parent="l10n_ec_base.menu_l10n_ec_root"
+                  action="action_l10n_ec_assembly_minute"
+                  sequence="50"/>
+
+        <!-- ===================== SEQUENCES ========================== -->
+        <record id="seq_l10n_ec_partner_share" model="ir.sequence">
+            <field name="name">Libro de Socios</field>
+            <field name="code">l10n_ec.partner.share</field>
+            <field name="prefix">SOC/%(year)s/</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="seq_l10n_ec_assembly_minute" model="ir.sequence">
+            <field name="name">Libro de Actas</field>
+            <field name="code">l10n_ec.assembly.minute</field>
+            <field name="prefix">ACTA/%(year)s/</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+    </data>
+</odoo>

@@ -1,11 +1,16 @@
 id,code,name,type,specific_rate,ad_valorem_rate
 ice_3011,3011,Cigarrillos Rubios,specific,0.16,0.0
-ice_3031,3031,Alcohol (Litros Puros),specific_content,10.30,0.0
-ice_3041,3041,Cerveza Industrial,specific_content,13.48,0.0
-ice_3043,3043,Cerveza Artesanal,specific_content,1.54,0.0
+ice_3031,3031,Alcohol (Litros Puros de Alcohol),specific_content,10.41,0.0
+ice_3041,3041,Cerveza Industrial,specific_content,13.62,0.0
+ice_3043,3043,Cerveza Artesanal,specific_content,1.56,0.0
 ice_3680,3680,Fundas Plásticas,specific,0.08,0.0
 ice_3053,3053,Bebidas Azucaradas (g/100g),specific_content,0.18,0.0
-ice_3072,3072,Perfumes y Aguas de Tocador,ad_valorem,0.0,20.0
-ice_3092,3092,Vehículos Motorizados,ad_valorem,0.0,15.0
-ice_3650,3650,Videojuegos,ad_valorem,0.0,35.0
-ice_3610,3610,Armas de Fuego,ad_valorem,0.0,300.0
+ice_3610,3610,Perfumes y Aguas de Tocador,ad_valorem,0.0,20.0
+ice_3073,3073,Vehículos Motorizados PVP hasta 20.000 USD,ad_valorem,0.0,5.0
+ice_3075,3075,"Vehículos Motorizados PVP 30.000 a 40.000 USD",ad_valorem,0.0,15.0
+ice_3077,3077,"Vehículos Motorizados PVP 40.000 a 50.000 USD",ad_valorem,0.0,20.0
+ice_3078,3078,"Vehículos Motorizados PVP 50.000 a 60.000 USD",ad_valorem,0.0,25.0
+ice_3079,3079,"Vehículos Motorizados PVP 60.000 a 70.000 USD",ad_valorem,0.0,30.0
+ice_3080,3080,Vehículos Motorizados PVP superior a 70.000 USD,ad_valorem,0.0,35.0
+ice_3620,3620,Videojuegos,ad_valorem,0.0,35.0
+ice_3630,3630,"Armas de Fuego, Armas Deportivas y Municiones",ad_valorem,0.0,300.0

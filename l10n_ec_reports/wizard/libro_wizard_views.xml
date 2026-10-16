@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Statutory-books wizard: form view, window actions and the Ecuador menu
+  entries (one child action per book so every book has its own menu item).
+-->
+<odoo>
+    <data>
+
+        <record id="view_l10n_ec_libro_wizard_form" model="ir.ui.view">
+            <field name="name">l10n_ec.libro.wizard.form</field>
+            <field name="model">l10n_ec.libro.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Libros Contables Ecuador">
+                    <group>
+                        <group>
+                            <field name="book_type"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="journal_ids"
+                                   invisible="book_type not in ('bancos', 'caja')"/>
+                        </group>
+                    </group>
+                    <group invisible="not xlsx_data">
+                        <field name="xlsx_filename" invisible="1"/>
+                        <field name="xlsx_data" filename="xlsx_filename" string="Descargar XLSX"/>
+                    </group>
+                    <group invisible="not csv_data">
+                        <field name="csv_filename" invisible="1"/>
+                        <field name="csv_data" filename="csv_filename" string="Descargar CSV"/>
+                    </group>
+                    <footer>
+                        <button string="Imprimir PDF" name="action_print"
+                                type="object" class="btn-primary"/>
+                        <button string="Exportar XLSX" name="action_export_xlsx"
+                                type="object" class="btn-secondary"/>
+                        <button string="Exportar CSV" name="action_export_csv"
+                                type="object" class="btn-secondary"/>
+                        <button string="Cerrar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Generic action (book_type passed through the context) -->
+        <record id="action_l10n_ec_libro_wizard" model="ir.actions.act_window">
+            <field name="name">Libros Contables</field>
+            <field name="res_model">l10n_ec.libro.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="menu_l10n_ec_libros"
+                  name="Libros Contables"
+                  parent="l10n_ec_base.menu_l10n_ec_root"
+                  sequence="10"/>
+
+        <!-- One child action per book (the plan requires every book in a menu) -->
+        <record id="action_l10n_ec_libro_ventas" model="ir.actions.act_window">
+            <field name="name">Libro de Ventas</field>
+            <field name="res_model">l10n_ec.libro.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_book_type': 'ventas'}</field>
+        </record>
+        <record id="action_l10n_ec_libro_compras" model="ir.actions.act_window">
+            <field name="name">Libro de Compras</field>
+            <field name="res_model">l10n_ec.libro.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_book_type': 'compras'}</field>
+        </record>
+        <record id="action_l10n_ec_libro_retenciones" model="ir.actions.act_window">
+            <field name="name">Libro de Retenciones</field>
+            <field name="res_model">l10n_ec.libro.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_book_type': 'retenciones'}</field>
+        </record>
+        <record id="action_l10n_ec_libro_bancos" model="ir.actions.act_window">
+            <field name="name">Libro de Bancos (BCE)</field>
+            <field name="res_model">l10n_ec.libro.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_book_type': 'bancos'}</field>
+        </record>
+        <record id="action_l10n_ec_libro_caja" model="ir.actions.act_window">
+            <field name="name">Libro de Caja</field>
+            <field name="res_model">l10n_ec.libro.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_book_type': 'caja'}</field>
+        </record>
+        <record id="action_l10n_ec_libro_diario" model="ir.actions.act_window">
+            <field name="name">Libro Diario</field>
+            <field name="res_model">l10n_ec.libro.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_book_type': 'diario'}</field>
+        </record>
+        <record id="action_l10n_ec_libro_mayor" model="ir.actions.act_window">
+            <field name="name">Libro Mayor</field>
+            <field name="res_model">l10n_ec.libro.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_book_type': 'mayor'}</field>
+        </record>
+        <record id="action_l10n_ec_libro_inventarios" model="ir.actions.act_window">
+            <field name="name">Libro de Inventarios y Balances</field>
+            <field name="res_model">l10n_ec.libro.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_book_type': 'inventarios'}</field>
+        </record>
+
+        <menuitem id="menu_l10n_ec_libro_ventas" name="Libro de Ventas"
+                  parent="menu_l10n_ec_libros"
+                  action="action_l10n_ec_libro_ventas" sequence="10"/>
+        <menuitem id="menu_l10n_ec_libro_compras" name="Libro de Compras"
+                  parent="menu_l10n_ec_libros"
+                  action="action_l10n_ec_libro_compras" sequence="20"/>
+        <menuitem id="menu_l10n_ec_libro_retenciones" name="Libro de Retenciones"
+                  parent="menu_l10n_ec_libros"
+                  action="action_l10n_ec_libro_retenciones" sequence="30"/>
+        <menuitem id="menu_l10n_ec_libro_bancos" name="Libro de Bancos (BCE)"
+                  parent="menu_l10n_ec_libros"
+                  action="action_l10n_ec_libro_bancos" sequence="40"/>
+        <menuitem id="menu_l10n_ec_libro_caja" name="Libro de Caja"
+                  parent="menu_l10n_ec_libros"
+                  action="action_l10n_ec_libro_caja" sequence="50"/>
+        <menuitem id="menu_l10n_ec_libro_diario" name="Libro Diario"
+                  parent="menu_l10n_ec_libros"
+                  action="action_l10n_ec_libro_diario" sequence="60"/>
+        <menuitem id="menu_l10n_ec_libro_mayor" name="Libro Mayor"
+                  parent="menu_l10n_ec_libros"
+                  action="action_l10n_ec_libro_mayor" sequence="70"/>
+        <menuitem id="menu_l10n_ec_libro_inventarios"
+                  name="Libro de Inventarios y Balances"
+                  parent="menu_l10n_ec_libros"
+                  action="action_l10n_ec_libro_inventarios" sequence="80"/>
+
+    </data>
+</odoo>

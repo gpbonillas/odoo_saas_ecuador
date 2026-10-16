@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  QWeb templates for the SUPERCIAS / NIIF-adjusted financial statements.
+
+  Statement structure per KB_SUPERCIAS.md 3.2 (5 statements):
+    balance     - Estado de Situacion Financiera (secciones + totales)
+    resultados  - Estado de Resultados Integral
+    flujo       - Estado de Flujos de Efectivo (metodo indirecto)
+    patrimonio  - Estado de Cambios en el Patrimonio
+    notas       - Notas a los Estados Financieros (estructura NIC 1)
+
+  All numbers produced by report_lib (pure python, unit-tested).
+-->
+<odoo>
+
+    <template id="report_estado_body">
+        <t t-set="data" t-value="o.get_statement_data()"/>
+        <div class="page">
+            <t t-set="layout_document_title">
+                <span t-esc="data.get('title')"/>
+            </t>
+            <h2>
+                <span t-esc="o.company_id.name"/> — <span t-esc="data.get('title')"/>
+            </h2>
+            <p>
+                <strong>Periodo:</strong> <span t-esc="data.get('period_label')"/>
+                 | <strong>Moneda:</strong>
+                <span t-esc="o.company_id.currency_id.name"/>
+                 | <strong>Generado:</strong>
+                <span t-esc="datetime.datetime.now().strftime('%Y-%m-%d %H:%M')"/>
+            </p>
+            <p t-if="data.get('structural')">
+                <em>Estructura de secciones segun NIIF / NIC 1 y regulacion
+                SUPERCIAS; importes calculados desde el libro diario y las
+                cuentas configuradas en el asistente.</em>
+            </p>
+
+            <!-- ============ sections: balance / resultados ============ -->
+            <t t-if="data.get('sections')">
+                <t t-foreach="data['sections']" t-as="section">
+                    <h3><span t-esc="section['title']"/></h3>
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                            <tr>
+                                <th style="width: 12%;">Cuenta</th>
+                                <th>Detalle</th>
+                                <th class="text-right" style="width: 20%;">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="section['rows']" t-as="row">
+                                <td><span t-esc="row['code']"/></td>
+                                <td><span t-esc="row['name']"/></td>
+                                <td class="text-right">
+                                    <span t-esc="o.fmt_cell(row['amount'])"/>
+                                </td>
+                            </tr>
+                            <tr class="fw-bold">
+                                <td colspan="2">
+                                    TOTAL <span t-esc="section['title']"/>
+                                </td>
+                                <td class="text-right">
+                                    <span t-esc="o.fmt_cell(section['total'])"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </t>
+
+                <!-- Statement totals -->
+                <table class="table table-sm table-bordered">
+                    <tbody>
+                        <tr t-if="data.get('total_activo') is not None">
+                            <td>Total activo</td>
+                            <td class="text-right">
+                                <span t-esc="o.fmt_cell(data.get('total_activo'))"/>
+                            </td>
+                        </tr>
+                        <tr t-if="data.get('total_pasivo') is not None">
+                            <td>Total pasivo</td>
+                            <td class="text-right">
+                                <span t-esc="o.fmt_cell(data.get('total_pasivo'))"/>
+                            </td>
+                        </tr>
+                        <tr t-if="data.get('total_patrimonio') is not None">
+                            <td>Total patrimonio</td>
+                            <td class="text-right">
+                                <span t-esc="o.fmt_cell(data.get('total_patrimonio'))"/>
+                            </td>
+                        </tr>
+                        <tr t-if="data.get('total_pasivo_patrimonio') is not None">
+                            <td><strong>Total pasivo + patrimonio</strong></td>
+                            <td class="text-right">
+                                <strong>
+                                    <span t-esc="o.fmt_cell(data.get('total_pasivo_patrimonio'))"/>
+                                </strong>
+                            </td>
+                        </tr>
+                        <tr t-if="data.get('utilidad_bruta') is not None">
+                            <td>Utilidad bruta</td>
+                            <td class="text-right">
+                                <span t-esc="o.fmt_cell(data.get('utilidad_bruta'))"/>
+                            </td>
+                        </tr>
+                        <tr t-if="data.get('utilidad_operacional') is not None">
+                            <td>Utilidad operacional</td>
+                            <td class="text-right">
+                                <span t-esc="o.fmt_cell(data.get('utilidad_operacional'))"/>
+                            </td>
+                        </tr>
+                        <tr t-if="data.get('impuesto_renta') is not None">
+                            <td>Impuesto a la renta (<span t-esc="o.fmt_cell(round((data.get('tax_rate') or 0) * 100, 2))"/>%)</td>
+                            <td class="text-right">
+                                <span t-esc="o.fmt_cell(data.get('impuesto_renta'))"/>
+                            </td>
+                        </tr>
+                        <tr t-if="data.get('utilidad_neta') is not None">
+                            <td><strong>Utilidad neta del ejercicio</strong></td>
+                            <td class="text-right">
+                                <strong>
+                                    <span t-esc="o.fmt_cell(data.get('utilidad_neta'))"/>
+                                </strong>
+                            </td>
+                        </tr>
+                        <tr t-if="data.get('balanced') is not None">
+                            <td>Cuadre contable (activo = pasivo + patrimonio)</td>
+                            <td class="text-right">
+                                <span t-esc="'CUADRA' if data.get('balanced') else 'DESCUADRE: %s' % o.fmt_cell(data.get('difference'))"/>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </t>
+
+            <!-- ============ flujo de efectivo ============ -->
+            <t t-if="data.get('operating')">
+                <t t-foreach="(('OPERACION', data.get('operating'), data.get('operating_total')),
+                               ('INVERSION', data.get('investing'), data.get('investing_total')),
+                               ('FINANCIACION', data.get('financing'), data.get('financing_total')))"
+                   t-as="block">
+                    <h3>Flujo de <span t-esc="block[0]"/></h3>
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            <tr t-foreach="block[1]" t-as="row">
+                                <td><span t-esc="row['name']"/></td>
+                                <td class="text-right">
+                                    <span t-esc="o.fmt_cell(row['amount'])"/>
+                                </td>
+                            </tr>
+                            <tr class="fw-bold">
+                                <td>Total <span t-esc="block[0]"/></td>
+                                <td class="text-right">
+                                    <span t-esc="o.fmt_cell(block[2])"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </t>
+
+                <table class="table table-sm table-bordered">
+                    <tbody>
+                        <tr>
+                            <td>Variacion neta de efectivo</td>
+                            <td class="text-right">
+                                <span t-esc="o.fmt_cell(data.get('net_change'))"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Efectivo al inicio</td>
+                            <td class="text-right">
+                                <span t-esc="o.fmt_cell(data.get('cash_open'))"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Efectivo al cierre</td>
+                            <td class="text-right">
+                                <span t-esc="o.fmt_cell(data.get('cash_close'))"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Variacion segun libros (cuentas de efectivo)</td>
+                            <td class="text-right">
+                                <span t-esc="o.fmt_cell(data.get('cash_delta'))"/>
+                            </td>
+                        </tr>
+                        <tr class="fw-bold">
+                            <td>Diferencia de conciliacion (metodo indirecto simplificado)</td>
+                            <td class="text-right">
+                                <span t-esc="o.fmt_cell(data.get('reconciliation_difference'))"/>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </t>
+
+            <!-- ============ cambios en el patrimonio ============ -->
+            <t t-if="data.get('rows') and data.get('saldo_final') is not None">
+                <table class="table table-sm table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Concepto</th>
+                            <th class="text-right">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="data['rows']" t-as="row">
+                            <td><span t-esc="row['name']"/></td>
+                            <td class="text-right">
+                                <span t-esc="o.fmt_cell(row['amount'])"/>
+                            </td>
+                        </tr>
+                        <tr class="fw-bold">
+                            <td>Verificacion (debe ser 0)</td>
+                            <td class="text-right">
+                                <span t-esc="o.fmt_cell(data.get('check'))"/>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </t>
+
+            <!-- ============ notas (estructura NIC 1) ============ -->
+            <t t-if="data.get('notes')">
+                <p>
+                    <em>Notas estructuradas segun NIC 1 / SUPERCIAS: el contenido
+                    de cada nota se completa por el contador. Las tablas siguientes
+                    definen el encabezado y columnas obligatorios.</em>
+                </p>
+                <t t-foreach="data['notes']" t-as="note">
+                    <h3>
+                        Nota <span t-esc="note['number']"/>:
+                        <span t-esc="note['title']"/>
+                    </h3>
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                            <tr>
+                                <th t-foreach="note['columns']" t-as="col">
+                                    <span t-esc="col"/>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="note['rows']" t-as="row">
+                                <td t-foreach="note['columns']" t-as="col">
+                                    <span t-esc="row.get(col) or ''"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </t>
+            </t>
+
+            <p t-if="not data.get('sections') and not data.get('operating')
+                     and not data.get('notes')
+                     and not (data.get('rows') and data.get('saldo_final') is not None)">
+                Sin datos contables para el periodo seleccionado.
+            </p>
+        </div>
+    </template>
+
+    <!-- Thin wrappers - one unique report_name per statement. -->
+    <template id="report_estado_balance">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-call="l10n_ec_reports.report_estado_body"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_estado_resultados">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-call="l10n_ec_reports.report_estado_body"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_estado_flujo">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-call="l10n_ec_reports.report_estado_body"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_estado_patrimonio">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-call="l10n_ec_reports.report_estado_body"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_estado_notas">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-call="l10n_ec_reports.report_estado_body"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

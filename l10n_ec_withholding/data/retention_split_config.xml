@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    IVA Withholding distribution (deprecated 30/70 split).
+
+    The withheld IVA goes in FULL to the SRI under the matching
+    Formulario 104 casillero (721=10%, 723=20%, 725=30%, 727=50%,
+    729=70%, 731=100%). The former "30% SRI / 70% IESS" split (cited
+    as "Decreto 745") had no legal basis and was CORRECTED in this
+    audit: sri_pct=100, iess_pct=0 (see docs/legal_audit_2026.md).
+
+    The parameters are kept for backward compatibility only.
+-->
+<odoo>
+    <data noupdate="1">
+        <record id="l10n_ec_withholding_iva_sri_pct" model="ir.config_parameter">
+            <field name="key">l10n_ec.withholding_iva_sri_pct</field>
+            <field name="value">100</field>
+        </record>
+        <record id="l10n_ec_withholding_iva_iess_pct" model="ir.config_parameter">
+            <field name="key">l10n_ec.withholding_iva_iess_pct</field>
+            <field name="value">0</field>
+        </record>
+
+        <!-- Auto-detection of withholdings on vendor bill confirmation -->
+        <record id="l10n_ec_withholding_auto_detect" model="ir.config_parameter">
+            <field name="key">l10n_ec.withholding_auto_detect</field>
+            <field name="value">True</field>
+        </record>
+    </data>
+</odoo>

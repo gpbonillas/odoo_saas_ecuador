@@ -47,55 +47,112 @@ Esta localización cumple **100%** con las siguientes regulaciones ecuatorianas 
 
 ### 2.2 Estructura Implementada
 
+Plan de cuentas cargado por `l10n_ec_base/models/template_ec.py` (métodos
+`@template("ec", ...)` de Odoo 18). Los códigos se muestran punteados; el
+ registro usa la llave `code` sin puntos. **103 cuentas, 40 grupos, 6 clases.**
+
 | Código | Cuenta | Tipo |
 |--------|--------|------|
-| **1** | ACTIVO | Grupo |
+| **1** | **ACTIVO** | **Grupo (35 cuentas)** |
 | 1.01 | Activo Corriente | Subgrupo |
-| 1.01.01 | Efectivo y Equivalentes | Cuenta |
-| 1.01.01.01 | Caja | Detalle |
-| 1.01.01.02 | Bancos | Detalle |
-| 1.01.01.03 | Cuentas de Ahorro | Detalle |
-| 1.01.02 | Cuentas por Cobrar | Cuenta |
-| 1.01.03 | Inventarios | Cuenta |
-| 1.01.04 | Activos por Impuestos | Cuenta |
-| 1.01.04.01 | IVA en Compras | Detalle |
-| 1.01.04.02 | Retenciones IVA Recibidas | Detalle |
-| 1.01.04.03 | Retenciones IR Recibidas | Detalle |
-| 1.01.04.04 | Crédito Tributario IVA | Detalle |
-| **2** | PASIVO | Grupo |
+| 1.01.01 | Efectivo y Equivalentes de Efectivo | Subgrupo |
+| 1.01.01.01 | Caja | asset_cash |
+| 1.01.01.02 | Bancos | asset_cash |
+| 1.01.01.03 | Cuentas de Ahorro | asset_cash |
+| 1.01.01.04 | Caja Chica | asset_cash |
+| 1.01.01.05 | Bancos del Exterior | asset_cash |
+| 1.01.01.06 | Inversiones Temporales | asset_current |
+| 1.01.02 | Cuentas por Cobrar Comerciales | Subgrupo |
+| 1.01.02.01 | Clientes Nacionales | asset_receivable |
+| 1.01.02.02 | Clientes No Relacionados *(cuenta por cobrar por defecto)* | asset_receivable |
+| 1.01.02.03 | Otras Cuentas por Cobrar | asset_receivable |
+| 1.01.02.04 | Provisión de Cuentas Incobrables | asset_current |
+| 1.01.03 | Inventarios | Subgrupo (5 cuentas de mercadería/materia prima/proceso/terminados/suministros) |
+| 1.01.04 | Activos por Impuestos | Subgrupo |
+| 1.01.04.01 | IVA en Compras | asset_current |
+| 1.01.04.02 | Retenciones IVA Recibidas | asset_current |
+| 1.01.04.03 | Retenciones IR Recibidas | asset_current |
+| 1.01.04.04 | ISD Pagado | asset_current |
+| 1.01.04.05 | Anticipo de Impuesto a la Renta | asset_current |
+| 1.01.05 | Activos Prepagados | Subgrupo (seguros/alquileres) |
+| 1.02 | Activo No Corriente | Subgrupo |
+| 1.02.01 | Propiedades, Planta y Equipo | Subgrupo (11 cuentas) |
+| 1.02.02 | Intangibles | Subgrupo (marcas y patentes, programas) |
+| **2** | **PASIVO** | **Grupo (19 cuentas)** |
 | 2.01 | Pasivo Corriente | Subgrupo |
-| 2.01.01 | Cuentas por Pagar | Cuenta |
-| 2.01.04 | IVA por Pagar | Cuenta |
-| 2.01.04.01 | IVA Ventas | Detalle |
-| 2.01.05 | Retenciones por Pagar | Cuenta |
-| 2.01.05.01 | Retención IR por Pagar | Detalle |
-| 2.01.05.02 | Retención IVA por Pagar | Detalle |
-| 2.01.06 | IESS por Pagar | Cuenta |
-| 2.01.06.01 | Aporte Personal | Detalle |
-| 2.01.06.02 | Aporte Patronal | Detalle |
-| 2.01.06.03 | Fondos de Reserva | Detalle |
-| 2.01.07 | Beneficios a Empleados | Cuenta |
-| 2.01.07.01 | Décimo Tercero por Pagar | Detalle |
-| 2.01.07.02 | Décimo Cuarto por Pagar | Detalle |
-| 2.01.07.03 | Vacaciones por Pagar | Detalle |
-| 2.01.08 | Participación Trabajadores 15% | Cuenta |
-| **3** | PATRIMONIO | Grupo |
-| **4** | INGRESOS | Grupo |
-| 4.01 | Ingresos Operacionales | Subgrupo |
-| 4.01.01 | Ventas Tarifa 15% | Cuenta |
-| 4.01.02 | Ventas Tarifa 0% | Cuenta |
-| 4.01.03 | Ventas Exentas | Cuenta |
-| 4.01.04 | Exportaciones | Cuenta |
-| **5** | GASTOS | Grupo |
-| 5.01 | Gastos Operacionales | Subgrupo |
-| 5.02 | Gastos Financieros | Subgrupo |
+| 2.01.01 | Cuentas por Pagar Comerciales | Subgrupo |
+| 2.01.01.01 | Proveedores Nacionales | liability_payable |
+| 2.01.01.02 | Proveedores del Exterior *(cuenta por pagar por defecto)* | liability_payable |
+| 2.01.02.01 | Documentos por Pagar Bancarios | liability_current |
+| 2.01.03.01 | Sueldos y Salarios por Pagar | liability_current |
+| 2.01.03.04 | Impuesto a la Renta por Pagar | liability_current |
+| 2.01.03.05 | Préstamos IESS por Pagar | liability_current |
+| 2.01.04 | IVA por Pagar *(nivel grupo — destino IVA ventas)* | liability_current |
+| 2.01.05 | Retenciones por Pagar | Subgrupo |
+| 2.01.05.04 | Retención IR (Fuente) por Pagar | liability_current |
+| 2.01.05.05 | Retención IVA por Pagar | liability_current |
+| 2.01.06.01 | IESS Aporte Personal por Pagar | liability_current |
+| 2.01.06.02 | IESS Aporte Patronal por Pagar | liability_current |
+| 2.01.06.03 | Fondos de Reserva por Pagar | liability_current |
+| 2.01.07.01 | Décimo Tercero por Pagar | liability_current |
+| 2.01.07.02 | Décimo Cuarto por Pagar | liability_current |
+| 2.01.07.03 | Vacaciones por Pagar | liability_current |
+| 2.01.08 | Participación de los Trabajadores 15% por Pagar | liability_current |
+| 2.02 | Pasivo No Corriente | Subgrupo (préstamos LP, jubilación patronal) |
+| **3** | **PATRIMONIO** | **Grupo (7 cuentas)** |
+| 3.01.01.01 | Capital Social | equity |
+| 3.01.02.01/.02 | Reserva Legal / Reserva de Capitalización | equity |
+| 3.01.03.01/.02 | Utilidad / Pérdida de Ejercicios Anteriores | equity_unaffected |
+| 3.01.04.01/.02 | Utilidad / Pérdida del Ejercicio | equity_unaffected |
+| **4** | **INGRESOS** | **Grupo (10 cuentas)** |
+| 4.01.01 | Ventas 15% | income |
+| 4.01.02 | Ventas 0% | income |
+| 4.01.03 | Ventas Exentas | income |
+| 4.01.04 | Exportaciones | income |
+| 4.01.05 | Ventas 5% | income |
+| 4.01.06 | Prestación de Servicios 15% | income |
+| 4.02.01.01/.02 | Intereses Ganados / Otros Ingresos Operacionales | income_other |
+| 4.03.01.01/.02 | Descuentos / Devoluciones en Ventas | income |
+| **5** | **GASTOS** | **Grupo (30 cuentas)** |
+| 5.01 | Gastos de Administración | Subgrupo (16: alquileres, servicios básicos, depreciación, amortización, incobrables…) |
+| 5.02 | Gastos de Personal | Subgrupo |
+| 5.02.01 | Sueldos y Salarios | expense |
+| 5.02.02 | Aporte Patronal IESS | expense |
+| 5.02.03 | Décimo Tercer Sueldo | expense |
+| 5.02.04 | Décimo Cuarto Sueldo | expense |
+| 5.02.05 | Horas Extras y Bonificaciones | expense |
+| 5.02.06 | Fondos de Reserva | expense |
+| 5.02.07 | Vacaciones | expense |
+| 5.02.08 | Alimentación y Transporte del Personal | expense |
+| 5.03 | Gastos de Ventas | Subgrupo (publicidad, comisiones, transporte/fletes) |
+| 5.04 | Gastos Financieros | Subgrupo (intereses, diferencias de cambio, comisiones bancarias) |
+| **6** | **COSTOS** | **Grupo (2 cuentas)** |
+| 6.01.01.01 | Costo de Ventas | expense_direct_cost |
+| 6.01.01.02 | Costo de Producción | expense_direct_cost |
+
+> **Nota auditoría (2026-06):** los códigos `2.01.03.02/03`, `2.01.04.01-03` y
+> `2.01.05.01-03` quedan **reservados** — l10n_ec_withholding y
+> l10n_ec_hr_payroll resuelven cuentas por código y aceptan la primera
+> coincidencia; usarlos provocaría asientos en cuentas equivocadas. Las
+> retenciones por pagar se ubican en 2.01.05.04/.05 y se resuelven por nombre.
 
 ### 2.3 Archivo de Implementación
 
 ```
-l10n_ec_base/models/template_ec.py
-l10n_ec_base/data/account.account.template.csv
+l10n_ec_base/models/template_ec.py          # fuente única del plan (dict-form)
+                                             # incluye account.tax.group (8 grupos)
 ```
+
+Los CSV muertos `data/account.account.template.csv` y
+`data/account.tax.template.csv` fueron eliminados: nunca se cargaban (ruta
+incorrecta para `_parse_csv`) y no estaban en la lista `data` del manifest.
+El XML `data/account_chart_template.xml` (grupos de impuestos) también fue
+eliminado: `_load` borra los registros contables de la empresa —incluidos los
+`account.tax.group` definidos en XML— antes de recrearlos desde el template,
+dejando los xmlids rotos. Los grupos ahora se definen en
+`_get_ec_account_tax_group` (llaves sin punto, resueltas vía
+`account.<empresa_id>_<llave>`).
+
 
 ---
 

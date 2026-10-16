@@ -17,32 +17,32 @@ from typing import Optional
 
 _logger = logging.getLogger(__name__)
 
-# Códigos de Retención IR
+# Códigos de Retención IR (Tabla 19 - Res. NAC-DGERCGC26-00000009, RO 233)
 RETENTION_CODES_IR = {
     '303': {'rate': 10.0, 'name': 'Honorarios Profesionales'},
-    '304': {'rate': 8.0, 'name': 'Servicios Predomina Intelecto'},
-    '307': {'rate': 2.0, 'name': 'Servicios Mano de Obra'},
-    '308': {'rate': 2.0, 'name': 'Servicios Entre Sociedades'},
-    '309': {'rate': 1.0, 'name': 'Publicidad y Comunicación'},
+    '304': {'rate': 10.0, 'name': 'Servicios Predomina Intelecto'},
+    '307': {'rate': 3.0, 'name': 'Servicios Mano de Obra'},
+    '308': {'rate': 10.0, 'name': 'Imagen o Renombre'},
+    '309': {'rate': 3.0, 'name': 'Publicidad y Comunicación'},
     '310': {'rate': 1.0, 'name': 'Transporte'},
-    '312': {'rate': 1.0, 'name': 'Bienes Muebles'},
-    '319': {'rate': 1.0, 'name': 'Arrendamiento Mercantil'},
-    '320': {'rate': 1.75, 'name': 'Arrendamiento Inmuebles'},
-    '322': {'rate': 1.0, 'name': 'Seguros y Reaseguros'},
-    '323': {'rate': 2.0, 'name': 'Rendimientos Financieros'},
-    '340': {'rate': 1.0, 'name': 'Artes Gráficas'},
-    '344': {'rate': 25.0, 'name': 'Dividendos Residentes'},
-    '500': {'rate': 25.0, 'name': 'Pagos Paraísos Fiscales'},
+    '312': {'rate': 2.0, 'name': 'Bienes Muebles'},
+    '319': {'rate': 2.0, 'name': 'Arrendamiento Mercantil'},
+    '320': {'rate': 10.0, 'name': 'Arrendamiento Inmuebles'},
+    '322': {'rate': 2.0, 'name': 'Seguros y Reaseguros'},
+    '323': {'rate': 3.0, 'name': 'Rendimientos Financieros'},
+    '325': {'rate': 25.0, 'name': 'Anticipo de Utilidades'},
+    '340': {'rate': 3.0, 'name': 'Impuesto Único Exportación Banano'},
+    '500': {'rate': 25.0, 'name': 'No Residentes - Rentas Inmobiliarias'},
 }
 
-# Códigos de Retención IVA
+# Códigos de Retención IVA (casilleros Formulario 104, Res. NAC-DGERCGC20-00000061)
 RETENTION_CODES_IVA = {
     '721': {'rate': 10.0, 'name': 'Bienes'},
     '723': {'rate': 20.0, 'name': 'Servicios'},
     '725': {'rate': 30.0, 'name': 'Bienes (Contribuyente Especial)'},
-    '727': {'rate': 70.0, 'name': 'Servicios (Contribuyente Especial)'},
-    '729': {'rate': 100.0, 'name': 'Liquidación de Compra'},
-    '731': {'rate': 100.0, 'name': 'Profesionales'},
+    '727': {'rate': 50.0, 'name': 'Contribuyente Especial 50%'},
+    '729': {'rate': 70.0, 'name': 'Contribuyente Especial 70%'},
+    '731': {'rate': 100.0, 'name': 'Liquidación de Compra / Importación Servicios'},
 }
 
 
@@ -105,6 +105,16 @@ class RetentionManager:
     def validate_5_day_rule(self, invoice_date: date, retention_date: date = None) -> dict:
         """
         Valida la regla de 5 días hábiles para retenciones.
+
+        Base legal: art. 50 de la Ley de Régimen Tributario Interno (LRTI):
+        el agente de retención debe aplicar la retención dentro de los
+        5 días hábiles de recibido el comprobante de pago (los días
+        hábiles se computan conforme al art. 12 del Código Tributario).
+
+        Limitación: este método approxima el cómputo excluyendo solo
+        fines de semana (no excluye feriados) y toma como fecha de inicio
+        la fecha de la factura (no la fecha efectiva de recepción del
+        comprobante de venta, que es el hecho generador del plazo).
 
         Args:
             invoice_date: Fecha de la factura

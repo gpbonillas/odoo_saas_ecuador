@@ -82,6 +82,15 @@
                         </group>
                     </group>
 
+                    <separator string="Plan de Cuentas"/>
+                    <group>
+                        <field name="chart_template" widget="radio"/>
+                    </group>
+                    <div class="alert alert-info">
+                        Se instalará el plan de cuentas NEC (Ecuador) sobre la
+                        empresa si aún no tiene uno configurado.
+                    </div>
+
                     <!-- Size explanation -->
                     <div class="alert alert-secondary" invisible="business_size != 'simple'">
                         <strong>PEQUEÑO:</strong> Solo POS + Factura electrónica.<br/>
@@ -140,6 +149,17 @@
                             <field name="email"/>
                         </group>
                     </group>
+
+                    <group string="🏛️ Régimen Tributario (por empresa)">
+                        <group>
+                            <field name="person_type"/>
+                            <field name="regimen"/>
+                        </group>
+                        <group>
+                            <field name="contribuyente_especial"/>
+                            <field name="agente_retencion"/>
+                        </group>
+                    </group>
                 </div>
 
                 <!-- ============================================================= -->
@@ -174,6 +194,15 @@
                         </group>
                     </group>
 
+                    <group string="🧾 Contabilidad">
+                        <group>
+                            <field name="accounting_method" widget="radio"/>
+                        </group>
+                        <group>
+                            <field name="chart_template"/>
+                        </group>
+                    </group>
+
                     <group string="🧪 Datos Demo (Opcional)">
                         <group>
                             <field name="install_demo_data"/>
@@ -203,10 +232,13 @@
                         <group>
                             <field name="business_template_id" readonly="1"/>
                             <field name="business_size" readonly="1"/>
+                            <field name="chart_template" readonly="1"/>
                         </group>
                         <group>
                             <field name="company_ruc" readonly="1"/>
                             <field name="company_name" readonly="1"/>
+                            <field name="regimen" readonly="1"/>
+                            <field name="accounting_method" readonly="1"/>
                         </group>
                     </group>
 

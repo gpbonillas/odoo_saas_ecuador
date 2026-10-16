@@ -2,8 +2,8 @@
 ## Company Setup Wizard - Ecuador Localization
 
 **Document ID:** SRS-WIZARD-EC-2026-001
-**Version:** 1.0.0
-**Date:** 2026-01-25
+**Version:** 1.1.0
+**Date:** 2026-01-25 · **Última revisión:** 2026-10-16 (esquema SRI corregido contra payload real, CHG-2026-003)
 **Module:** l10n_ec / l10n_ec_base
 **Classification:** Internal
 
@@ -45,39 +45,50 @@ User-Agent: Odoo/18.0 SomatechEC/1.0
 
 ### 2.4 Ejemplo Request/Response
 
+> **CORREGIDO 2026-10-16 (v1.1):** payload real verificado en vivo (2 llamadas, ambiente prod
+> lectura). El ejemplo anterior (RUC inventado + campos inventados) era **falso** — ese RUC no
+> existe en el SRI (respuesta vacía) y ya se eliminó. IDs de prueba exclusivos: D-04.
+
 **Request:**
 ```
-GET /obtenerPorNumerosRuc?ruc=1790016919001
+GET /obtenerPorNumerosRuc?ruc=1793125212001
 ```
 
-**Response (200 OK):**
+**Response (200 OK) — payload real 2026-10-16 (16 claves exactas):**
 ```json
 [{
-  "numeroRuc": "1790016919001",
-  "razonSocial": "EMPRESA EJEMPLO S.A.",
-  "nombreComercial": "EMPRESA EJEMPLO",
-  "estadoContribuyente": "ACTIVO",
-  "claseContribuyente": "ESPECIAL",
+  "numeroRuc": "1793125212001",
+  "razonSocial": "CANNACHAIN S.A.S. ",
+  "estadoContribuyenteRuc": "ACTIVO",
+  "actividadEconomicaPrincipal": "CULTIVO DE LINO Y CÁÑAMO.",
   "tipoContribuyente": "SOCIEDAD",
-  "obligadoContabilidad": "SI",
-  "actividadEconomicaPrincipal": "COMERCIO AL POR MAYOR",
-  "codigoActividadEconomica": "G4610",
-  "direccionMatriz": "AV. AMAZONAS 1234 Y NACIONES UNIDAS",
-  "nombreCalle": "AV. AMAZONAS",
-  "numeroCasa": "1234",
-  "interseccion": "NACIONES UNIDAS",
-  "nombreProvincia": "PICHINCHA",
-  "nombreCanton": "QUITO",
-  "nombreParroquia": "IÑAQUITO",
-  "telefono1": "022567890",
-  "correo": "info@empresa.com.ec",
-  "fechaInicioActividades": "2010-01-15",
-  "fechaActualizacion": "2025-12-01",
-  "contribuyenteEspecial": "5368",
-  "agenteRetencion": "123",
-  "regimenRimpe": ""
+  "regimen": "GENERAL",
+  "categoria": null,
+  "obligadoLlevarContabilidad": "SI",
+  "agenteRetencion": "NO",
+  "contribuyenteEspecial": "NO",
+  "informacionFechasContribuyente": {
+    "fechaInicioActividades": "2021-02-26 00:00:00.0",
+    "fechaCese": "",
+    "fechaReinicioActividades": "",
+    "fechaActualizacion": "2025-01-15 11:12:14.0"
+  },
+  "representantesLegales": [
+    { "identificacion": "1716341274", "nombre": "ENCALADA EGUEZ VICTOR AUGUSTO" }
+  ],
+  "motivoCancelacionSuspension": null,
+  "contribuyenteFantasma": "NO",
+  "transaccionesInexistente": "NO"
 }]
 ```
+
+Notas de ingestión:
+* `razonSocial` trae **espacio final** → `trim`.
+* **Persona natural** (`ruc=1713488185001`): `tipoContribuyente=PERSONA NATURAL`,
+  `obligadoLlevarContabilidad=NO`, `representantesLegales=null` — mismas 16 claves.
+* **NO devuelve** (pese a documentación anterior): `nombreComercial`, dirección/provincia/cantón,
+  `telefono1`, `correo`, `codigoActividadEconomica` (CIIU), `regimenRimpe`, fecha de inicio
+  plana → esos datos los **pregunta** el wizard paso ① (`USER`, WIZ-01).
 
 ---
 
@@ -112,28 +123,29 @@ GET /obtenerPorNumerosRuc?ruc=1790016919001
 ┌─────────────────────────────────────────────────────────────────┐
 │  PASO 2: DATOS CARGADOS (Editable)                              │
 │  ┌───────────────────┬─────────────────────────────────────────┐│
-│  │ Razón Social:     │ [AUTO: razonSocial]                     ││
-│  │ Nombre Comercial: │ [AUTO: nombreComercial]                 ││
-│  │ Estado SRI:       │ [AUTO: estadoContribuyente] ✅          ││
+│  │ Razón Social:     │ [AUTO: razonSocial] (trim) ✅           ││
+│  │ Estado SRI:       │ [AUTO: estadoContribuyenteRuc] ✅       ││
 │  │ Tipo Contribuy:   │ [AUTO: tipoContribuyente]               ││
-│  │ Clase Contribuy:  │ [AUTO: claseContribuyente]              ││
+│  │ Régimen:          │ [AUTO: regimen]                         ││
 │  │ Actividad Econ:   │ [AUTO: actividadEconomicaPrincipal]     ││
-│  │ Obligado Contab:  │ [AUTO: obligadoContabilidad] ☑          ││
+│  │ Obligado Contab:  │ [AUTO: obligadoLlevarContabilidad] ☑    ││
 │  │ Contrib. Especial:│ [AUTO: contribuyenteEspecial]           ││
 │  │ Agente Retención: │ [AUTO: agenteRetencion]                 ││
-│  │ Régimen RIMPE:    │ [AUTO: regimenRimpe]                    ││
+│  │ Inicio Activ.:    │ [AUTO: informacionFechasContribuyente]  ││
+│  │ Rep. Legal:       │ [AUTO: representantesLegales[0]]        ││
+│  │ (rojo fraude):    │ [AUTO: fantasma/transacciones/motivo]   ││
 │  └───────────────────┴─────────────────────────────────────────┘│
 └─────────────────────────┬───────────────────────────────────────┘
                           │
                           ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  PASO 3: DIRECCIÓN (Editable)                                   │
+│  PASO 3: DATOS QUE EL SRI NO EXPONE (USER)                      │
 │  ┌───────────────────┬─────────────────────────────────────────┐│
-│  │ Dirección:        │ [AUTO: direccionMatriz]                 ││
-│  │ Ciudad:           │ [AUTO: nombreCanton]                    ││
-│  │ Provincia:        │ [AUTO: nombreProvincia]                 ││
-│  │ Teléfono:         │ [AUTO: telefono1]                       ││
-│  │ Email:            │ [AUTO: correo]                          ││
+│  │ Nombre Comercial: │ [USER] (endpoint no lo devuelve)        ││
+│  │ Dirección:        │ [USER]                                  ││
+│  │ Ciudad:           │ [USER]                                  ││
+│  │ Teléfono:         │ [USER]                                  ││
+│  │ Email:            │ [USER]                                  ││
 │  └───────────────────┴─────────────────────────────────────────┘│
 └─────────────────────────┬───────────────────────────────────────┘
                           │
@@ -155,26 +167,25 @@ GET /obtenerPorNumerosRuc?ruc=1790016919001
 
 ## 4. MAPEO DE CAMPOS
 
-### 4.1 API SRI → Wizard
+### 4.1 API SRI → Wizard (esquema real, verificado 2026-10-16)
 
 | Campo API SRI | Tipo | Campo Wizard | Auto-fill |
 |:--------------|:-----|:-------------|:----------|
 | `numeroRuc` | string(13) | `company_ruc` | ❌ Input |
-| `razonSocial` | string | `company_name` | ✅ AUTO |
-| `nombreComercial` | string | `commercial_name` | ✅ AUTO |
-| `estadoContribuyente` | string | `sri_estado` | ✅ AUTO |
+| `razonSocial` | string | `company_name` | ✅ AUTO (**trim** — trae espacio final) |
+| `estadoContribuyenteRuc` | string | `sri_estado` | ✅ AUTO (gate: `ACTIVO`; ≠ ⇒ ⛔) |
 | `tipoContribuyente` | string | `sri_tipo_contribuyente` | ✅ AUTO |
-| `claseContribuyente` | string | `sri_clase_contribuyente` | ✅ AUTO |
-| `actividadEconomicaPrincipal` | string | `sri_actividad` | ✅ AUTO |
-| `obligadoContabilidad` | "SI"/"NO" | `obligado_contabilidad` | ✅ AUTO |
-| `contribuyenteEspecial` | string | `contribuyente_especial` | ✅ AUTO |
-| `agenteRetencion` | string | `agente_retencion` | ✅ AUTO |
-| `regimenRimpe` | string | `regimen_rimpe` | ✅ AUTO |
-| `direccionMatriz` | string | `street` | ✅ AUTO |
-| `nombreCanton` | string | `city` | ✅ AUTO |
-| `nombreProvincia` | string | `province` | ✅ AUTO |
-| `telefono1` | string | `phone` | ✅ AUTO |
-| `correo` | string | `email` | ✅ AUTO |
+| `regimen` | string | `sri_regimen` | ✅ AUTO |
+| `actividadEconomicaPrincipal` | string | `sri_actividad` | ✅ AUTO (solo texto → mapeo local `texto→vertical`, N-01 §⑨) |
+| `obligadoLlevarContabilidad` | "SI"/"NO" | `obligado_contabilidad` | ✅ AUTO |
+| `contribuyenteEspecial` | "SI"/"NO" | `contribuyente_especial` | ✅ AUTO |
+| `agenteRetencion` | "SI"/"NO" | `agente_retencion` | ✅ AUTO (valores posibles ≠ NO `[VERIFY]`) |
+| `informacionFechasContribuyente.fechaInicioActividades` | datetime | `fecha_inicio` | ✅ AUTO (**anidado**) |
+| `informacionFechasContribuyente.fechaActualizacion` | datetime | `fecha_actualizacion` | ✅ AUTO (**anidado**) |
+| `representantesLegales[0].{nombre,identificacion}` | obj (lista) | `rep_legal_name` / `rep_legal_id` | ✅ AUTO (**lista** — null en natural; pre-filla usuarios paso ⑨) |
+| `contribuyenteFantasma`, `transaccionesInexistente`, `motivoCancelacionSuspension` | flag | banderas de auditoría | ✅ AUTO (rojo si ≠ `NO`/`NO`/`null`) |
+| `categoria` | ? | — | `[VERIFY]` (null en ambos IDs) |
+| *(no expuestos)* `nombreComercial`, dirección, `telefono1`, `correo`, CIIU, `regimenRimpe` | — | paso ① | ❓ **USER** (WIZ-01: se pregunta lo que SRI no sabe) |
 
 ### 4.2 Wizard → res.company (Odoo)
 
@@ -202,30 +213,35 @@ GET /obtenerPorNumerosRuc?ruc=1790016919001
 
 ---
 
-## 5. CAMPOS API SRI NO UTILIZADOS (Disponibles)
+## 5. CAMPOS API SRI NO UTILIZADOS (Disponibles) — real, 2026-10-16
 
 | Campo API | Uso Potencial | Prioridad |
 |:----------|:--------------|:----------|
-| `codigoActividadEconomica` | Clasificación CIIU | Alta |
-| `nombreParroquia` | Dirección completa | Media |
-| `nombreCalle` | Dirección detallada | Media |
-| `numeroCasa` | Dirección detallada | Media |
-| `interseccion` | Dirección detallada | Baja |
-| `fechaInicioActividades` | Antigüedad empresa | Alta |
-| `fechaActualizacion` | Auditoría | Baja |
-| `estadoEstablecimiento` | Validación local | Media |
+| `informacionFechasContribuyente.fechaCese` / `fechaReinicioActividades` | Bloqueo por cese / continuidad de actividades | Alta |
+| `representantesLegales[]` (lista completa) | Alta: usuarios/firmantes paso ⑨ | Alta |
+| `motivoCancelacionSuspension` | Auditoría (rojo si ≠ `null`) | Alta |
+| `contribuyenteFantasma` / `transaccionesInexistente` | Señales de fraude (rojo si ≠ `NO`) | Alta |
+| `categoria` | Clasificación (null observado) `[VERIFY]` | Baja |
+| `actividadEconomicaPrincipal` (texto) | `vertical.suggested` vía mapeo local (no existe CIIU en el payload) | Alta |
+
+**Campos que NO existen en la respuesta real** (corregido v1.1 — la v1.0 los inventó):
+`codigoActividadEconomica`, `nombreComercial`, `direccionMatriz`, `nombreCalle`, `numeroCasa`,
+`interseccion`, `nombreProvincia`, `nombreCanton`, `nombreParroquia`, `telefono1`, `correo`,
+`fechaInicioActividades` (plana), `fechaActualizacion` (plana), `claseContribuyente`,
+`regimenRimpe`, `estadoEstablecimiento`.
 
 ---
 
 ## 6. VALIDACIONES
 
-### 6.1 Validación de Entrada
+### 6.1 Validación de Entrada (reglas stdnum — FR-LE-50, ISO-EC-10 §3.5)
 
 | Campo | Regla | Mensaje Error |
 |:------|:------|:--------------|
-| RUC | 13 dígitos numéricos | "El RUC debe tener 13 dígitos numéricos" |
-| RUC | Algoritmo módulo 10/11 | "RUC inválido" |
-| Estado | != "ACTIVO" | ⚠️ Warning: "Contribuyente no activo" |
+| RUC | 13 dígitos + despacho por 3er dígito (0–5 natural = cédula+001, 6 público, 9 jurídica, 7/8 inválidos) | "RUC inválido" |
+| Cédula | 10 dígitos, provincia 01–24 (+30,50), 3er dígito 0–6, módulo 10 | "Cédula inválida" |
+| Estado | `estadoContribuyenteRuc` ≠ "ACTIVO" | ⛔ "Contribuyente no activo — no puede facturar" (N-01) |
+| Señales rojas | `contribuyenteFantasma`/`transaccionesInexistente` ≠ "NO" o `motivoCancelacionSuspension` ≠ null | ⛔ "Contribuyente con observaciones SRI — revisar" |
 
 ### 6.2 Validación API
 

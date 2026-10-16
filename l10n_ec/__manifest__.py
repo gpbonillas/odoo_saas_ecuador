@@ -87,6 +87,18 @@ Desarrollado por Somatech.dev
         "l10n_ec_hr_payroll",  # Código Trabajo + IESS - Nómina
         "l10n_ec_customs",  # COPCI Art. 108-216 - Aduanas
         "l10n_ec_quality",  # Ley Calidad Art. 31-40, ARCSA Res. 067
+        # ================================================================
+        # MÓDULOS FUNCIONALES QUE ANTES NO ESTABAN EN `depends`
+        # (auditoría item 6: se declaran explícitamente para que el
+        # instalador los cargue en orden; ninguno depende de `l10n_ec`,
+        # verificado — sin ciclos).
+        # ================================================================
+        "l10n_ec_income_tax",  # Impuesto a la Renta - Form 104
+        "l10n_ec_loans",  # Préstamos quirografarios (nómina)
+        "l10n_ec_vacation",  # Cálculo de vacaciones (nómina)
+        "l10n_ec_sut",  # Sueldo Unificado de Trabajo
+        "l10n_ec_bank_transfer",  # Transferencias bancarias
+        "l10n_ec_portal",  # Portal de empleados
     ],
     "data": [
         "security/l10n_ec_security.xml",

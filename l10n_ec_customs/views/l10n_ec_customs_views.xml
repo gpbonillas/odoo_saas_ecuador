@@ -46,6 +46,8 @@
             <form string="Import DAU">
                 <header>
                     <button name="action_calculate" string="Calculate Taxes" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_post" string="Post Import Entry" type="object" class="oe_highlight" invisible="state == 'done'"/>
+                    <button name="action_check_ecuapass" string="Check ECUAPASS" type="object"/>
                     <field name="state" widget="statusbar"/>
                 </header>
                 <sheet>
@@ -74,6 +76,22 @@
                                 <field name="total_ad_valorem"/>
                                 <field name="total_fodinfa"/>
                                 <field name="total_iva"/>
+                                <field name="total_isd"/>
+                            </group>
+                            <group string="Accounting">
+                                <field name="journal_id"/>
+                                <field name="move_id" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="ECUAPASS">
+                            <group>
+                                <field name="ecuapass_dui_number"/>
+                                <field name="ecuapass_folio"/>
+                                <field name="ecuapass_state"/>
+                                <field name="ecuapass_last_check" readonly="1"/>
+                            </group>
+                            <group>
+                                <field name="ecuapass_response" readonly="1" nolabel="1" placeholder="Integration pending (stub)..."/>
                             </group>
                         </page>
                         <page string="Lines">

@@ -26,6 +26,7 @@
                     <header>
                         <button name="action_post" string="Post" class="oe_highlight" type="object" invisible="state != 'draft'"/>
                         <button name="action_send_sri" string="Send to SRI" class="oe_highlight" type="object" invisible="l10n_ec_sri_status in ('sent', 'authorized') or state == 'draft'"/>
+                        <button name="action_check_sri" string="Check Authorization" type="object" invisible="l10n_ec_sri_status != 'sent'"/>
                         <button name="%(l10n_ec_edi.action_l10n_ec_certificate)d" string="Check Certificate" type="action" groups="base.group_no_one"/>
                         <field name="state" widget="statusbar" statusbar_visible="draft,posted"/>
                     </header>
@@ -50,19 +51,28 @@
                                 <field name="retention_line_ids">
                                     <list editable="bottom">
                                         <field name="tax_type"/>
-                                        <field name="tax_code"/>
+                                        <field name="withholding_type" column_invisible="True"/>
+                                        <field name="tax_id"/>
+                                        <field name="tax_code" optional="show"/>
                                         <field name="base"/>
-                                        <field name="percentage"/>
+                                        <field name="percentage" readonly="1"/>
                                         <field name="amount" sum="Total"/>
                                     </list>
                                 </field>
                             </page>
                             <page string="SRI Info">
                                 <group>
-                                    <field name="l10n_ec_sri_access_key"/>
-                                    <field name="l10n_ec_sri_status"/>
-                                    <field name="l10n_ec_sri_response"/>
-                                    <field name="l10n_ec_xml_data"/>
+                                    <group>
+                                        <field name="l10n_ec_sri_access_key"/>
+                                        <field name="l10n_ec_sri_status"/>
+                                        <field name="l10n_ec_authorization_date"/>
+                                        <field name="l10n_ec_sri_response"/>
+                                        <field name="l10n_ec_xml_data"/>
+                                    </group>
+                                    <group>
+                                        <field name="journal_id"/>
+                                        <field name="move_id"/>
+                                    </group>
                                 </group>
                             </page>
                         </notebook>

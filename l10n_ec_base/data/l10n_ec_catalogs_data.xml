@@ -178,5 +178,10 @@
         <field name="retention_agent" eval="True"/>
     </record>
 
-    <!-- PROVINCIAS: Loaded from l10n_ec_provinces.xml (dedicated file) -->
+    <!-- PROVINCIAS: loaded from data/l10n_ec_provinces.xml (dedicated file).
+         NOTE: the 24 l10n_ec.province records were duplicated here and in
+         data/l10n_ec_provinces.xml. l10n_ec.province.code has a unique SQL
+         constraint, so loading both files crashed every fresh install of
+         l10n_ec_base with a duplicate-key error on code=01. The canonical
+         records now live ONLY in data/l10n_ec_provinces.xml. -->
 </odoo>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pos_order_form_l10n_ec_sri" model="ir.ui.view">
+        <field name="name">pos.order.form.l10n_ec.sri</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <group string="SRI Electrónico" name="l10n_ec_sri">
+                    <field name="state" invisible="1"/>
+                    <group>
+                        <field name="l10n_ec_sri_status"/>
+                        <field name="l10n_ec_sri_access_key" readonly="1"/>
+                        <field name="l10n_ec_authorization_date" readonly="1"/>
+                        <field name="l10n_ec_last_transmission_date" readonly="1"/>
+                        <field name="l10n_ec_is_contingency"/>
+                    </group>
+                    <group>
+                        <field name="l10n_ec_transmission_error" readonly="1"/>
+                        <field name="l10n_ec_annul_reason"/>
+                        <field name="l10n_ec_annul_date" readonly="1"/>
+                    </group>
+                </group>
+                <group string="Acciones SRI" name="l10n_ec_sri_actions">
+                    <button name="action_l10n_ec_transmit" string="Transmitir al SRI"
+                            type="object" class="btn-primary"
+                            invisible="l10n_ec_sri_status in ('sent', 'authorized', 'annulled')"/>
+                    <button name="action_l10n_ec_check_authorization" string="Verificar Autorización"
+                            type="object"
+                            invisible="l10n_ec_sri_status != 'sent'"/>
+                    <button name="action_l10n_ec_request_annulment" string="Solicitar Anulación"
+                            type="object"
+                            invisible="l10n_ec_sri_status not in ('sent', 'authorized')"/>
+                    <button name="action_l10n_ec_annul" string="Confirmar Anulación"
+                            type="object" class="btn-danger"
+                            invisible="l10n_ec_sri_status != 'annul_requested'"/>
+                    <button name="action_l10n_ec_cancel" string="Cancelar Ticket (EC)"
+                            type="object" class="btn-secondary"
+                            invisible="state == 'cancel'"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -19,12 +19,17 @@ class AccountRetentionLine(models.Model):
     tax_type = fields.Selection(
         [("1", "Renta"), ("2", "IVA"), ("6", "ISD")], string="Impuesto", required=True
     )
+    withholding_type = fields.Char(
+        compute="_compute_withholding_type",
+        help="Technical field: maps the SRI tax type (1/2/6) to the "
+             "l10n_ec.withholding.tax type used for the m2o domain.",
+    )
 
     tax_id = fields.Many2one(
         "l10n_ec.withholding.tax",
         string="Tax Code",
         required=True,
-        domain="[('type', '=', tax_type)]",
+        domain="[('type', '=', withholding_type)]",
     )
 
     # Related fields for ease of use/display
@@ -42,6 +47,12 @@ class AccountRetentionLine(models.Model):
 
     # Document Sustento (if multi-invoice retention allowed, usually 1-to-1 but data structure supports N)
     invoice_id = fields.Many2one("account.move", string="Invoice Reference")
+
+    @api.depends("tax_type")
+    def _compute_withholding_type(self):
+        mapping = {"1": "renta", "2": "iva", "6": "isd"}
+        for line in self:
+            line.withholding_type = mapping.get(line.tax_type, "renta")
 
     @api.depends("base", "percentage")
     def _compute_amount(self):

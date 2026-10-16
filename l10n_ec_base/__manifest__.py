@@ -7,7 +7,7 @@
 {
     "name": "Ecuador - Base Localization (NEC 2026)",
     "version": "18.0.1.0.0",
-    "category": "Accounting/Localizations",
+    "category": "Accounting/Localizations/Account Charts",
     "summary": "Chart of Accounts, Tax Templates, and Identity Validation (SRI 2026)",
     "description": """
 Ecuador Base Localization Module
@@ -32,6 +32,10 @@ This module provides the base localization for Ecuador:
         "purchase",
         "stock",
         "l10n_latam_invoice_document",
+        # DE 045-2025 (models/purchase_order.py) inherits purchase.order and
+        # reads picking_ids.date_done (purchase_stock). Without these, the
+        # registry crashes on any DB where `purchase` is not already installed.
+        "purchase_stock",
     ],
     "data": [
         "security/l10n_ec_groups.xml",
@@ -41,7 +45,6 @@ This module provides the base localization for Ecuador:
         "data/l10n_ec_catalogs_data.xml",
         "data/l10n_ec_provinces.xml",
         "data/l10n_ec.canton.csv",
-        "data/account_chart_template.xml",
         "data/l10n_latam.document.type.csv",
         "views/res_partner_views.xml",
         "views/res_company_views.xml",
@@ -51,4 +54,6 @@ This module provides the base localization for Ecuador:
     "installable": True,
     "application": False,
     "auto_install": False,
+    # Migra parámetros globales legados (ir.config_parameter) → res.company
+    "post_init_hook": "post_init_hook",
 }

@@ -197,37 +197,77 @@ class L10nEcSriRucService(models.AbstractModel):
     def _parse_sri_response(self, data):
         """
         Parsea la respuesta del SRI a formato estandarizado.
+
+        CHG-2026-003: el ConsolidadoContribuyente cambió de esquema (verificado
+        en vivo 2026-10-16, payload real en docs/srs/SRS_WIZARD_COMPANY_EC.md
+        §2.4). Llaves nuevas primero, las viejas como fallback por si el SRI
+        revierte. Mismo mapeo que mcp_server/sri_client.py::_parse:
+          * estadoContribuyente       -> estadoContribuyenteRuc
+          * obligadoContabilidad      -> obligadoLlevarContabilidad
+          * regimenRimpe              -> regimen
+          * fechas planas             -> informacionFechasContribuyente{}
+          * agrega: categoria, representantesLegales[], banderas rojas
+            (contribuyenteFantasma / transaccionesInexistente) y motivo de
+            cancelación/suspensión.
+        El consolidado NO trae dirección/teléfono/correo/CIIU: esos campos
+        quedan "" y los pregunta el wizard (WIZ-01, datos USER).
         """
-        # El SRI retorna diferentes campos según el tipo de RUC
+        fechas = data.get("informacionFechasContribuyente") or {}
+
+        def pick(*keys, default=""):
+            for key in keys:
+                if data.get(key) not in (None, ""):
+                    return data.get(key)
+            return default
+
         return {
-            "ruc": data.get("numeroRuc", ""),
-            "razon_social": data.get("razonSocial", ""),
-            "nombre_comercial": data.get("nombreComercial", ""),
-            "estado": data.get("estadoContribuyente", ""),
-            "estado_establecimiento": data.get("estadoEstablecimiento", ""),
-            "clase_contribuyente": data.get("claseContribuyente", ""),
-            "tipo_contribuyente": data.get("tipoContribuyente", ""),
-            "obligado_contabilidad": data.get("obligadoContabilidad", "NO") == "SI",
-            "actividad_economica": data.get("actividadEconomicaPrincipal", ""),
-            "codigo_actividad": data.get("codigoActividadEconomica", ""),
-            # Dirección
-            "direccion": data.get("direccionMatriz", ""),
-            "calle": data.get("nombreCalle", ""),
-            "numero": data.get("numeroCasa", ""),
-            "interseccion": data.get("interseccion", ""),
-            "provincia": data.get("nombreProvincia", ""),
-            "canton": data.get("nombreCanton", ""),
-            "parroquia": data.get("nombreParroquia", ""),
-            # Contacto
-            "telefono": data.get("telefono1", ""),
-            "email": data.get("correo", ""),
-            # Fechas
-            "fecha_inicio_actividades": data.get("fechaInicioActividades", ""),
-            "fecha_actualizacion": data.get("fechaActualizacion", ""),
-            # Especiales
-            "contribuyente_especial": data.get("contribuyenteEspecial", ""),
-            "agente_retencion": data.get("agenteRetencion", ""),
-            "regimen_rimpe": data.get("regimenRimpe", ""),
+            "ruc": pick("numeroRuc", "ruc"),
+            # razonSocial trae espacio final -> trim
+            "razon_social": str(pick("razonSocial", "razon_social")).strip(),
+            "nombre_comercial": str(
+                pick("nombreComercial", "nombre_comercial")).strip(),
+            "estado": pick("estadoContribuyenteRuc", "estadoContribuyente"),
+            "estado_establecimiento": pick("estadoEstablecimiento"),
+            "clase_contribuyente": pick("claseContribuyente"),
+            "tipo_contribuyente": pick("tipoContribuyente"),
+            "regimen": pick("regimen", "regimenRimpe"),
+            "categoria": pick("categoria"),
+            "obligado_contabilidad": str(
+                pick("obligadoLlevarContabilidad", "obligadoContabilidad",
+                     default="NO")).upper() == "SI",
+            "actividad_economica": pick("actividadEconomicaPrincipal"),
+            "codigo_actividad": pick("codigoActividadEconomica"),
+            # Dirección (NO viene en el consolidado: se queda vacío)
+            "direccion": pick("direccionMatriz", "direccion"),
+            "calle": pick("nombreCalle"),
+            "numero": pick("numeroCasa"),
+            "interseccion": pick("interseccion"),
+            "provincia": pick("nombreProvincia"),
+            "canton": pick("nombreCanton"),
+            "parroquia": pick("nombreParroquia"),
+            # Contacto (NO viene en el consolidado)
+            "telefono": pick("telefono1"),
+            "email": pick("correo"),
+            "direccion_disponible_en_sri": bool(
+                pick("direccionMatriz", "nombreProvincia", "nombreCanton")),
+            # Fechas (ahora anidadas; planas como fallback)
+            "fecha_inicio_actividades": fechas.get(
+                "fechaInicioActividades", pick("fechaInicioActividades")),
+            "fecha_actualizacion": fechas.get(
+                "fechaActualizacion", pick("fechaActualizacion")),
+            "fecha_cese": fechas.get("fechaCese", ""),
+            "fecha_reinicio_actividades": fechas.get(
+                "fechaReinicioActividades", ""),
+            # Especiales y banderas rojas
+            "contribuyente_especial": pick("contribuyenteEspecial"),
+            "agente_retencion": pick("agenteRetencion"),
+            "regimen_rimpe": pick("regimenRimpe", "regimen"),
+            "contribuyente_fantasma": pick("contribuyenteFantasma"),
+            "transacciones_inexistentes": pick("transaccionesInexistente"),
+            "motivo_cancelacion_suspension": pick(
+                "motivoCancelacionSuspension"),
+            "representantes_legales": data.get("representantesLegales") or [],
+            "schema_version": "consolidado-2026",
         }
 
     @api.model

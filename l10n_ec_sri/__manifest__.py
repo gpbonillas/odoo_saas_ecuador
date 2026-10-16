@@ -41,8 +41,10 @@ Complete SRI (Servicio de Rentas Internas) integration:
     "data": [
         "security/ir.model.access.csv",
         "data/ir_sequence_data.xml",
+        "data/account.tax.group.csv",
         "views/account_move_views.xml",
         "views/account_move_purchase_views.xml",
+        "views/account_move_xml_template.xml",
         "views/l10n_ec_retention_views.xml",
         "views/l10n_ec_retention_xml_template.xml",
     ],

@@ -85,6 +85,44 @@ class L10nEcCompanySetupWizard(models.TransientModel):
     regimen_rimpe = fields.Char(string="Régimen RIMPE", readonly=True)
 
     # =========================================================================
+    # CONFIGURACIÓN POR EMPRESA (antes parámetros globales — auditoría item 2)
+    # =========================================================================
+    person_type = fields.Selection(
+        [
+            ("natural", "Persona Natural"),
+            ("juridica", "Persona Jurídica"),
+        ],
+        string="Tipo de Persona",
+        default="juridica",
+        help="Se deduce del 3er dígito del RUC (0-5 natural, 6-9 jurídica).",
+    )
+
+    regimen = fields.Selection(
+        [
+            ("general", "Régimen General"),
+            ("rimpe_empresario", "RIMPE - Empresario"),
+            ("rimpe_negocio_popular", "RIMPE - Negocio Popular"),
+            ("contribuyente_especial", "Contribuyente Especial"),
+            ("regimen_especial", "Régimen Especial (sin fines de lucro)"),
+            ("zede", "ZEDE"),
+            ("public_sector", "Sector Público"),
+        ],
+        string="Régimen Tributario",
+        default="general",
+        help="Se autocompleta desde los datos del SRI; puede ajustarlo.",
+    )
+
+    accounting_method = fields.Selection(
+        [
+            ("accrual", "Devengado"),
+            ("cash", "Caja (lo percibido)"),
+        ],
+        string="Método de Contabilización",
+        default="accrual",
+        help="Elección del contribuyente: devengado o lo percibido (caja).",
+    )
+
+    # =========================================================================
     # MULTI-STEP WIZARD CONTROL
     # =========================================================================
     current_step = fields.Integer(
@@ -277,6 +315,10 @@ class L10nEcCompanySetupWizard(models.TransientModel):
             self.sri_loaded = False
             return
 
+        # Deducir tipo de persona del RUC aunque el SRI no responda
+        # (3er dígito: 0-5 persona natural, 6-9 jurídica)
+        self.person_type = "natural" if ruc[2] in "012345" else "juridica"
+
         # Consultar SRI
         try:
             service = self.env["l10n_ec.sri.ruc.service"]
@@ -303,6 +345,9 @@ class L10nEcCompanySetupWizard(models.TransientModel):
                 self.contribuyente_especial = data.get("contribuyente_especial", "")
                 self.agente_retencion = data.get("agente_retencion", "")
                 self.regimen_rimpe = data.get("regimen_rimpe", "")
+
+                # Autocompletar régimen tributario desde el SRI
+                self.regimen = self._guess_regimen()
 
                 self.sri_loaded = True
                 self.sri_message = (
@@ -359,8 +404,32 @@ class L10nEcCompanySetupWizard(models.TransientModel):
             },
         }
 
+    def _guess_regimen(self):
+        """Deriva el régimen tributario a partir de los datos cargados del SRI."""
+        self.ensure_one()
+        if self.contribuyente_especial:
+            return "contribuyente_especial"
+        rimpe = (self.regimen_rimpe or "").lower()
+        if "popular" in rimpe:
+            return "rimpe_negocio_popular"
+        if "rimpe" in rimpe or "emprendedor" in rimpe:
+            return "rimpe_empresario"
+        tipo = (self.sri_tipo_contribuyente or "").lower()
+        if "sector público" in tipo or "sector publico" in tipo:
+            return "public_sector"
+        return "general"
+
     def action_configure_company(self):
-        """Aplica la configuración a la empresa."""
+        """Aplica la configuración a la empresa (campos POR EMPRESA).
+
+        Auditoría item 2: los valores que antes se escribían como
+        ir.config_parameter GLOBALES (ambiente SRI, obligado a llevar
+        contabilidad, contribuyente especial, agente de retención) se guardan
+        ahora en res.company — la base es multiempresa.
+        Auditoría items 3-5: se persiste el estándar del plan de cuentas
+        elegido, el tipo de persona/régimen y el método de contabilización, y
+        se instala el plan de cuentas NEC si la empresa aún no tiene uno.
+        """
         self.ensure_one()
 
         if not self.company_ruc or not self.company_name:
@@ -378,7 +447,7 @@ class L10nEcCompanySetupWizard(models.TransientModel):
             )
             province_id = province.id if province else False
 
-        # Update company
+        # Update company (datos generales)
         company.write(
             {
                 "name": self.company_name,
@@ -394,20 +463,46 @@ class L10nEcCompanySetupWizard(models.TransientModel):
             }
         )
 
-        # Set SRI parameters
-        IrConfigParam = self.env["ir.config_parameter"].sudo()
-        IrConfigParam.set_param("l10n_ec.sri_environment", self.sri_environment)
-        IrConfigParam.set_param(
-            "l10n_ec.obligado_contabilidad", str(self.obligado_contabilidad)
-        )
-
+        # --- Configuración ecuatoriana POR EMPRESA -----------------------
+        company_vals = {
+            # l10n_ec_edi define ambiente/agente/resoluciones:
+            "l10n_ec_sri_environment": self.sri_environment,
+            "l10n_ec_forced_accounting": self.obligado_contabilidad,
+            # l10n_ec_base define tipo/régimen/método/estándar:
+            "l10n_ec_person_type": self.person_type or "juridica",
+            "l10n_ec_regimen": self.regimen or self._guess_regimen(),
+            "l10n_ec_accounting_method": self.accounting_method or "accrual",
+            "l10n_ec_chart_standard": self.chart_template or "ecuador_niif",
+            "l10n_ec_taxpayer_type": (
+                "special" if self.contribuyente_especial
+                else (
+                    "rimpe_p" if (self.regimen or "") == "rimpe_negocio_popular"
+                    else "rimpe_e" if (self.regimen or "") == "rimpe_empresario"
+                    else "general"
+                )
+            ),
+        }
         if self.contribuyente_especial:
-            IrConfigParam.set_param(
-                "l10n_ec.contribuyente_especial", self.contribuyente_especial
-            )
-
+            # Sólo escribir resoluciones si el usuario/SRI las informó
+            # (equivalente al viejo guard `if self.contribuyente_especial:`).
+            company_vals["l10n_ec_special_resolution"] = self.contribuyente_especial
         if self.agente_retencion:
-            IrConfigParam.set_param("l10n_ec.agente_retencion", self.agente_retencion)
+            company_vals["l10n_ec_withhold_resolution"] = self.agente_retencion
+            company_vals["l10n_ec_withhold_agent"] = True
+        company.write(company_vals)
+
+        # --- Plan de cuentas NEC (auditoría items 1 y 3) ------------------
+        # Nota: Odoo 18 auto-instala `generic_coa`; sólo se salta si el plan
+        # NEC ('ec') ya está cargado en la empresa.
+        chart_message = ""
+        if company.chart_template != "ec":
+            try:
+                self.env["account.chart.template"].sudo().try_loading(
+                    "ec", company
+                )
+                chart_message = " Plan de cuentas NEC instalado."
+            except Exception as exc:  # pragma: no cover - entorno sin CoA
+                chart_message = f" (Plan de cuentas no instalado: {exc})"
 
         # Install demo data if selected
         demo_message = ""
@@ -422,9 +517,9 @@ class L10nEcCompanySetupWizard(models.TransientModel):
             "params": {
                 "title": _("✅ Empresa Configurada"),
                 "message": _(
-                    "La empresa %s ha sido configurada correctamente para Ecuador.%s"
+                    "La empresa %s ha sido configurada correctamente para Ecuador.%s%s"
                 )
-                % (self.company_name, demo_message),
+                % (self.company_name, chart_message, demo_message),
                 "type": "success",
                 "sticky": False,
                 "next": {

@@ -97,7 +97,21 @@ def post_init_hook(env):
     )
 
     # =========================================================================
-    # 6. ABRIR WIZARD DE CONFIGURACIÓN DE EMPRESA
+    # 6. MIGRAR PARÁMETROS GLOBALES LEGADOS → res.company (auditoría item 2)
+    # =========================================================================
+    # l10n_ec_base (dependencia) define los campos por empresa y su propio
+    # post_init_hook; aquí se repite por si esta BD instaló l10n_ec_base antes
+    # de que existiera la migración (idempotente, no pisa valores existentes).
+    try:
+        from odoo.addons.l10n_ec_base.hooks import _migrate_legacy_config_params
+
+        _migrate_legacy_config_params(env)
+        _logger.info("✅ Parámetros legados migrados a la empresa (si aplica)")
+    except Exception as e:
+        _logger.warning(f"⚠️ Error migrando parámetros legados: {e}")
+
+    # =========================================================================
+    # 7. ABRIR WIZARD DE CONFIGURACIÓN DE EMPRESA
     # =========================================================================
     # Note: We can't directly open a wizard from post_init_hook because
     # the request context isn't available. Instead, we create a todo item

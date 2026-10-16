@@ -44,8 +44,8 @@ PROD002,Servicio Corte,Servicios,5.00,0,15,servicio,unidad,
 
 ```csv
 tipo,ruc_cedula,razon_social,nombre_comercial,email,telefono,direccion,tipo_contribuyente,es_cliente,es_proveedor
-juridica,1790012345001,EMPRESA ABC S.A.,ABC,contacto@abc.com,022345678,Av. Principal 123,general,1,0
-natural,1712345678,PÉREZ LÓPEZ JUAN CARLOS,,juan@email.com,0991234567,Calle 1 N1-23,natural,1,1
+juridica,1793125212001,CANNACHAIN S.A.S.,CANNACHAIN,contacto@ejemplo.com,022345678,Av. Principal 123,general,1,0
+natural,1713488185,CADENA PEÑA ADRIAN RAFAEL,,correo@ejemplo.com,0991234567,Calle 1 N1-23,natural,1,1
 ```
 
 ---

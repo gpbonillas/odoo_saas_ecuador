@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Default SRI withholding tariff table (Tabla 19 / Tabla 21).
+
+    Lookup: (tax type, RUC 4th digit of the vendor, activity of the line).
+    Rows with a concrete RUC digit take precedence over these 'any' rows,
+    so digit-specific overrides can be added as data without code changes.
+-->
+<odoo>
+    <data noupdate="1">
+
+        <!-- ==================== IVA (Tabla 21) ==================== -->
+        <record id="tariff_iva_goods_any" model="l10n_ec.retention.tariff">
+            <field name="tax_type">iva</field>
+            <field name="ruc_digit">any</field>
+            <field name="activity">goods</field>
+            <field name="sequence">10</field>
+            <field name="withholding_tax_id" ref="tax_ret_iva_725"/>
+        </record>
+        <record id="tariff_iva_services_any" model="l10n_ec.retention.tariff">
+            <field name="tax_type">iva</field>
+            <field name="ruc_digit">any</field>
+            <field name="activity">services</field>
+            <field name="sequence">10</field>
+            <field name="withholding_tax_id" ref="tax_ret_iva_727"/>
+        </record>
+        <record id="tariff_iva_professional_any" model="l10n_ec.retention.tariff">
+            <field name="tax_type">iva</field>
+            <field name="ruc_digit">any</field>
+            <field name="activity">professional</field>
+            <field name="sequence">10</field>
+            <field name="withholding_tax_id" ref="tax_ret_iva_731"/>
+        </record>
+        <record id="tariff_iva_liquidacion_any" model="l10n_ec.retention.tariff">
+            <field name="tax_type">iva</field>
+            <field name="ruc_digit">any</field>
+            <field name="activity">liquidacion</field>
+            <field name="sequence">10</field>
+            <field name="withholding_tax_id" ref="tax_ret_iva_729"/>
+        </record>
+        <record id="tariff_iva_transport_any" model="l10n_ec.retention.tariff">
+            <field name="tax_type">iva</field>
+            <field name="ruc_digit">any</field>
+            <field name="activity">transport</field>
+            <field name="sequence">10</field>
+            <field name="withholding_tax_id" ref="tax_ret_iva_725"/>
+        </record>
+
+        <!-- ==================== RENTA (Tabla 19) ==================== -->
+        <record id="tariff_renta_goods_any" model="l10n_ec.retention.tariff">
+            <field name="tax_type">renta</field>
+            <field name="ruc_digit">any</field>
+            <field name="activity">goods</field>
+            <field name="sequence">10</field>
+            <field name="withholding_tax_id" ref="tax_ret_ir_312"/>
+        </record>
+        <record id="tariff_renta_services_any" model="l10n_ec.retention.tariff">
+            <field name="tax_type">renta</field>
+            <field name="ruc_digit">any</field>
+            <field name="activity">services</field>
+            <field name="sequence">10</field>
+            <field name="withholding_tax_id" ref="tax_ret_ir_307"/>
+        </record>
+        <record id="tariff_renta_professional_any" model="l10n_ec.retention.tariff">
+            <field name="tax_type">renta</field>
+            <field name="ruc_digit">any</field>
+            <field name="activity">professional</field>
+            <field name="sequence">10</field>
+            <field name="withholding_tax_id" ref="tax_ret_ir_303"/>
+        </record>
+        <record id="tariff_renta_transport_any" model="l10n_ec.retention.tariff">
+            <field name="tax_type">renta</field>
+            <field name="ruc_digit">any</field>
+            <field name="activity">transport</field>
+            <field name="sequence">10</field>
+            <field name="withholding_tax_id" ref="tax_ret_ir_310"/>
+        </record>
+        <record id="tariff_renta_liquidacion_any" model="l10n_ec.retention.tariff">
+            <field name="tax_type">renta</field>
+            <field name="ruc_digit">any</field>
+            <field name="activity">liquidacion</field>
+            <field name="sequence">10</field>
+            <field name="withholding_tax_id" ref="tax_ret_ir_312"/>
+        </record>
+
+    </data>
+</odoo>

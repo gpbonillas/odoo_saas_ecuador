@@ -1,2 +1,9 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_l10n_ec_ats_wizard,l10n_ec.ats.wizard,model_l10n_ec_ats_wizard,account.group_account_invoice,1,1,1,1
+access_l10n_ec_libro_wizard,l10n_ec.libro.wizard,model_l10n_ec_libro_wizard,account.group_account_invoice,1,1,1,1
+access_l10n_ec_form_wizard,l10n_ec.form.wizard,model_l10n_ec_form_wizard,account.group_account_invoice,1,1,1,1
+access_l10n_ec_financials_wizard,l10n_ec.financials.wizard,model_l10n_ec_financials_wizard,account.group_account_invoice,1,1,1,1
+access_l10n_ec_partner_share_user,l10n_ec.partner.share.user,model_l10n_ec_partner_share,account.group_account_user,1,1,1,1
+access_l10n_ec_partner_share_manager,l10n_ec.partner.share.manager,model_l10n_ec_partner_share,account.group_account_manager,1,1,1,1
+access_l10n_ec_assembly_minute_user,l10n_ec.assembly.minute.user,model_l10n_ec_assembly_minute,account.group_account_user,1,1,1,1
+access_l10n_ec_assembly_minute_manager,l10n_ec.assembly.minute.manager,model_l10n_ec_assembly_minute,account.group_account_manager,1,1,1,1

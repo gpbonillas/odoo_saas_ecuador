@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!--
+      Bank layout config records (one per supported generator).
+      `bank_code` must exist in l10n_ec_bank_transfer/file_formats/__init__.py
+      (LAYOUTS registry).
+    -->
+    <record id="layout_pichincha" model="l10n_ec.bank.layout">
+        <field name="name">Banco Pichincha (Cash Management)</field>
+        <field name="bank_code">pichincha</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="layout_guayaquil" model="l10n_ec.bank.layout">
+        <field name="name">Banco Guayaquil (Multicash)</field>
+        <field name="bank_code">guayaquil</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="layout_produbanco" model="l10n_ec.bank.layout">
+        <field name="name">produbanco (Multiacceso)</field>
+        <field name="bank_code">produbanco</field>
+        <field name="sequence">30</field>
+    </record>
+    <record id="layout_pacifico" model="l10n_ec.bank.layout">
+        <field name="name">Banco Pacífico</field>
+        <field name="bank_code">pacifico</field>
+        <field name="sequence">40</field>
+    </record>
+    <record id="layout_austro" model="l10n_ec.bank.layout">
+        <field name="name">Banco del Austro</field>
+        <field name="bank_code">austro</field>
+        <field name="sequence">50</field>
+    </record>
+    <record id="layout_bolivariano" model="l10n_ec.bank.layout">
+        <field name="name">Banco Bolivariano</field>
+        <field name="bank_code">bolivariano</field>
+        <field name="sequence">60</field>
+    </record>
+    <record id="layout_loja" model="l10n_ec.bank.layout">
+        <field name="name">Banco del Loja</field>
+        <field name="bank_code">loja</field>
+        <field name="sequence">70</field>
+    </record>
+    <record id="layout_internacional" model="l10n_ec.bank.layout">
+        <field name="name">Banco Internacional</field>
+        <field name="bank_code">internacional</field>
+        <field name="sequence">80</field>
+    </record>
+    <record id="layout_ib" model="l10n_ec.bank.layout">
+        <field name="name">IB / CENPE (Transferencia Interbancaria BCE)</field>
+        <field name="bank_code">ib</field>
+        <field name="sequence">90</field>
+    </record>
+    <record id="layout_generic" model="l10n_ec.bank.layout">
+        <field name="name">Genérico (cualquier banco)</field>
+        <field name="bank_code">generic</field>
+        <field name="sequence">999</field>
+    </record>
+</odoo>

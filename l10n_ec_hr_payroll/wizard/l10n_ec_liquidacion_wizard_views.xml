@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Liquidación de contrato de trabajo (Ministerio de Trabajo) —
+         all amounts computed from ir.config_parameter via
+         l10n_ec_payroll_calc; indemnización remains manual. -->
+    <record id="view_l10n_ec_liquidacion_wizard_form" model="ir.ui.view">
+        <field name="name">l10n.ec.termination.wizard.form</field>
+        <field name="model">l10n_ec.termination.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Liquidación de Beneficios Sociales">
+                <header>
+                    <button name="action_confirm" string="Confirmar Liquidación"
+                            type="object" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_options="draft,done"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Datos">
+                            <field name="employee_id"/>
+                            <field name="contract_id"/>
+                            <field name="termination_type"/>
+                            <field name="region"/>
+                        </group>
+                        <group string="Relación Laboral">
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="wage"/>
+                            <field name="months_service"/>
+                            <field name="years_service"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Haberes">
+                            <group>
+                                <field name="salary_days"/>
+                                <field name="salary_proportional"/>
+                                <field name="decimo_13"/>
+                                <field name="decimo_14"/>
+                                <field name="decimo_14_deadline"/>
+                            </group>
+                        </page>
+                        <page string="Vacaciones y Fondos">
+                            <group>
+                                <field name="vacation_days"/>
+                                <field name="vacation_pay"/>
+                                <field name="fondos_reserva"/>
+                            </group>
+                        </page>
+                        <page string="Cesantía y Final">
+                            <group>
+                                <field name="utilidades"/>
+                                <field name="auxilio_cesantia_pct"/>
+                                <field name="auxilio_cesantia"/>
+                                <field name="indemnizacion"/>
+                                <field name="total_a_pagar"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_l10n_ec_liquidacion_wizard" model="ir.actions.act_window">
+        <field name="name">Liquidación de Contrato</field>
+        <field name="res_model">l10n_ec.termination.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_l10n_ec_liquidacion_wizard"
+              name="Liquidación de Contrato"
+              parent="l10n_ec_hr_payroll.menu_l10n_ec_payroll_root"
+              action="action_l10n_ec_liquidacion_wizard"
+              sequence="90"/>
+</odoo>

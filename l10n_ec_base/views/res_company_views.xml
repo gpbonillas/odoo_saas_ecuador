@@ -1,4 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright 2026 Somatech.dev
+    License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl-3.0).
+-->
 <odoo>
     <menuitem id="menu_l10n_ec_root" name="Ecuador" parent="account.menu_finance_reports" sequence="100"/>
+
+    <!-- Configuración ecuatoriana por empresa (SRI, régimen, método de contabilidad).
+         Sólo se exportan campos OWNED por l10n_ec_base; los campos l10n_ec_*
+         (ambiente SRI, agente de retención, resoluciones) los añade l10n_ec_edi. -->
+    <record id="res_company_form_view_ec" model="ir.ui.view">
+        <field name="name">res.company.form.ec.base</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="before">
+                <group string="Ecuador — Régimen Tributario" name="l10n_ec_group">
+                    <group>
+                        <field name="l10n_ec_person_type"/>
+                        <field name="l10n_ec_taxpayer_type"/>
+                        <field name="l10n_ec_regimen"/>
+                    </group>
+                    <group>
+                        <field name="l10n_ec_contribuyente_especial"/>
+                        <field name="l10n_ec_accounting_method" widget="radio"/>
+                        <field name="l10n_ec_chart_standard"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
 </odoo>

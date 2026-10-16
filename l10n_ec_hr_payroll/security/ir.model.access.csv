@@ -1,2 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_l10n_ec_payslip,l10n_ec.payslip,model_l10n_ec_payslip,base.group_user,1,1,1,1
+access_l10n_ec_liquidacion_wizard,l10n_ec.termination.wizard,model_l10n_ec_termination_wizard,base.group_user,1,1,1,1

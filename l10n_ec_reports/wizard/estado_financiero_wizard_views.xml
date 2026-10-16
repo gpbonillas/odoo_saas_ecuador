@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SUPERCIAS financial statements wizard (5 statements) + Ecuador menu.
+-->
+<odoo>
+    <data>
+
+        <record id="view_l10n_ec_financials_wizard_form" model="ir.ui.view">
+            <field name="name">l10n_ec.financials.wizard.form</field>
+            <field name="model">l10n_ec.financials.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Estados Financieros SUPERCIAS">
+                    <group>
+                        <group>
+                            <field name="statement"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="alert">
+                        Estados segun KB_SUPERCIAS 3.2: Situacion Financiera,
+                        Resultados, Flujos de Efectivo (metodo indirecto),
+                        Cambios en el Patrimonio y Notas (estructura NIC 1).
+                        El Balance y el Resultados se calculan desde el libro
+                        diario; los demas usan los saldos de apertura y cierre.
+                    </div>
+                    <footer>
+                        <button string="Imprimir" name="action_print"
+                                type="object" class="btn-primary"/>
+                        <button string="Cerrar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_l10n_ec_financials_wizard" model="ir.actions.act_window">
+            <field name="name">Estados Financieros</field>
+            <field name="res_model">l10n_ec.financials.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="menu_l10n_ec_estados"
+                  name="Estados Financieros"
+                  parent="l10n_ec_base.menu_l10n_ec_root"
+                  sequence="20"/>
+
+        <record id="action_l10n_ec_estado_balance" model="ir.actions.act_window">
+            <field name="name">Balance General</field>
+            <field name="res_model">l10n_ec.financials.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_statement': 'balance'}</field>
+        </record>
+        <record id="action_l10n_ec_estado_resultados" model="ir.actions.act_window">
+            <field name="name">Estado de Resultados</field>
+            <field name="res_model">l10n_ec.financials.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_statement': 'resultados'}</field>
+        </record>
+        <record id="action_l10n_ec_estado_flujo" model="ir.actions.act_window">
+            <field name="name">Flujo de Efectivo</field>
+            <field name="res_model">l10n_ec.financials.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_statement': 'flujo'}</field>
+        </record>
+        <record id="action_l10n_ec_estado_patrimonio" model="ir.actions.act_window">
+            <field name="name">Cambios en el Patrimonio</field>
+            <field name="res_model">l10n_ec.financials.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_statement': 'patrimonio'}</field>
+        </record>
+        <record id="action_l10n_ec_estado_notas" model="ir.actions.act_window">
+            <field name="name">Notas a los Estados Financieros</field>
+            <field name="res_model">l10n_ec.financials.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_statement': 'notas'}</field>
+        </record>
+
+        <menuitem id="menu_l10n_ec_estado_balance" name="Balance General"
+                  parent="menu_l10n_ec_estados"
+                  action="action_l10n_ec_estado_balance" sequence="10"/>
+        <menuitem id="menu_l10n_ec_estado_resultados" name="Estado de Resultados"
+                  parent="menu_l10n_ec_estados"
+                  action="action_l10n_ec_estado_resultados" sequence="20"/>
+        <menuitem id="menu_l10n_ec_estado_flujo" name="Flujo de Efectivo"
+                  parent="menu_l10n_ec_estados"
+                  action="action_l10n_ec_estado_flujo" sequence="30"/>
+        <menuitem id="menu_l10n_ec_estado_patrimonio" name="Cambios en el Patrimonio"
+                  parent="menu_l10n_ec_estados"
+                  action="action_l10n_ec_estado_patrimonio" sequence="40"/>
+        <menuitem id="menu_l10n_ec_estado_notas" name="Notas a los Estados Financieros"
+                  parent="menu_l10n_ec_estados"
+                  action="action_l10n_ec_estado_notas" sequence="50"/>
+
+    </data>
+</odoo>

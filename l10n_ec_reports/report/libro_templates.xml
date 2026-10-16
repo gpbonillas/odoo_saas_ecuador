@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  QWeb templates for the Ecuadorian statutory books.
+
+  One parameterized template renders every book: the wizard
+  (l10n_ec.libro.wizard.get_book_payload()) returns
+  {'title','period','columns':[(key,label)],'rows':[dict], 'totals':{...}}
+  and ALL numbers are produced by report_lib (pure python, unit-tested).
+-->
+<odoo>
+
+    <!-- Generic table: columns define both header and cell keys. -->
+    <template id="report_libro_table">
+        <table class="table table-sm table-bordered">
+            <thead>
+                <tr>
+                    <th t-foreach="columns" t-as="col">
+                        <span t-esc="col[1]"/>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr t-foreach="rows" t-as="row">
+                    <td t-foreach="columns" t-as="col">
+                        <span t-esc="o.fmt_cell(row.get(col[0]))"/>
+                    </td>
+                </tr>
+            </tbody>
+            <tfoot t-if="totals">
+                <tr class="fw-bold">
+                    <t t-foreach="o.fmt_totals(totals, columns)" t-as="tot">
+                        <td>
+                            <span t-esc="tot[0]"/>: <span t-esc="tot[1]"/>
+                        </td>
+                    </t>
+                </tr>
+            </tfoot>
+        </table>
+    </template>
+
+    <template id="report_libro_body">
+        <t t-set="payload" t-value="o.get_book_payload()"/>
+        <t t-set="columns" t-value="payload.get('columns') or []"/>
+        <t t-set="rows" t-value="payload.get('rows') or []"/>
+        <t t-set="totals" t-value="payload.get('totals') or {}"/>
+        <div class="page">
+            <t t-set="layout_document_title">
+                <span t-esc="payload.get('title')"/>
+            </t>
+            <h2>
+                <span t-esc="o.company_id.name"/> — <span t-esc="payload.get('title')"/>
+            </h2>
+            <p>
+                <strong>Periodo:</strong> <span t-esc="payload.get('period')"/>
+                 | <strong>Generado:</strong>
+                <span t-esc="datetime.datetime.now().strftime('%Y-%m-%d %H:%M')"/>
+            </p>
+
+            <p t-if="payload.get('opening') is not None and 'opening' in payload">
+                <strong>Saldo inicial:</strong>
+                <span t-esc="o.fmt_cell(payload.get('opening'))"/>
+            </p>
+
+            <t t-call="l10n_ec_reports.report_libro_table"/>
+
+            <!-- Libro Mayor: per-account subtotal block -->
+            <div t-if="payload.get('accounts')">
+                <h3>Cuentas con movimiento</h3>
+                <table class="table table-sm table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Cuenta</th>
+                            <th>Nombre</th>
+                            <th class="text-right">Debe</th>
+                            <th class="text-right">Haber</th>
+                            <th class="text-right">Saldo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="payload['accounts']" t-as="acc">
+                            <td><span t-esc="acc['code']"/></td>
+                            <td><span t-esc="acc['name']"/></td>
+                            <td class="text-right"><span t-esc="o.fmt_cell(acc['debit'])"/></td>
+                            <td class="text-right"><span t-esc="o.fmt_cell(acc['credit'])"/></td>
+                            <td class="text-right"><span t-esc="o.fmt_cell(acc['balance'])"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Libro de Inventarios y Balances: NEC groups + valuation -->
+            <div t-if="payload.get('groups')">
+                <h3>Resumen por grupo NEC</h3>
+                <table class="table table-sm table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Grupo</th>
+                            <th>Denominacion</th>
+                            <th class="text-right">Debe</th>
+                            <th class="text-right">Haber</th>
+                            <th class="text-right">Saldo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="payload['groups']" t-as="grp">
+                            <td><span t-esc="grp['group']"/></td>
+                            <td><span t-esc="grp['label']"/></td>
+                            <td class="text-right"><span t-esc="o.fmt_cell(grp['debit'])"/></td>
+                            <td class="text-right"><span t-esc="o.fmt_cell(grp['credit'])"/></td>
+                            <td class="text-right"><span t-esc="o.fmt_cell(grp['balance'])"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div t-if="payload.get('valuation')">
+                    <h3>Valoracion de inventarios</h3>
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-right">Cantidad</th>
+                                <th class="text-right">Costo unitario</th>
+                                <th class="text-right">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="payload['valuation']" t-as="val">
+                                <td><span t-esc="val['name']"/></td>
+                                <td class="text-right"><span t-esc="o.fmt_cell(val['quantity'])"/></td>
+                                <td class="text-right"><span t-esc="o.fmt_cell(val['unit_cost'])"/></td>
+                                <td class="text-right"><span t-esc="o.fmt_cell(val['value'])"/></td>
+                            </tr>
+                            <tr class="fw-bold">
+                                <td colspan="3">Total valoracion</td>
+                                <td class="text-right">
+                                    <span t-esc="o.fmt_cell(payload.get('valuation_total'))"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <p t-if="not rows">
+                Sin movimientos en el periodo para este libro.
+            </p>
+        </div>
+    </template>
+
+    <template id="report_libro">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-call="l10n_ec_reports.report_libro_body"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

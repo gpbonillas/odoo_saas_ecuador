@@ -5,11 +5,14 @@
     "category": "Accounting/Localizations",
     "summary": "Manage RIMPE (Emprendedores & Negocios Populares)",
     "description": """
-        Implements LORTI Art. 97 (RIMPE).
+        Implements the RIMPE regime (Régimen Simplificado para Emprendedores
+        y Negocios Populares), previsto en la LRTI; normas de aplicación:
+        Resolución SRI NAC-DGERCGC23-00000004 (RO 257-2S, 27-feb-2023).
         Supports:
         - Partner Classification (Popular vs Entrepreneur)
         - Document Type 02 (Notas de Venta) logic
-        - Special Retention Codes (332B, 343A)
+        - Retention codes per SRI Tabla 19 (332=0% Negocios Populares,
+          343=1% Emprendedores; Res. NAC-DGERCGC26-00000009)
         - Retention Restrictions (0% for Popular)
     """,
     "author": "Somatech Ecuador",

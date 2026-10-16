@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!--
+          POS factura electrónica (codDoc 01, v1.1.0) rendered directly from
+          a pos.order. Totals/tax groups/payment codes are precomputed in
+          Python (PosOrder._l10n_ec_build_comprobante_xml) to keep this
+          template dumb.
+          TODO: validate final XML against the SRI "Factura electrónica"
+          schema (v1.1.0) with a live celcer submission.
+        -->
+        <template id="l10n_ec_pos_factura_xml">
+            <factura id="comprobante" version="1.1.0">
+                <infoTributaria>
+                    <ambiente t-out="environment"/>
+                    <tipoEmision>1</tipoEmision>
+                    <razonSocial t-out="company.name[:300]"/>
+                    <nombreComercial t-if="company.l10n_ec_commercial_name"
+                                     t-out="company.l10n_ec_commercial_name[:300]"/>
+                    <ruc t-out="company.vat"/>
+                    <claveAcceso t-out="access_key"/>
+                    <codDoc>01</codDoc>
+                    <estab t-out="access_key[24:27]"/>
+                    <ptoEmi t-out="access_key[27:30]"/>
+                    <secuencial t-out="access_key[30:39]"/>
+                    <dirMatriz t-out="company.street[:300]"/>
+                </infoTributaria>
+                <infoFactura>
+                    <fechaEmision t-out="fecha_emision"/>
+                    <dirEstablecimiento t-if="company.street" t-out="company.street[:300]"/>
+                    <obligadoContabilidad t-if="company.l10n_ec_forced_accounting" t-out="'SI'"/>
+                    <tipoIdentificacionComprador t-out="partner_id_code"/>
+                    <razonSocialComprador t-out="(partner.name or 'CONSUMIDOR FINAL')[:300]"/>
+                    <identificacionComprador t-out="partner.vat or '9999999999999'"/>
+                    <totalSinImpuestos t-out="format_float(total_sin_impuestos, 2)"/>
+                    <totalDescuento t-out="format_float(total_descuento, 2)"/>
+                    <totalConImpuestos>
+                        <t t-foreach="tax_groups" t-as="grp">
+                            <totalImpuesto>
+                                <codigo t-out="grp['codigo']"/>
+                                <codigoPorcentaje t-out="grp['codigo_porcentaje']"/>
+                                <baseImponible t-out="format_float(grp['base'], 2)"/>
+                                <tarifa t-out="format_float(0, 2)"/>
+                                <valor t-out="format_float(grp['impuesto'], 2)"/>
+                            </totalImpuesto>
+                        </t>
+                    </totalConImpuestos>
+                    <propina>0.00</propina>
+                    <importeTotal t-out="format_float(importe_total, 2)"/>
+                    <moneda>USD</moneda>
+                    <pagos>
+                        <t t-foreach="payment_codes" t-as="pcode">
+                            <pago>
+                                <formaPago t-out="pcode"/>
+                            </pago>
+                        </t>
+                    </pagos>
+                </infoFactura>
+                <detalles>
+                    <t t-foreach="order.lines" t-as="line">
+                        <detalle>
+                            <codigoInterno t-out="line.product_id.default_code or str(line.product_id.id)"/>
+                            <codigoAdicional t-if="line.product_id.barcode" t-out="line.product_id.barcode"/>
+                            <descripcion t-out="(line.full_product_name or line.product_id.name or '')[:300]"/>
+                            <cantidad t-out="format_float(line.qty, 2)"/>
+                            <precioUnitario t-out="format_float(line.price_unit, 2)"/>
+                            <descuento t-out="format_float(line.price_unit * line.qty * (line.discount or 0) / 100.0, 2)"/>
+                            <precioTotalSinImpuesto t-out="format_float(line.price_subtotal, 2)"/>
+                        </detalle>
+                    </t>
+                </detalles>
+                <infoAdicional>
+                    <t t-if="order.pos_reference">
+                        <campoAdicional nombre="Ticket POS" t-out="order.pos_reference"/>
+                    </t>
+                </infoAdicional>
+            </factura>
+        </template>
+
+        <!-- Hourly: transmit pending tickets + poll authorizations -->
+        <record id="ir_cron_l10n_ec_pos_transmit" model="ir.cron">
+            <field name="name">POS EC: Transmitir comprobantes al SRI</field>
+            <field name="model_id" ref="point_of_sale.model_pos_order"/>
+            <field name="state">code</field>
+            <field name="code">model._l10n_ec_cron_transmit_pending()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">hours</field>
+            <field name="active" eval="True"/>
+        </record>
+    </data>
+</odoo>

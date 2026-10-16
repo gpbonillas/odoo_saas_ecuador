@@ -187,14 +187,19 @@ l10n_ec_fecha_constitucion = Date
 
 ## 6. VALIDATION RULES
 
-### 6.1 RUC/Cédula Validation
+### 6.1 RUC/Cédula Validation (stdnum ground truth — FR-LE-50, ISO-EC-10 §3.5)
 
 | Type | Digits | 3rd Digit | Check |
 |:-----|:-------|:----------|:------|
-| Cédula | 10 | 0-5 | Módulo 10 |
-| RUC Natural | 13 | 0-5 | Módulo 10 + 001 |
-| RUC Sociedad | 13 | 9 | Módulo 11 |
-| RUC Público | 13 | 6 | Módulo 11 |
+| Cédula | 10 | 0–6 (provincia 01–24 + 30/50) | Módulo 10 (pesos 2,1) sobre 10 dígitos |
+| RUC Natural | 13 | 0–5 | Válida como cédula + establecimiento (últimos 3 dígitos) ≠ `000` (`001` es el estándar, D-02) |
+| RUC Sociedad | 13 | 9 | Módulo 11 primeros 10 (pesos 4,3,2,7,6,5,4,3,2,1) |
+| RUC Público | 13 | 6 | Módulo 11 primeros 9 (pesos 3,2,7,6,5,4,3,2,1) + fallback natural |
+| RUC (7/8) | 13 | 7 u 8 | **Inválido** |
+
+Reglas de negocio (D-02/D-03): RUC natural = cédula + `001` **siempre**; se puede **comprar**
+con cédula; **vender/emitir exige RUC ACTIVO** en el SRI. Evidencia de equivalencia `stdnum`:
+20,195 casos → 0 diferencias (2026-10-16).
 
 ### 6.2 Business Rules
 

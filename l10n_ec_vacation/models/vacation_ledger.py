@@ -1,6 +1,16 @@
 # -*- coding: utf-8 -*-
+"""Vacation ledger — Ecuadorian accrued/paid vacation control.
+
+Accrual math follows KB_LABOR_SBU_DECIMOS / CT art. 69:
+  * base: 15 days/year → 1.25 days/month
+  * seniority: +1 day per completed year after year 5, capped at +15
+    (total never exceeds 30 days).
+The seniority/cap constants live in ``l10n_ec_payroll_calc`` so the
+payslip engine, the liquidación wizard and this ledger share them.
+"""
 from odoo import models, fields, api
-from dateutil.relativedelta import relativedelta
+
+from odoo.addons.l10n_ec_hr_payroll.models import l10n_ec_payroll_calc as calc
 
 
 class L10nEcVacationLedger(models.Model):
@@ -44,16 +54,14 @@ class L10nEcVacationLedger(models.Model):
     @api.model
     def run_monthly_accrual(self, reference_date=None):
         """
-        Scheduled Action to run accruals.
-        Logic:
+        Scheduled Action to run accruals (CT art. 69 / KB §3):
+
         1. Find active contracts.
-        2. Calculate seniority (Years of service).
-        3. Base = 1.25.
-        4. If years > 5, add (years - 5) capped? No, logic is +1 day for every year after 5.
-           Wait, Art 69 says "un día adicional por cada año excedente".
-           It usually caps at 15 extra days (total 30), but law says "no excederá de 15".
-           So Max Days = 15 (Base) + 15 (Seniority) = 30.
-           Monthly portion of seniority = (Years - 5) / 12.
+        2. Seniority = completed years of service (calc.years_of_service).
+        3. Base = 1.25 days/month (15 days/year).
+        4. Seniority bonus = +1 day/year after year 5, capped at +15
+           extra days (total never exceeds 30); monthly portion =
+           bonus / 12.
         """
         if not reference_date:
             reference_date = fields.Date.today()
@@ -63,32 +71,29 @@ class L10nEcVacationLedger(models.Model):
         for contract in contracts:
             # Check if accrual already ran for this month? (Omitted for MVP simplicity, would be a unique constraint)
 
-            # 1. Base Accrual
-            accrual = 1.25
+            # 1. Base Accrual (15 days / 12 months)
+            base_monthly = calc.VACATION_BASE_DAYS / 12.0
 
-            # 2. Seniority Bonus
-            # Calculate seniority
-            start_date = contract.date_start
-            # Service years
-            delta = relativedelta(reference_date, start_date)
-            years_service = delta.years
-
+            # 2. Seniority Bonus, shared logic with payslip/wizard:
+            #    +1 day per completed year after year 5, capped at +15.
+            years_service = calc.years_of_service(
+                contract.date_start, reference_date
+            )
             seniority_days_yearly = 0.0
             if years_service > 5:
-                extra_years = years_service - 5
                 seniority_days_yearly = min(
-                    extra_years, 15
-                )  # Cap additional days at 15
+                    years_service - 5, calc.VACATION_MAX_EXTRA_DAYS
+                )
 
             seniority_monthly = seniority_days_yearly / 12.0
-            total_earned = accrual + seniority_monthly
+            total_earned = base_monthly + seniority_monthly
 
             self.create(
                 {
                     "employee_id": contract.employee_id.id,
                     "contract_id": contract.id,
                     "date": reference_date,
-                    "description": f"Monthly Accrual ({reference_date.strftime('%B %Y')}) - Base: 1.25, Seniority: {seniority_monthly:.2f}",
+                    "description": f"Monthly Accrual ({reference_date.strftime('%B %Y')}) - Base: {base_monthly:.2f}, Seniority: {seniority_monthly:.2f}",
                     "days_earned": total_earned,
                 }
             )

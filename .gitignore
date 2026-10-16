@@ -124,3 +124,12 @@ venv.bak/
 # Local development
 .odoorc
 odoo.conf
+
+# === SECRETS — NEVER COMMIT / NEVER PUSH ===
+# Firma electronica SRI (.p12) + credenciales. Ignorado por git.
+secrets/
+*.p12
+*.pfx
+*.p7b
+*.key
+*.pem

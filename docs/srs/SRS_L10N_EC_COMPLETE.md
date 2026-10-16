@@ -122,14 +122,19 @@
 
 | XML ID | Name | Type | RUC/CI |
 |:-------|:-----|:-----|:-------|
-| demo_customer_natural | Juan Carlos Pérez | Cédula | 1710034065 |
-| demo_customer_natural_obligado | María López | RUC Natural | 1720567890001 |
-| demo_customer_sociedad | Comercializadora S.A. | Sociedad | 1790016919001 |
-| demo_customer_especial | Distribuidora Nacional | Especial | 1791234567001 |
-| demo_customer_rimpe_e | Artesanías Andinas | RIMPE Emprendedor | 0501234567001 |
-| demo_customer_rimpe_p | Tienda Don Pedro | RIMPE Popular | 0912345678001 |
+| demo_customer_natural | Juan Carlos Pérez | Cédula | 1713488185 |
+| demo_customer_natural_obligado | María López | RUC Natural | 1713488185001 |
+| demo_customer_sociedad | CANNACHAIN S.A.S. | Sociedad | 1793125212001 |
+| demo_customer_especial | Distribuidora Nacional | Especial | PENDIENTE (D-04: sin ID aprobado) |
+| demo_customer_rimpe_e | Artesanías Andinas | RIMPE Emprendedor | PENDIENTE (D-04) |
+| demo_customer_rimpe_p | Tienda Don Pedro | RIMPE Popular | PENDIENTE (D-04) |
 | demo_customer_final | Consumidor Final | Final | 9999999999999 |
-| demo_customer_exporter | Exportadora Bananera | Exportador | 0790123456001 |
+| demo_customer_exporter | Exportadora Bananera | Exportador | PENDIENTE (D-04) |
+
+> **D-04 (2026-10-16):** solo existen IDs de prueba aprobados `1713488185` (cédula),
+> `1713488185001` (natural) y `1793125212001` (jurídica). El XML demo del código
+> (`l10n_ec_base/demo/l10n_ec_demo_partners.xml`) aún contiene RUCs inventados — pendiente
+> de limpieza (bloqueado en fase "solo docs").
 
 ### 3.3 Supplier Types (Retention Testing)
 

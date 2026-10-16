@@ -30,10 +30,19 @@ Complete customs management for Ecuador (SENAE):
     "author": "Somatech.dev, Odoo Community Association (OCA)",
     "website": "https://github.com/somatechlat/odoo_saas_ecuador",
     "license": "LGPL-3",
-    "depends": ["stock", "account", "purchase", "mail"],
+    "depends": [
+        "stock",
+        "account",
+        "purchase",
+        "mail",
+        "l10n_ec_edi",
+        # l10n_ec_base owns the canonical ir.config_parameter keys
+        # (l10n_ec.fodinfa, l10n_ec.customs_iva) and the l10n_ec tax/group
+        # templates this module instantiates as concrete taxes.
+        "l10n_ec_base",
+    ],
     "data": [
         "security/ir.model.access.csv",
-        "data/l10n_ec_customs_data.xml",
         "views/l10n_ec_customs_views.xml",
     ],
     "images": ["static/description/banner.png"],

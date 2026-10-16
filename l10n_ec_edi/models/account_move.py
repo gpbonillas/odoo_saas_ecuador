@@ -221,23 +221,94 @@ class AccountMove(models.Model):
             company = move.company_id
             # Environment: 1=Test, 2=Prod
             env = "2" if company.l10n_ec_sri_environment == "production" else "1"
+
+            ruc = "".join(c for c in (company.vat or "") if c.isdigit())
+            if len(ruc) != 13:
+                raise ValidationError(
+                    _(
+                        "Company %s has no valid 13-digit RUC configured; "
+                        "cannot generate the SRI access key."
+                    )
+                    % company.name
+                )
+
             # Get establishment/emission point from company or default
-            estab = getattr(company, "l10n_ec_establishment", "001") or "001"
-            pto = getattr(company, "l10n_ec_emission_point", "001") or "001"
-            seq = (
-                move.name.split("/")[-1] if "/" in move.name else move.name[-9:]
-            )  # Simple logic, needs refinement
+            estab = str(getattr(company, "l10n_ec_establishment", "") or "001")
+            pto = str(getattr(company, "l10n_ec_emission_point", "") or "001")
+            estab = "".join(c for c in estab if c.isdigit()).zfill(3)[-3:]
+            pto = "".join(c for c in pto if c.isdigit()).zfill(3)[-3:]
+
+            # Sequential: digits only, last 9 (invoice names can be
+            # 'INV/2026/00001', 'FACT-001-001-000000001', '/ (Counter)', ...).
+            seq = "".join(c for c in (move.name or "") if c.isdigit())[-9:]
+            seq = seq.zfill(9)
+
+            doc_type = move.l10n_latam_document_type_id.code
+            if not doc_type:
+                doc_type = "04" if move.move_type in ("out_refund", "in_refund") else "01"
 
             key = AccessKey.generate(
                 invoice_date=move.invoice_date,
-                doc_type=move.l10n_latam_document_type_id.code,
-                ruc=company.vat,
+                doc_type=doc_type,
+                ruc=ruc,
                 environment=env,
                 establishment=estab,
                 emission_point=pto,
                 sequential=seq,
             )
+            if len(key) != 49 or not key.isdigit():
+                raise ValidationError(
+                    _(
+                        "Generated SRI access key is invalid (got %r, expected "
+                        "49 digits). Check the company RUC, journal "
+                        "establishment/emission point and invoice sequence."
+                    )
+                    % key
+                )
             move.l10n_ec_sri_access_key = key
+
+    @api.depends(
+        "l10n_latam_available_document_type_ids",
+        "partner_id",
+        "move_type",
+        "debit_origin_id",
+    )
+    def _compute_l10n_latam_document_type(self):
+        """
+        Auto-select SRI codDoc 03 (Liquidación de Compra) for draft vendor
+        bills whose supplier is NOT obligated to keep accounting
+        (natural persons below the SRI threshold); obligated contributors
+        keep codDoc 01 (Factura de Compra).
+        """
+        super()._compute_l10n_latam_document_type()
+
+        liq_compra = self.env.ref("l10n_ec_base.ec_dt_03", raise_if_not_found=False)
+        factura = self.env.ref("l10n_ec_base.ec_dt_01", raise_if_not_found=False)
+        if not liq_compra:
+            return
+
+        for move in self:
+            if (
+                move.state != "draft"
+                or move.move_type != "in_invoice"
+                or move.debit_origin_id
+            ):
+                continue
+            available = move.l10n_latam_available_document_type_ids._origin
+            if liq_compra not in available:
+                continue
+
+            partner = move.partner_id
+            obligated = (
+                partner._l10n_ec_is_forced_to_keep_accounting() if partner else True
+            )
+            if not obligated:
+                move.l10n_latam_document_type_id = liq_compra
+            elif (
+                move.l10n_latam_document_type_id == liq_compra
+                and factura in available
+            ):
+                move.l10n_latam_document_type_id = factura
 
     def action_send_sri(self):
         """

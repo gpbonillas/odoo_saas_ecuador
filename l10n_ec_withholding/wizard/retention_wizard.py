@@ -25,61 +25,23 @@ class RetentionWizard(models.TransientModel):
             invoice = self.env["account.move"].browse(self.env.context["active_id"])
             res["invoice_id"] = invoice.id
 
-            lines = []
-            # Auto-calculation logic
-            # We look for Taxes on the Invoice Lines that are "Retentions"
-            # Since we don't have strict Tax Group mapping in this scaffold yet,
-            # we will create lines based on the invoice lines tax calculations if they appear to be retentions
-            # OR, more robustly for a Wizard: We allow the user to select the code and we apply it to the base.
-
-            # Strategy: Pre-fill base amounts from invoice totals to save typing
-            # Separate by VAT and Income Tax bases if possible.
-
-            # Simple approach: Create one line for Income Tax (Renta) and one for VAT (IVA) if applicable.
-            # Base Imponible Renta = Amount Untaxed
-            # Base Imponible IVA = Amount Tax (only if Retaining IVA)
-
-            # 1. Renta Line Suggestion
-            lines.append(
-                (
-                    0,
-                    0,
-                    {
-                        "tax_type": "1",  # Renta
-                        "base": invoice.amount_untaxed,
-                        "percentage": 0.0,
-                        "tax_code": "332",  # Default/Common code, user can change
-                    },
-                )
-            )
-
-            # 2. IVA Line Suggestion (if there is VAT)
-            total_vat = sum(
-                line.price_total - line.price_subtotal
-                for line in invoice.invoice_line_ids
-            )
-            if total_vat > 0:
-                lines.append(
-                    (
-                        0,
-                        0,
-                        {
-                            "tax_type": "2",  # IVA
-                            "base": total_vat,  # Base for IVA Retention is the VAT amount itself?
-                            # No, usually percentage of VAT amount (10%, 30%, 70%, 100%)
-                            # Or is base the invoice subtotal?
-                            # Ficha Tecnica: baseImponible for code 2 (IVA) is the VAT AMOUNT.
-                            # Review DM_02: "baseImponible" -> "Decimal 2 places".
-                            # For IVA retention, the base is the IVA value.
-                            # Let's confirm: "Retention of IVA is X% of the IVA Value."
-                            "base": total_vat,
-                            "percentage": 30.0,  # Common Goods %
-                            "tax_code": "2",  # Common Code
-                        },
+            # Pre-fill with the automatically detected withholding
+            # (product IR/IVA codes + SRI tariff table by RUC 4th digit /
+            # activity). The user can edit rates/codes before creating.
+            if invoice.move_type == "in_invoice":
+                lines = []
+                for vals in invoice._l10n_ec_calculate_withholding_vals():
+                    line_vals = {
+                        key: value
+                        for key, value in vals.items()
+                        if key in ("tax_type", "tax_id", "base", "percentage")
+                    }
+                    tax = self.env["l10n_ec.withholding.tax"].browse(
+                        line_vals.get("tax_id")
                     )
-                )
-
-            res["line_ids"] = lines
+                    line_vals["percentage"] = tax.percentage
+                    lines.append((0, 0, line_vals))
+                res["line_ids"] = lines
 
         return res
 
@@ -104,10 +66,9 @@ class RetentionWizard(models.TransientModel):
                     0,
                     {
                         "tax_type": line.tax_type,
-                        "tax_code": line.tax_code,
+                        "tax_id": line.tax_id.id,
                         "base": line.base,
-                        "percentage": line.percentage,
-                        "amount": line.amount,
+                        "invoice_id": self.invoice_id.id,
                     },
                 )
             )
@@ -133,12 +94,36 @@ class RetentionWizardLine(models.TransientModel):
     tax_type = fields.Selection(
         [("1", "Renta"), ("2", "IVA"), ("6", "ISD")], string="Impuesto", required=True
     )
+    withholding_type = fields.Char(compute="_compute_withholding_type")
 
-    tax_code = fields.Char(string="Código Retención", required=True)
+    tax_id = fields.Many2one(
+        "l10n_ec.withholding.tax",
+        string="Tax Code",
+        required=True,
+        domain="[('type', '=', withholding_type)]",
+    )
+    tax_code = fields.Char(related="tax_id.code", string="Código", readonly=True)
     base = fields.Monetary(string="Base Imponible", required=True)
-    percentage = fields.Float(string="Porcentaje %", required=True)
+    percentage = fields.Float(string="Porcentaje %", readonly=True)
     amount = fields.Monetary(string="Valor Retenido", compute="_compute_amount")
     currency_id = fields.Many2one(related="wizard_id.invoice_id.currency_id")
+
+    @api.depends("tax_type")
+    def _compute_withholding_type(self):
+        mapping = {"1": "renta", "2": "iva", "6": "isd"}
+        for line in self:
+            line.withholding_type = mapping.get(line.tax_type, "renta")
+
+    @api.onchange("tax_id")
+    def _onchange_tax_id(self):
+        for line in self:
+            line.percentage = line.tax_id.percentage
+            if line.tax_id:
+                line.tax_type = {
+                    "renta": "1",
+                    "iva": "2",
+                    "isd": "6",
+                }.get(line.tax_id.type, line.tax_type)
 
     @api.depends("base", "percentage")
     def _compute_amount(self):

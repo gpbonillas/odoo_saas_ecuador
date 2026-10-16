@@ -33,6 +33,8 @@ SRI electronic invoicing integration for Point of Sale:
     ],
     "data": [
         "views/pos_config_views.xml",
+        "views/pos_order_views.xml",
+        "data/pos_sri_data.xml",
     ],
     "assets": {
         "point_of_sale._assets_pos": [

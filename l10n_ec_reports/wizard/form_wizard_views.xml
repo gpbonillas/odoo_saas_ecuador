@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SRI forms wizard (101/102/103/104/107/108 + Gastos Personales).
+  Fields are grouped by form so the user only sees the inputs that feed
+  the selected form's calculation.
+-->
+<odoo>
+    <data>
+
+        <record id="view_l10n_ec_form_wizard_form" model="ir.ui.view">
+            <field name="name">l10n_ec.form.wizard.form</field>
+            <field name="model">l10n_ec.form.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Formularios SRI">
+                    <group>
+                        <group>
+                            <field name="form"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+
+                    <!-- Shared fiscal inputs (annual forms + 103/104 period) -->
+                    <group string="Ingresos fiscales">
+                        <group>
+                            <field name="pagos_previos"
+                                   invisible="form not in ('101', '102', '107')"/>
+                            <field name="aportes_iess"
+                                   invisible="form not in ('102', '107')"/>
+                            <field name="retenciones_fuente"
+                                   invisible="form not in ('101', '102', '107')"/>
+                        </group>
+                        <group string="Formulario 107 - Ingresos">
+                            <field name="ingreso_trabajo" invisible="form != '107'"/>
+                            <field name="ingreso_tercera" invisible="form != '107'"/>
+                            <field name="ingreso_cuarta" invisible="form != '107'"/>
+                            <field name="ingreso_capital" invisible="form != '107'"/>
+                            <field name="ingreso_otros" invisible="form != '107'"/>
+                        </group>
+                    </group>
+
+                    <group string="Gastos personales (107 / GP)"
+                           invisible="form not in ('gp', '107')">
+                        <group>
+                            <field name="g_vivienda"/>
+                            <field name="g_salud"/>
+                            <field name="g_educacion"/>
+                        </group>
+                        <group>
+                            <field name="g_alimentacion"/>
+                            <field name="g_vestimenta"/>
+                            <field name="g_turismo"/>
+                        </group>
+                        <group>
+                            <field name="cargas_familiares"/>
+                            <field name="enfermedad_catastrofica"/>
+                        </group>
+                    </group>
+
+                    <footer>
+                        <button string="Calcular e Imprimir" name="action_print"
+                                type="object" class="btn-primary"/>
+                        <button string="Cerrar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_l10n_ec_form_wizard" model="ir.actions.act_window">
+            <field name="name">Formularios SRI</field>
+            <field name="res_model">l10n_ec.form.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="menu_l10n_ec_formularios"
+                  name="Formularios SRI"
+                  parent="l10n_ec_base.menu_l10n_ec_root"
+                  sequence="25"/>
+
+        <record id="action_l10n_ec_form_101" model="ir.actions.act_window">
+            <field name="name">Formulario 101 - Impuesto a la Renta</field>
+            <field name="res_model">l10n_ec.form.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_form': '101'}</field>
+        </record>
+        <record id="action_l10n_ec_form_102" model="ir.actions.act_window">
+            <field name="name">Formulario 102 - Renta Personas Naturales</field>
+            <field name="res_model">l10n_ec.form.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_form': '102'}</field>
+        </record>
+        <record id="action_l10n_ec_form_103" model="ir.actions.act_window">
+            <field name="name">Formulario 103 - Retenciones en la Fuente</field>
+            <field name="res_model">l10n_ec.form.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_form': '103'}</field>
+        </record>
+        <record id="action_l10n_ec_form_104" model="ir.actions.act_window">
+            <field name="name">Formulario 104 - IVA y ICE</field>
+            <field name="res_model">l10n_ec.form.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_form': '104'}</field>
+        </record>
+        <record id="action_l10n_ec_form_107" model="ir.actions.act_window">
+            <field name="name">Formulario 107 - Renta Personas Naturales</field>
+            <field name="res_model">l10n_ec.form.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_form': '107'}</field>
+        </record>
+        <record id="action_l10n_ec_form_108" model="ir.actions.act_window">
+            <field name="name">Formulario 108 - Notas de Credito Emitidas</field>
+            <field name="res_model">l10n_ec.form.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_form': '108'}</field>
+        </record>
+        <record id="action_l10n_ec_form_gastos_personales" model="ir.actions.act_window">
+            <field name="name">Gastos Personales - Deducciones y Topes</field>
+            <field name="res_model">l10n_ec.form.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_form': 'gp'}</field>
+        </record>
+
+        <menuitem id="menu_l10n_ec_form_101" name="Formulario 101 (Renta)"
+                  parent="menu_l10n_ec_formularios"
+                  action="action_l10n_ec_form_101" sequence="10"/>
+        <menuitem id="menu_l10n_ec_form_102" name="Formulario 102 (Personas Naturales)"
+                  parent="menu_l10n_ec_formularios"
+                  action="action_l10n_ec_form_102" sequence="20"/>
+        <menuitem id="menu_l10n_ec_form_103" name="Formulario 103 (Retenciones)"
+                  parent="menu_l10n_ec_formularios"
+                  action="action_l10n_ec_form_103" sequence="30"/>
+        <menuitem id="menu_l10n_ec_form_104" name="Formulario 104 (IVA e ICE)"
+                  parent="menu_l10n_ec_formularios"
+                  action="action_l10n_ec_form_104" sequence="40"/>
+        <menuitem id="menu_l10n_ec_form_107" name="Formulario 107 (Renta)"
+                  parent="menu_l10n_ec_formularios"
+                  action="action_l10n_ec_form_107" sequence="50"/>
+        <menuitem id="menu_l10n_ec_form_108" name="Formulario 108 (Notas de Credito)"
+                  parent="menu_l10n_ec_formularios"
+                  action="action_l10n_ec_form_108" sequence="60"/>
+        <menuitem id="menu_l10n_ec_form_gp" name="Gastos Personales"
+                  parent="menu_l10n_ec_formularios"
+                  action="action_l10n_ec_form_gastos_personales" sequence="70"/>
+
+    </data>
+</odoo>

@@ -44,6 +44,8 @@
 
     <!-- ================================================================= -->
     <!-- CÓDIGOS DE RETENCIÓN IR (Impuesto a la Renta)                    -->
+    <!-- Tarifas Tabla 19 verificadas contra Resolución                  -->
+    <!-- NAC-DGERCGC26-00000009 (27-feb-2026, RO 233)                    -->
     <!-- ================================================================= -->
     <record id="ret_ir_303" model="l10n_ec.retention.code">
         <field name="code">303</field>
@@ -56,28 +58,28 @@
         <field name="code">304</field>
         <field name="name">Servicios predomina el intelecto</field>
         <field name="type">ir</field>
-        <field name="rate">8.0</field>
+        <field name="rate">10.0</field>
         <field name="applies_to">services</field>
     </record>
     <record id="ret_ir_307" model="l10n_ec.retention.code">
         <field name="code">307</field>
         <field name="name">Servicios predomina la mano de obra</field>
         <field name="type">ir</field>
-        <field name="rate">2.0</field>
+        <field name="rate">3.0</field>
         <field name="applies_to">services</field>
     </record>
     <record id="ret_ir_308" model="l10n_ec.retention.code">
         <field name="code">308</field>
-        <field name="name">Servicios entre sociedades</field>
+        <field name="name">Uso o aprovechamiento de la imagen o renombre</field>
         <field name="type">ir</field>
-        <field name="rate">2.0</field>
+        <field name="rate">10.0</field>
         <field name="applies_to">services</field>
     </record>
     <record id="ret_ir_309" model="l10n_ec.retention.code">
         <field name="code">309</field>
-        <field name="name">Publicidad y comunicación</field>
+        <field name="name">Publicidad y agencias de comunicación</field>
         <field name="type">ir</field>
-        <field name="rate">1.0</field>
+        <field name="rate">3.0</field>
         <field name="applies_to">services</field>
     </record>
     <record id="ret_ir_310" model="l10n_ec.retention.code">
@@ -89,56 +91,57 @@
     </record>
     <record id="ret_ir_312" model="l10n_ec.retention.code">
         <field name="code">312</field>
-        <field name="name">Compra de bienes muebles</field>
+        <field name="name">Transferencia de bienes muebles</field>
         <field name="type">ir</field>
-        <field name="rate">1.0</field>
+        <field name="rate">2.0</field>
         <field name="applies_to">goods</field>
     </record>
     <record id="ret_ir_319" model="l10n_ec.retention.code">
         <field name="code">319</field>
         <field name="name">Arrendamiento mercantil</field>
         <field name="type">ir</field>
-        <field name="rate">1.0</field>
+        <field name="rate">2.0</field>
         <field name="applies_to">services</field>
     </record>
     <record id="ret_ir_320" model="l10n_ec.retention.code">
         <field name="code">320</field>
         <field name="name">Arrendamiento bienes inmuebles</field>
         <field name="type">ir</field>
-        <field name="rate">1.75</field>
+        <field name="rate">10.0</field>
         <field name="applies_to">services</field>
     </record>
     <record id="ret_ir_322" model="l10n_ec.retention.code">
         <field name="code">322</field>
         <field name="name">Seguros y reaseguros</field>
         <field name="type">ir</field>
-        <field name="rate">1.0</field>
+        <field name="rate">2.0</field>
         <field name="applies_to">services</field>
     </record>
     <record id="ret_ir_323" model="l10n_ec.retention.code">
         <field name="code">323</field>
         <field name="name">Rendimientos financieros</field>
         <field name="type">ir</field>
-        <field name="rate">2.0</field>
+        <field name="rate">3.0</field>
         <field name="applies_to">services</field>
     </record>
     <record id="ret_ir_340" model="l10n_ec.retention.code">
         <field name="code">340</field>
-        <field name="name">Artes gráficas</field>
+        <field name="name">Impuesto único a la exportación de banano</field>
         <field name="type">ir</field>
-        <field name="rate">1.0</field>
+        <field name="rate">3.0</field>
         <field name="applies_to">both</field>
     </record>
+    <!-- Código oficial del anticipo de utilidades: 325 (Tabla 19) -->
     <record id="ret_ir_344" model="l10n_ec.retention.code">
-        <field name="code">344</field>
-        <field name="name">Dividendos distribuidos residentes</field>
+        <field name="code">325</field>
+        <field name="name">Anticipo de utilidades/dividendos</field>
         <field name="type">ir</field>
         <field name="rate">25.0</field>
         <field name="applies_to">both</field>
     </record>
     <record id="ret_ir_500" model="l10n_ec.retention.code">
         <field name="code">500</field>
-        <field name="name">Pagos a paraísos fiscales</field>
+        <field name="name">Rentas pagadas a no residentes - rentas inmobiliarias (25% ó 37%)</field>
         <field name="type">ir</field>
         <field name="rate">25.0</field>
         <field name="applies_to">both</field>
@@ -146,6 +149,8 @@
 
     <!-- ================================================================= -->
     <!-- CÓDIGOS DE RETENCIÓN IVA                                          -->
+    <!-- Casilleros Formulario 104 (Res. NAC-DGERCGC20-00000061):          -->
+    <!-- 721=10%, 723=20%, 725=30%, 727=50%, 729=70%, 731=100%             -->
     <!-- ================================================================= -->
     <record id="ret_iva_721" model="l10n_ec.retention.code">
         <field name="code">721</field>
@@ -163,28 +168,28 @@
     </record>
     <record id="ret_iva_725" model="l10n_ec.retention.code">
         <field name="code">725</field>
-        <field name="name">Retención IVA Bienes 30% (Contrib. Especial)</field>
+        <field name="name">Retención IVA 30% (Contrib. Especial)</field>
         <field name="type">iva</field>
         <field name="rate">30.0</field>
         <field name="applies_to">goods</field>
     </record>
     <record id="ret_iva_727" model="l10n_ec.retention.code">
         <field name="code">727</field>
-        <field name="name">Retención IVA Servicios 70% (Contrib. Especial)</field>
+        <field name="name">Retención IVA 50% (Contrib. Especial)</field>
         <field name="type">iva</field>
-        <field name="rate">70.0</field>
+        <field name="rate">50.0</field>
         <field name="applies_to">services</field>
     </record>
     <record id="ret_iva_729" model="l10n_ec.retention.code">
         <field name="code">729</field>
-        <field name="name">Retención IVA 100% Liquidación de Compra</field>
+        <field name="name">Retención IVA 70% (Contrib. Especial)</field>
         <field name="type">iva</field>
-        <field name="rate">100.0</field>
+        <field name="rate">70.0</field>
         <field name="applies_to">both</field>
     </record>
     <record id="ret_iva_731" model="l10n_ec.retention.code">
         <field name="code">731</field>
-        <field name="name">Retención IVA 100% Profesionales</field>
+        <field name="name">Retención IVA 100% (liquidación de compra, importación de servicios, combustibles y periódicos)</field>
         <field name="type">iva</field>
         <field name="rate">100.0</field>
         <field name="applies_to">services</field>

@@ -1,22 +1,160 @@
 <?xml version="1.0" encoding="utf-8"?>
-<odoo>
-    <record id="action_report_form_103" model="ir.actions.report">
-        <field name="name">Form 103 (Draft)</field>
-        <field name="model">l10n_ec.ats.wizard</field>
-        <field name="report_type">qweb-pdf</field>
-        <field name="report_name">l10n_ec_reports.report_form_103</field>
-        <field name="report_file">l10n_ec_reports.report_form_103</field>
-        <field name="binding_model_id" ref="model_l10n_ec_ats_wizard"/>
-        <field name="binding_type">report</field>
-    </record>
+<!--
+  Report actions for the Ecuadorian statutory books, SRI forms and the
+  SUPERCIAS financial statements.
 
-    <record id="action_report_form_104" model="ir.actions.report">
-        <field name="name">Form 104 (Draft)</field>
-        <field name="model">l10n_ec.ats.wizard</field>
-        <field name="report_type">qweb-pdf</field>
-        <field name="report_name">l10n_ec_reports.report_form_104</field>
-        <field name="report_file">l10n_ec_reports.report_form_104</field>
-        <field name="binding_model_id" ref="model_l10n_ec_ats_wizard"/>
-        <field name="binding_type">report</field>
-    </record>
+  NOTE: action_report_form_103 / action_report_form_104 keep their historical
+  xml ids (referenced by the ATS wizard shortcuts); their model is now
+  l10n_ec.form.wizard, which owns the real Form 103/104 calculations.
+-->
+<odoo>
+    <data>
+
+        <!-- ===================== SRI FORMS ========================== -->
+        <record id="action_report_form_101" model="ir.actions.report">
+            <field name="name">Formulario 101 - Impuesto a la Renta</field>
+            <field name="model">l10n_ec.form.wizard</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">l10n_ec_reports.report_form_101</field>
+            <field name="report_file">l10n_ec_reports.report_form_101</field>
+            <field name="binding_model_id" ref="model_l10n_ec_form_wizard"/>
+            <field name="binding_type">report</field>
+            <field name="binding_view_types">list,form</field>
+        </record>
+
+        <record id="action_report_form_102" model="ir.actions.report">
+            <field name="name">Formulario 102 - Renta Personas Naturales</field>
+            <field name="model">l10n_ec.form.wizard</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">l10n_ec_reports.report_form_102</field>
+            <field name="report_file">l10n_ec_reports.report_form_102</field>
+            <field name="binding_model_id" ref="model_l10n_ec_form_wizard"/>
+            <field name="binding_type">report</field>
+            <field name="binding_view_types">list,form</field>
+        </record>
+
+        <record id="action_report_form_103" model="ir.actions.report">
+            <field name="name">Formulario 103 - Retenciones en la Fuente</field>
+            <field name="model">l10n_ec.form.wizard</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">l10n_ec_reports.report_form_103</field>
+            <field name="report_file">l10n_ec_reports.report_form_103</field>
+            <field name="binding_model_id" ref="model_l10n_ec_form_wizard"/>
+            <field name="binding_type">report</field>
+            <field name="binding_view_types">list,form</field>
+        </record>
+
+        <record id="action_report_form_104" model="ir.actions.report">
+            <field name="name">Formulario 104 - IVA y ICE</field>
+            <field name="model">l10n_ec.form.wizard</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">l10n_ec_reports.report_form_104</field>
+            <field name="report_file">l10n_ec_reports.report_form_104</field>
+            <field name="binding_model_id" ref="model_l10n_ec_form_wizard"/>
+            <field name="binding_type">report</field>
+            <field name="binding_view_types">list,form</field>
+        </record>
+
+        <record id="action_report_form_107" model="ir.actions.report">
+            <field name="name">Formulario 107 - Renta Personas Naturales</field>
+            <field name="model">l10n_ec.form.wizard</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">l10n_ec_reports.report_form_107</field>
+            <field name="report_file">l10n_ec_reports.report_form_107</field>
+            <field name="binding_model_id" ref="model_l10n_ec_form_wizard"/>
+            <field name="binding_type">report</field>
+            <field name="binding_view_types">list,form</field>
+        </record>
+
+        <record id="action_report_form_108" model="ir.actions.report">
+            <field name="name">Formulario 108 - Notas de Credito Emitidas</field>
+            <field name="model">l10n_ec.form.wizard</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">l10n_ec_reports.report_form_108</field>
+            <field name="report_file">l10n_ec_reports.report_form_108</field>
+            <field name="binding_model_id" ref="model_l10n_ec_form_wizard"/>
+            <field name="binding_type">report</field>
+            <field name="binding_view_types">list,form</field>
+        </record>
+
+        <record id="action_report_form_gastos_personales" model="ir.actions.report">
+            <field name="name">Gastos Personales - Deducciones y Topes</field>
+            <field name="model">l10n_ec.form.wizard</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">l10n_ec_reports.report_form_gastos_personales</field>
+            <field name="report_file">l10n_ec_reports.report_form_gastos_personales</field>
+            <field name="binding_model_id" ref="model_l10n_ec_form_wizard"/>
+            <field name="binding_type">report</field>
+            <field name="binding_view_types">list,form</field>
+        </record>
+
+        <!-- ===================== STATUTORY BOOKS ===================== -->
+        <record id="action_report_libro" model="ir.actions.report">
+            <field name="name">Libro Contable Ecuatoriano</field>
+            <field name="model">l10n_ec.libro.wizard</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">l10n_ec_reports.report_libro</field>
+            <field name="report_file">l10n_ec_reports.report_libro</field>
+            <field name="binding_model_id" ref="model_l10n_ec_libro_wizard"/>
+            <field name="binding_type">report</field>
+            <field name="binding_view_types">form</field>
+        </record>
+
+        <!-- ============== ESTADOS FINANCIEROS (SUPERCIAS) ============ -->
+        <record id="action_report_estado_balance" model="ir.actions.report">
+            <field name="name">Estado de Situacion Financiera (Balance General)</field>
+            <field name="model">l10n_ec.financials.wizard</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">l10n_ec_reports.report_estado_balance</field>
+            <field name="report_file">l10n_ec_reports.report_estado_balance</field>
+            <field name="binding_model_id" ref="model_l10n_ec_financials_wizard"/>
+            <field name="binding_type">report</field>
+            <field name="binding_view_types">form</field>
+        </record>
+
+        <record id="action_report_estado_resultados" model="ir.actions.report">
+            <field name="name">Estado de Resultados Integral</field>
+            <field name="model">l10n_ec.financials.wizard</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">l10n_ec_reports.report_estado_resultados</field>
+            <field name="report_file">l10n_ec_reports.report_estado_resultados</field>
+            <field name="binding_model_id" ref="model_l10n_ec_financials_wizard"/>
+            <field name="binding_type">report</field>
+            <field name="binding_view_types">form</field>
+        </record>
+
+        <record id="action_report_estado_flujo" model="ir.actions.report">
+            <field name="name">Estado de Flujos de Efectivo</field>
+            <field name="model">l10n_ec.financials.wizard</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">l10n_ec_reports.report_estado_flujo</field>
+            <field name="report_file">l10n_ec_reports.report_estado_flujo</field>
+            <field name="binding_model_id" ref="model_l10n_ec_financials_wizard"/>
+            <field name="binding_type">report</field>
+            <field name="binding_view_types">form</field>
+        </record>
+
+        <record id="action_report_estado_patrimonio" model="ir.actions.report">
+            <field name="name">Estado de Cambios en el Patrimonio</field>
+            <field name="model">l10n_ec.financials.wizard</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">l10n_ec_reports.report_estado_patrimonio</field>
+            <field name="report_file">l10n_ec_reports.report_estado_patrimonio</field>
+            <field name="binding_model_id" ref="model_l10n_ec_financials_wizard"/>
+            <field name="binding_type">report</field>
+            <field name="binding_view_types">form</field>
+        </record>
+
+        <record id="action_report_estado_notas" model="ir.actions.report">
+            <field name="name">Notas a los Estados Financieros</field>
+            <field name="model">l10n_ec.financials.wizard</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">l10n_ec_reports.report_estado_notas</field>
+            <field name="report_file">l10n_ec_reports.report_estado_notas</field>
+            <field name="binding_model_id" ref="model_l10n_ec_financials_wizard"/>
+            <field name="binding_type">report</field>
+            <field name="binding_view_types">form</field>
+        </record>
+
+    </data>
 </odoo>

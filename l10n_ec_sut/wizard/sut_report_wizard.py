@@ -1,17 +1,38 @@
 # -*- coding: utf-8 -*-
 """
-SUT Report Generator - MDT Integration
+SUT Report Generator - MDT Integration.
+
+Scope: TXT/csv helpers for the three MDT "SUT" (Sistema Único de
+Trabajo) style reporting extracts that this repo supports:
+  * Décimo Tercero (13th)   — earnings ÷ 12 (KB_LABOR_SBU_DECIMOS §2.1)
+  * Décimo Cuarto (14th)    — SBU/360 × days, region-dependent window
+                              (KB_LABOR_SBU_DECIMOS §3)
+  * Utilidades (art. 97-104) — 15% of net profit: 10% equal +
+                              5% by cargas familiares, filed by April 15.
 
 Legal basis:
 - Código Trabajo Art. 97-104: 15% Utilidades
   - 10% repartición directa (igual para todos)
   - 5% por cargas familiares
 - Filing: April 15 each year
+- Décimo Cuarto deadlines (KB §3.1): Costa/Galápagos → 15 marzo;
+  Sierra/Amazonía → 15 agosto. NOT Sept 15 — the old comment here was
+  wrong. Calculation periods (KB §3.2): Costa 1 mar prev → 28/29 feb;
+  Sierra 1 ago prev → 31 jul.
 """
 import base64
+from datetime import date
+
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from collections import defaultdict
+
+try:
+    from odoo.addons.l10n_ec_hr_payroll.models import (
+        l10n_ec_payroll_calc as calc,
+    )
+except ImportError:  # pragma: no cover - standalone lint environments
+    calc = None
 
 
 class L10nEcSutReportWizard(models.TransientModel):
@@ -133,23 +154,55 @@ class L10nEcSutReportWizard(models.TransientModel):
         return content
 
     def _generate_14th_report(self, payslips):
-        """Décimo Cuarto report for SUT."""
-        content = "Cedula,Nombres,Region,Dias_Trabajados,Valor_Decimo\n"
+        """Décimo Cuarto report for SUT.
+
+        Region + deadlines come from the shared calc library
+        (KB_LABOR_SBU_DECIMOS §3.1/§3.2): Costa/Galápagos pays by
+        15 marzo (period 1 mar prev → 28/29 feb); Sierra/Amazonía pays
+        by 15 agosto (period 1 ago prev → 31 jul).
+        """
+        content = (
+            "Cedula,Nombres,Region,Dias_Trabajados,"
+            "Valor_Decimo,Fecha_Limite_Pago\n"
+        )
+        payment_year = (self.date_end or date.today()).year
         for p in payslips:
-            region = p.employee_id.address_home_id.state_id.name or "Sierra"
-            # Sierra/Oriente: Sept 15, Costa/Galapagos: March 15
-            content += f"{p.employee_id.identification_id},{p.employee_id.name},{region},{p.days_worked},{p.fourteenth}\n"
+            emp = p.employee_id
+            # Prefer the computed employee field (province-based, see
+            # l10n_ec_hr_payroll/models/hr_employee_ec.py); fall back to
+            # the home address state name; "sierra" is the legal default.
+            region = (
+                getattr(emp, "l10n_ec_decimo_cuarto_region", False)
+                or emp.private_state_id.name
+                or "sierra"
+            )
+            region_key = (
+                calc.normalize_decimo_cuarto_region(region)
+                if calc
+                else "sierra"
+            )
+            deadline = (
+                calc.decimo_cuarto_deadline(payment_year, region_key).isoformat()
+                if calc
+                else ""
+            )
+            content += (
+                f"{emp.identification_id},{emp.name},{region_key},"
+                f"{p.days_worked},{p.fourteenth},{deadline}\n"
+            )
         return content
 
     def _generate_utilidades_report(self, payslips):
         """
-        Utilidades report per Código Trabajo Art. 97-104.
+        Utilidades report per Código Trabajo Art. 97-104 and
+        KB_LABOR_UTILIDADES §3:
 
-        Distribution:
-        - 10% equal distribution (Art. 100)
-        - 5% by cargas familiares (Art. 101)
+        - 10% component: proportional to DAYS WORKED
+          (Factor A = days worked by employee; Factor B = total days).
+        - 5% component: proportional to DAYS WORKED × FAMILY LOADS
+          (Factor 1 = days × cargas; Factor 2 = sum of Factor 1).
 
-        Profit is AUTO-CALCULATED from accounting.
+        Profit is AUTO-CALCULATED from accounting (15% of net profit).
         """
         if self.company_profit <= 0:
             raise UserError(
@@ -159,7 +212,7 @@ class L10nEcSutReportWizard(models.TransientModel):
                 % self.fiscal_year_profit
             )
 
-        # Calculate 10% (equal) and 5% (by cargas)
+        # Calculate 10% (days) and 5% (days × cargas)
         total_profit = self.company_profit
         equal_portion = total_profit * (10 / 15)  # 10% of 15% = 2/3
         cargas_portion = total_profit * (5 / 15)  # 5% of 15% = 1/3
@@ -180,21 +233,25 @@ class L10nEcSutReportWizard(models.TransientModel):
             )
 
         total_days = sum(emp["days"] for emp in employee_data.values())
-        total_cargas = sum(emp["cargas"] for emp in employee_data.values())
+        # KB §3.2 Factor 2 = Σ (days worked × cargas)
+        total_days_cargas = sum(
+            emp["days"] * emp["cargas"] for emp in employee_data.values()
+        )
 
         # Calculate per employee
         content = "Cedula,Nombres,Dias_Trabajados,Cargas_Familiares,Utilidad_10pct,Utilidad_5pct,Total_Utilidad\n"
 
         for emp_id, emp in employee_data.items():
-            # 10% portion: proportional to days worked
+            # 10% portion: proportional to days worked (KB §3.1)
             if total_days > 0:
                 utilidad_10 = (emp["days"] / total_days) * equal_portion
             else:
                 utilidad_10 = 0
 
-            # 5% portion: proportional to cargas
-            if total_cargas > 0 and emp["cargas"] > 0:
-                utilidad_5 = (emp["cargas"] / total_cargas) * cargas_portion
+            # 5% portion: proportional to days × cargas (KB §3.2)
+            factor_1 = emp["days"] * emp["cargas"]
+            if total_days_cargas > 0 and factor_1 > 0:
+                utilidad_5 = (factor_1 / total_days_cargas) * cargas_portion
             else:
                 utilidad_5 = 0
 

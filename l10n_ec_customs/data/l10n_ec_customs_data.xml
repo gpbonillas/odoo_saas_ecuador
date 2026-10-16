@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Customs parameters (l10n_ec.fodinfa, l10n_ec.customs_iva) are defined
-     in l10n_ec_base/data/l10n_ec_sri_config.xml to avoid duplicate key conflicts. -->
-<odoo noupdate="1">
-</odoo>
-

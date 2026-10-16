@@ -1,100 +1,175 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ATS (Anexo Transaccional Simplificado) XML - SRI monthly return.
+
+  Structure per SRS_MODULE_09_L10N_EC_REPORTS.md 3.1:
+    header, compras (+air, retenciones, pagoExterior, formasDePago),
+    ventas, ventasEstablecimiento, anulados, exportaciones, retenciones.
+
+  Rendered from the payload built by report_lib.ats_build() - every value
+  is already computed there (unit-tested); this template only serializes.
+
+  format_float(value, precision) formats monetary fields with a fixed
+  number of decimals (the SRI schema rejects scientific notation).
+-->
 <odoo>
     <data>
         <template id="l10n_ec_ats_xml">
             <iva>
                 <TipoIDInformante>R</TipoIDInformante>
-                <IdInformante t-out="company.vat"/>
-                <razonSocial t-out="company.name[:300]"/>
-                <Anio t-out="wizard.date_year"/>
-                <Mes t-out="wizard.date_month"/>
-                <numEstabRuc t-out="company.l10n_ec_entity or '001'"/>
-                <totalVentas t-out="format_float(total_sales, 2)"/>
+                <IdInformante t-out="company.vat or header.get('vat')"/>
+                <razonSocial t-out="header.get('company_name') or company.name"/>
+                <Anio t-out="header.get('year')"/>
+                <Mes t-out="header.get('month')"/>
+                <numEstabRuc t-out="header.get('entity') or '001'"/>
+                <totalVentas t-out="format_float(total_ventas, 2)"/>
                 <codigoOperativo>IVA</codigoOperativo>
 
-                <!-- COMPRAS -->
+                <!-- =================== COMPRAS ======================= -->
                 <compras>
-                    <t t-foreach="purchases" t-as="p">
+                    <t t-foreach="compras" t-as="p">
                         <detalleCompras>
-                            <codSustento t-out="p.get('sustento', '01')"/>
-                            <tpIdProv t-out="p.get('tpIdProv', '01')"/>
-                            <idProv t-out="p.get('idProv', '9999999999999')"/>
-                            <tipoComprobante t-out="p.get('tipoComprobante', '01')"/>
+                            <codSustento t-out="p.get('codSustento') or '01'"/>
+                            <tpIdProv t-out="p.get('tpIdProv') or '01'"/>
+                            <idProv t-out="p.get('idProv') or '9999999999999'"/>
+                            <tipoComprobante t-out="p.get('tipoComprobante') or '01'"/>
+                            <parteRel t-out="p.get('parteRel') or 'NO'"/>
                             <fechaRegistro t-out="p.get('fechaRegistro')"/>
-                            <establecimiento t-out="p.get('estab', '001')"/>
-                            <puntoEmision t-out="p.get('ptoEmi', '001')"/>
-                            <secuencial t-out="p.get('secuencial', '000000001')"/>
+                            <establecimiento t-out="p.get('establecimiento') or '001'"/>
+                            <puntoEmision t-out="p.get('puntoEmision') or '001'"/>
+                            <secuencial t-out="p.get('secuencial') or '0'"/>
                             <fechaEmision t-out="p.get('fechaEmision')"/>
-                            <autorizacion t-out="p.get('autorizacion', '9999999999')"/>
-                            <baseNoGraIva t-out="format_float(p.get('baseNoGraIva', 0.0), 2)"/>
-                            <baseImponible t-out="format_float(p.get('baseImponible', 0.0), 2)"/>
-                            <baseImpGrav t-out="format_float(p.get('baseImpGrav', 0.0), 2)"/>
-                            <baseImpExe t-out="0.00"/>
-                            <montoIce t-out="format_float(p.get('montoIce', 0.0), 2)"/>
-                            <montoIva t-out="format_float(p.get('montoIva', 0.0), 2)"/>
+                            <autorizacion t-out="p.get('autorizacion') or '9999999999'"/>
+                            <baseNoGraIva t-out="format_float(p.get('baseNoGraIva'), 2)"/>
+                            <baseImponible t-out="format_float(p.get('baseImponible'), 2)"/>
+                            <baseImpGrav t-out="format_float(p.get('baseImpGrav'), 2)"/>
+                            <baseImpExe t-out="format_float(p.get('baseImpExe'), 2)"/>
+                            <montoIce t-out="format_float(p.get('montoIce'), 2)"/>
+                            <montoIva t-out="format_float(p.get('montoIva'), 2)"/>
 
-                            <!-- RETENCION (AIR) -->
-                            <air>
-                                <t t-foreach="p.get('retentions', [])" t-as="r">
-                                    <detalleAir>
-                                        <codRetAir t-out="r.get('code')"/>
-                                        <baseImpAir t-out="format_float(r.get('base'), 2)"/>
-                                        <porcentajeAir t-out="format_float(r.get('percent', 0), 2)"/>
-                                        <valRetAir t-out="format_float(r.get('val', 0), 2)"/>
-                                    </detalleAir>
+                            <!-- IVA withholdings practiced on this purchase -->
+                            <valorRetBienes t-out="format_float(p.get('valorRetBienes'), 2)"/>
+                            <valorRetServicios t-out="format_float(p.get('valorRetServicios'), 2)"/>
+                            <valRetBien10 t-out="format_float(p.get('valRetBien10'), 2)"/>
+                            <valRetServ20 t-out="format_float(p.get('valRetServ20'), 2)"/>
+                            <valRetServ50 t-out="format_float(p.get('valRetServ50'), 2)"/>
+
+                            <pagoExterior>
+                                <pagoLocExt t-out="(p.get('pagoExterior') or {}).get('pagoLocExt') or '01'"/>
+                            </pagoExterior>
+                            <formasDePago>
+                                <t t-foreach="p.get('formasDePago') or [{'formaPago': '20'}]" t-as="fp">
+                                    <formaPago t-out="fp.get('formaPago') or '20'"/>
                                 </t>
-                            </air>
+                            </formasDePago>
 
-                            <estabRetencion1 t-out="p.get('estabRet', '000')"/>
-                            <ptoEmiRetencion1 t-out="p.get('ptoEmiRet', '000')"/>
-                            <secRetencion1 t-out="p.get('secRet', '000000000')"/>
-                            <autRetencion1 t-out="p.get('autRet', '0000000000')"/>
-                            <fechaEmiRet1 t-out="p.get('fechaEmiRet')"/>
+                            <!-- AIR: income-tax withholdings on the purchase -->
+                            <t t-if="p.get('air')">
+                                <air>
+                                    <t t-foreach="p['air']" t-as="r">
+                                        <detalleAir>
+                                            <codRetAir t-out="r.get('codRetAir')"/>
+                                            <baseImpAir t-out="format_float(r.get('baseImpAir'), 2)"/>
+                                            <porcentajeAir t-out="format_float(r.get('porcentajeAir'), 2)"/>
+                                            <valRetAir t-out="format_float(r.get('valRetAir'), 2)"/>
+                                        </detalleAir>
+                                    </t>
+                                </air>
+                            </t>
+
+                            <!-- Retention voucher reference (comprobante 07) -->
+                            <estabRetencion1 t-out="p.get('estabRetencion1') or '000'"/>
+                            <ptoEmiRetencion1 t-out="p.get('ptoEmiRetencion1') or '000'"/>
+                            <secRetencion1 t-out="p.get('secRetencion1') or '0'"/>
+                            <autRetencion1 t-out="p.get('autRetencion1') or '0'"/>
+                            <fechaEmiRet1 t-out="p.get('fechaEmiRet1')"/>
                         </detalleCompras>
                     </t>
                 </compras>
 
-                <!-- VENTAS -->
+                <!-- =================== VENTAS ======================== -->
                 <ventas>
-                    <t t-foreach="sales" t-as="s">
+                    <t t-foreach="ventas" t-as="s">
                         <detalleVentas>
-                            <tpIdCliente t-out="s.get('tpIdCliente', '07')"/>
-                            <idCliente t-out="s.get('idCliente', '9999999999999')"/>
-                            <parteRelVentas>NO</parteRelVentas> <!-- Default -->
-                            <tipoComprobante t-out="s.get('tipoComprobante', '18')"/>
-                            <tipoEmision t-out="s.get('tipoEmision', 'F')"/>
-                            <numeroComprobantes t-out="s.get('count', 0)"/>
-                            <baseNoGraIva t-out="format_float(s.get('baseNoGraIva', 0.0), 2)"/>
-                            <baseImponible t-out="format_float(s.get('baseImponible', 0.0), 2)"/>
-                            <baseImpGrav t-out="format_float(s.get('baseImpGrav', 0.0), 2)"/>
-                            <montoIva t-out="format_float(s.get('montoIva', 0.0), 2)"/>
-                            <montoIce t-out="0.00"/>
-                            <valorRetIva t-out="0.00"/> <!-- Needs implementation if sold to agent -->
-                            <valorRetRenta t-out="0.00"/>
+                            <tpIdCliente t-out="s.get('tpIdCliente') or '07'"/>
+                            <idCliente t-out="s.get('idCliente') or '9999999999999'"/>
+                            <parteRelVtas t-out="s.get('parteRelVtas') or 'NO'"/>
+                            <tipoComprobante t-out="s.get('tipoComprobante') or '18'"/>
+                            <tipoEmision t-out="s.get('tipoEmision') or 'F'"/>
+                            <numeroComprobantes t-out="s.get('numeroComprobantes') or 0"/>
+                            <baseNoGraIva t-out="format_float(s.get('baseNoGraIva'), 2)"/>
+                            <baseImponible t-out="format_float(s.get('baseImponible'), 2)"/>
+                            <baseImpGrav t-out="format_float(s.get('baseImpGrav'), 2)"/>
+                            <baseImpExe t-out="format_float(s.get('baseImpExe'), 2)"/>
+                            <montoIva t-out="format_float(s.get('montoIva'), 2)"/>
+                            <montoIce t-out="format_float(s.get('montoIce'), 2)"/>
+                            <valorRetIva t-out="format_float(s.get('valorRetIva'), 2)"/>
+                            <valorRetRenta t-out="format_float(s.get('valorRetRenta'), 2)"/>
                         </detalleVentas>
                     </t>
                 </ventas>
 
+                <!-- ========= VENTAS POR ESTABLECIMIENTO ============== -->
                 <ventasEstablecimiento>
-                    <ventaEst>
-                        <codEstab t-out="company.l10n_ec_entity or '001'"/>
-                        <ventasEstab t-out="format_float(total_sales, 2)"/>
-                        <ivaComp t-out="0.00"/>
-                    </ventaEst>
+                    <t t-foreach="ventas_establecimiento" t-as="ve">
+                        <ventaEst>
+                            <codEstab t-out="ve.get('codEstab') or header.get('entity') or '001'"/>
+                            <ventasEstab t-out="format_float(ve.get('ventasEstab'), 2)"/>
+                            <ivaComp t-out="format_float(ve.get('ivaComp'), 2)"/>
+                        </ventaEst>
+                    </t>
                 </ventasEstablecimiento>
 
-                <anulados>
-                    <t t-foreach="cancelled" t-as="c">
-                        <detalleAnulados>
-                            <tipoComprobante t-out="c.get('tipo', '01')"/>
-                            <establecimiento t-out="c.get('estab', '001')"/>
-                            <puntoEmision t-out="c.get('pto', '001')"/>
-                            <secuencialInicio t-out="c.get('sec', '0')"/>
-                            <secuencialFin t-out="c.get('sec', '0')"/>
-                            <autorizacion t-out="c.get('aut', '0000000000')"/>
-                        </detalleAnulados>
-                    </t>
-                </anulados>
+                <!-- ================== ANULADOS ======================= -->
+                <t t-if="anulados">
+                    <anulados>
+                        <t t-foreach="anulados" t-as="c">
+                            <detalleAnulados>
+                                <tipoComprobante t-out="c.get('tipoComprobante') or '01'"/>
+                                <establecimiento t-out="c.get('establecimiento') or '001'"/>
+                                <puntoEmision t-out="c.get('puntoEmision') or '001'"/>
+                                <secuencialInicio t-out="c.get('secuencialInicio') or '0'"/>
+                                <secuencialFin t-out="c.get('secuencialFin') or '0'"/>
+                                <autorizacion t-out="c.get('autorizacion') or '0'"/>
+                            </detalleAnulados>
+                        </t>
+                    </anulados>
+                </t>
+
+                <!-- =============== EXPORTACIONES ===================== -->
+                <t t-if="exportaciones">
+                    <exportaciones>
+                        <t t-foreach="exportaciones" t-as="x">
+                            <detalleExportaciones>
+                                <tpIdCliente t-out="x.get('tpIdCliente') or '07'"/>
+                                <idCliente t-out="x.get('idCliente') or '9999999999999'"/>
+                                <tipoComprobante t-out="x.get('tipoComprobante') or '18'"/>
+                                <fechaEmision t-out="x.get('fechaEmision')"/>
+                                <autorizacion t-out="x.get('autorizacion') or '0'"/>
+                                <valorExport t-out="format_float(x.get('valorExport'), 2)"/>
+                                <valorRetenido t-out="format_float(x.get('valorRetenido'), 2)"/>
+                                <montoIva t-out="format_float(x.get('montoIva'), 2)"/>
+                            </detalleExportaciones>
+                        </t>
+                    </exportaciones>
+                </t>
+
+                <!-- =============== RETENCIONES ======================= -->
+                <t t-if="retenciones">
+                    <retenciones>
+                        <t t-foreach="retenciones" t-as="r">
+                            <detalleRetenciones>
+                                <codRetAir t-out="r.get('codRetAir')"/>
+                                <fechaEmision t-out="r.get('fechaEmision')"/>
+                                <identificacionRetenido t-out="r.get('identificacionRetenido')"/>
+                                <numComprobante t-out="r.get('numComprobante')"/>
+                                <porcentajeAir t-out="format_float(r.get('porcentajeAir'), 2)"/>
+                                <valRetAir t-out="format_float(r.get('valRetAir'), 2)"/>
+                                <tipoRet t-out="r.get('tipoRet') or 'ir'"/>
+                            </detalleRetenciones>
+                        </t>
+                    </retenciones>
+                </t>
             </iva>
         </template>
     </data>

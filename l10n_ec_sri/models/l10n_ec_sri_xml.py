@@ -20,7 +20,8 @@ class L10nEcSriXml(models.AbstractModel):
         [8:10]  Doc Type (01)
         [10:23] RUC (1234567890001)
         [23:24] Environment (1 or 2)
-        [24:30] Establisment/Series (001-001) -> 001001
+        [24:27] Establishment (001)
+        [27:30] Emission Point (001)
         [30:39] Sequential (000000001)
         [39:47] Random Number (8 digits)
         [47:48] Emission Type (1)
@@ -28,22 +29,41 @@ class L10nEcSriXml(models.AbstractModel):
         """
         # 1. Extraction
         date_inv = record.invoice_date.strftime("%d%m%Y")
-        doc_type = record.l10n_latam_document_type_id.code  # e.g., '01'
-        ruc = record.company_id.vat
-        env = record.company_id.l10n_ec_sri_environment
+        doc_type = record.l10n_latam_document_type_id.code
+        if not doc_type:
+            doc_type = "04" if record.move_type in ("out_refund", "in_refund") else "01"
 
-        # Split Journal: 001-001
-        try:
-            entity, emission = record.journal_id.code.split(
-                "-"
-            )  # Simplified extraction hook
-            serie = f"{entity}{emission}"
-        except:
-            # Fallback for now or use fields from journal extension
-            # In real implementation, use l10n_ec_entity from `account.journal`
-            serie = f"{record.journal_id.l10n_ec_entity}{record.journal_id.l10n_ec_emission}"
+        ruc = "".join(c for c in (record.company_id.vat or "") if c.isdigit())
+        if len(ruc) != 13:
+            raise ValidationError(
+                "Company %s has no valid 13-digit RUC configured; "
+                "cannot generate the SRI access key." % record.company_id.name
+            )
 
-        sequential = f"{record.name.split('-')[-1]:0>9}"  # Extract sequence number
+        # Environment: the access key digit is 1 (test) or 2 (production),
+        # NOT the company selection value ("test"/"production").
+        env = "2" if record.company_id.l10n_ec_sri_environment == "production" else "1"
+
+        # Split Journal code: 001-001 (establecimiento-punto de emisión)
+        entity = emission = ""
+        journal_code = record.journal_id.code or ""
+        if "-" in journal_code:
+            entity, emission = [p.strip() for p in journal_code.split("-")[:2]]
+        else:
+            # Optional account.journal extension fields (not always present)
+            entity = str(getattr(record.journal_id, "l10n_ec_entity", "") or "")
+            emission = str(getattr(record.journal_id, "l10n_ec_emission", "") or "")
+
+        entity = "".join(c for c in entity if c.isdigit()).zfill(3)[-3:]
+        emission = "".join(c for c in emission if c.isdigit()).zfill(3)[-3:]
+        if entity == "000" and emission == "000":
+            # Fallback: default establishment/emission point 001-001
+            entity, emission = "001", "001"
+        serie = f"{entity}{emission}"
+
+        # Sequential: digits only, last 9
+        sequential = "".join(c for c in (record.name or "") if c.isdigit())[-9:]
+        sequential = sequential.zfill(9)
 
         # Random 8 digits
         code_numeric = f"{random.randint(1, 99999999):08d}"
@@ -57,9 +77,10 @@ class L10nEcSriXml(models.AbstractModel):
 
         access_key = f"{base_key}{verifier}"
 
-        if len(access_key) != 49:
+        if len(access_key) != 49 or not access_key.isdigit():
             raise ValidationError(
-                f"Generated Access Key length is {len(access_key)}, expected 49."
+                f"Generated Access Key is invalid (got {access_key!r}, "
+                "expected 49 digits)."
             )
 
         return access_key
@@ -91,14 +112,12 @@ class L10nEcSriXml(models.AbstractModel):
     @api.model
     def render_xml(self, record):
         """
-        Render the XML using QWeb template.
+        Render the SRI XML for *record*.
+
+        Delegates to the l10n_ec_edi template engine (factura 01 /
+        liquidación de compra 03 / nota de crédito 04 / nota de débito 05)
+        so both emission paths share one XSD-compliant implementation.
+        The previously referenced 'l10n_ec_sri.xml_invoice' template never
+        existed under that id.
         """
-        # We assume a qweb template 'l10n_ec_sri.xml_invoice' exists
-        # This returns bytes
-        # In a real implementation, we pass formatted values
-        values = {
-            "record": record,
-            "access_key": record.l10n_ec_sri_access_key,
-            # Add all other XSD 2.26 fields here
-        }
-        return self.env["ir.qweb"]._render("l10n_ec_sri.xml_invoice", values)
+        return self.env["account.edi.format"]._export_l10n_ec_edi(record)

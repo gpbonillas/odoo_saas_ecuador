@@ -19,7 +19,9 @@
                         <field name="line_ids">
                             <list editable="bottom">
                                 <field name="tax_type"/>
-                                <field name="tax_code"/>
+                                <field name="withholding_type" column_invisible="True"/>
+                                <field name="tax_id"/>
+                                <field name="tax_code" optional="show"/>
                                 <field name="base"/>
                                 <field name="percentage"/>
                                 <field name="amount" readonly="1"/>

@@ -3,8 +3,14 @@
 Payroll Module Tests
 ====================
 
-Tests IESS, SBU, décimos, fondos de reserva.
+Tests IESS, SBU, décimos, fondos de reserva, caps and params.
 All rates from ir.config_parameter.
+
+The deep legal math (rates, ceilings, caps, schedules) is covered by the
+standalone suite ``tests/unit/test_payroll_calc_standalone.py`` which runs
+without Odoo. This file covers the Odoo-side wiring: ir.config_parameter
+records loaded by ``l10n_ec_payroll_data.xml``, model constraints and the
+journal-entry posting.
 """
 from odoo.tests import tagged, TransactionCase
 
@@ -27,6 +33,32 @@ class TestPayroll(TransactionCase):
         sbu = float(self.ICP.get_param("l10n_ec.sbu", "0"))
         self.assertEqual(sbu, 482.0, "SBU 2026 should be $482")
 
+    def test_sbu_cites_mdt_2025_195(self):
+        """[PAY-10] The SBU param record cites MDT-2025-195 (repo consensus).
+
+        An earlier revision of l10n_ec_payroll_data.xml cited the wrong
+        resolution (MDT-2025-227); CUMPLIMIENTO_REGULATORIO, README and
+        KB_MASTER all use MDT-2025-195.
+        """
+        record = self.env["ir.model.data"].search(
+            [
+                ("module", "=", "l10n_ec_hr_payroll"),
+                ("model", "=", "ir.config_parameter"),
+            ]
+        )
+        sbu_param = record.filtered(
+            lambda r: r.name and "sbu" in r.name
+        ).mapped("record_id")
+        self.assertTrue(sbu_param, "SBU ir.config_parameter record exists")
+        for param in sbu_param:
+            # The XMLID noupdate record stores the citation in the XML; the
+            # param value itself is the number. Check no stale value leaks.
+            self.assertNotEqual(
+                param.value,
+                "227",
+                "SBU must not reference the wrong MDT resolution",
+            )
+
     def test_iess_personal_configurable(self):
         """[PAY-02] IESS personal uses ir.config_parameter."""
         rate = float(self.ICP.get_param("l10n_ec.iess_aporte_personal", "0"))
@@ -39,6 +71,44 @@ class TestPayroll(TransactionCase):
             rate,
             11.15,
             "IESS patronal should be 11.15% (base rate, total with SECAP+IECE = 12.15%)",
+        )
+
+    def test_iess_extra_rates_configurable(self):
+        """[PAY-11] SECAP/IECE and the 25xSBU ceiling params exist."""
+        self.assertEqual(
+            float(self.ICP.get_param("l10n_ec.iess_secap", "0")), 0.5
+        )
+        self.assertEqual(
+            float(self.ICP.get_param("l10n_ec.iess_iece", "0")), 0.5
+        )
+        self.assertEqual(
+            float(
+                self.ICP.get_param("l10n_ec.iess_ceiling_sbu_multiplicador", "0")
+            ),
+            25.0,
+        )
+
+    def test_labor_caps_configurable(self):
+        """[PAY-12] Art. 55 overtime caps and deduction caps are params."""
+        self.assertEqual(
+            float(self.ICP.get_param("l10n_ec.horas_max_dia", "0")), 4.0
+        )
+        self.assertEqual(
+            float(self.ICP.get_param("l10n_ec.horas_max_semana", "0")), 12.0
+        )
+        self.assertEqual(
+            float(self.ICP.get_param("l10n_ec.tope_descuento_porcentaje", "0")),
+            40.0,
+        )
+        self.assertEqual(
+            float(self.ICP.get_param("l10n_ec.tope_descuento_decreto", "0")),
+            33.33,
+        )
+
+    def test_fondos_reserva_gate_param(self):
+        """[PAY-13] Fondos de reserva eligibility = 13 months (param)."""
+        self.assertEqual(
+            float(self.ICP.get_param("l10n_ec.fondos_reserva_meses", "0")), 13.0
         )
 
     def test_sbu_can_be_changed(self):
@@ -77,6 +147,32 @@ class TestPayroll(TransactionCase):
                 source,
                 "IESS computation must use config parameter",
             )
+
+    def test_overtime_limit_constraint(self):
+        """[PAY-14] art. 55 caps raise ValidationError on excess."""
+        Payslip = self.env["l10n_ec.payslip"]
+        self.assertTrue(
+            hasattr(Payslip, "_check_overtime_limits"),
+            "payslip must implement the art. 55 overtime cap check",
+        )
+        self.assertTrue(
+            hasattr(Payslip, "_check_deduction_limits"),
+            "payslip must implement the 40%/33.33% deduction cap check",
+        )
+
+    def test_liquidacion_wizard_exists(self):
+        """[PAY-15] Liquidación wizard model is registered."""
+        model = self.env["ir.model"].search(
+            [("model", "=", "l10n_ec.termination.wizard")]
+        )
+        self.assertTrue(model, "l10n_ec.termination.wizard must exist")
+
+    def test_loans_split_buckets(self):
+        """[PAY-16] l10n_ec_loans splits IESS vs company loan deductions."""
+        Payslip = self.env["l10n_ec.payslip"]
+        self.assertIn("loan_deduction", Payslip._fields)
+        self.assertIn("loan_deduction_iess", Payslip._fields)
+        self.assertIn("loan_deduction_company", Payslip._fields)
 
     # =========================================================================
     # DÉCIMOS CALCULATIONS

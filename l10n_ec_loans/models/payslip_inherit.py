@@ -1,20 +1,35 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields, api
 
+# loan_type values defined in l10n_ec.loan (see loan.py)
+IESS_LOAN_TYPES = ("iess_qui", "iess_hip")
+COMPANY_LOAN_TYPES = ("company",)
+
 
 class L10nEcPayslip(models.Model):
     _inherit = "l10n_ec.payslip"
 
-    # Add Loan Deduction Field
+    # Aggregate loan deduction for this period (kept for backward compat,
+    # views and the base net_wage computation read it via getattr).
     loan_deduction = fields.Float(
         "IESS/Company Loans", compute="_compute_loans", store=True
+    )
+    # Bucket split required by the journal-entry posting in
+    # l10n_ec_hr_payroll: IESS quirografario/hipotecario installments are
+    # paid to the IESS (a different liability account than company loans).
+    loan_deduction_iess = fields.Float(
+        "IESS Loan Deduction", compute="_compute_loans", store=True
+    )
+    loan_deduction_company = fields.Float(
+        "Company Loan Deduction", compute="_compute_loans", store=True
     )
 
     @api.depends("employee_id", "date_start", "date_end")
     def _compute_loans(self):
+        Line = self.env["l10n_ec.loan.line"]
         for rec in self:
             # Find unpaid loan installments due in this period
-            installments = self.env["l10n_ec.loan.line"].search(
+            installments = Line.search(
                 [
                     ("loan_id.employee_id", "=", rec.employee_id.id),
                     ("loan_id.state", "=", "active"),
@@ -23,36 +38,27 @@ class L10nEcPayslip(models.Model):
                     ("date_due", "<=", rec.date_end),
                 ]
             )
-            total = sum(installments.mapped("amount"))
-            rec.loan_deduction = total
-
-    # Override total computation to include loans
-    @api.depends(
-        "total_income",
-        "total_benefits_cash",
-        "iess_personal",
-        "income_tax",
-        "advances",
-        "loan_deduction",
-    )
-    def _compute_totals(self):
-        # We need to call super or re-implement.
-        # Since we modified the original logic widely, let's re-implement strictly.
-        for rec in self:
-            # Re-calc Totals (Copy of original + loan_deduction)
-            # Note: This overrides the previous method entirely if we use same @api.depends
-            # But since 'loan_deduction' is new, we should just subtract it from net_wage?
-            # No, net_wage compute needs to know about it.
-
-            # Re-triggering the base logic is messy if we don't fully override.
-            # We will just subtract it here:
-            rec.net_wage = (
-                (rec.total_income + rec.total_benefits_cash)
-                - rec.iess_personal
-                - rec.income_tax
-                - rec.advances
-                - rec.loan_deduction
+            iess = sum(
+                installments.filtered(
+                    lambda l: l.loan_id.loan_type in IESS_LOAN_TYPES
+                ).mapped("amount")
             )
+            company = sum(
+                installments.filtered(
+                    lambda l: l.loan_id.loan_type in COMPANY_LOAN_TYPES
+                ).mapped("amount")
+            )
+            rec.loan_deduction_iess = iess
+            rec.loan_deduction_company = company
+            rec.loan_deduction = iess + company
+
+    @api.depends("loan_deduction")
+    def _compute_totals(self):
+        # The base implementation (l10n_ec_hr_payroll) already subtracts
+        # loan_deduction from net_wage via getattr; here we only extend the
+        # recompute trigger so net_wage refreshes when loans change.
+        # @api.depends accumulates across the model inheritance chain.
+        super()._compute_totals()
 
     def action_confirm(self):
         # Mark installments as paid

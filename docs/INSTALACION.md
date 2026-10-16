@@ -94,7 +94,7 @@ Ir a **Configuración > Empresas** y configurar:
 
 | Campo | Descripción | Ejemplo |
 |-------|-------------|---------|
-| RUC | 13 dígitos (validación automática) | 1791234567001 |
+| RUC | 13 dígitos (validación automática) | 1793125212001 |
 | Razón Social | Nombre registrado en SRI | Mi Empresa S.A. |
 | Dirección | Dirección fiscal | Quito, Ecuador |
 

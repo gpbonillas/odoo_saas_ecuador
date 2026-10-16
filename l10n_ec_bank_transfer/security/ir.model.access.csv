@@ -1,2 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_l10n_ec_bank_transfer_wizard,l10n_ec.bank.transfer.wizard,model_l10n_ec_bank_transfer_wizard,base.group_user,1,1,1,1
+access_l10n_ec_bank_layout,l10n_ec.bank.layout,model_l10n_ec_bank_layout,base.group_user,1,0,0,0
+access_l10n_ec_bank_layout_manager,l10n_ec.bank.layout.manager,model_l10n_ec_bank_layout,base.group_system,1,1,1,1
+access_l10n_ec_bank_book_helper,l10n_ec.bank.book.helper,model_l10n_ec_bank_book_helper,base.group_user,1,0,0,0

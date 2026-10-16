@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
+        <!--
+          Guía de Remisión electrónica (SRI codDoc 06, v1.1.0).
+          Consumes the precomputed helpers on stock.picking
+          (l10n_ec_guia_* — see models/stock_picking.py) so the template
+          contains no field-name logic:
+            * transportista = carrier company (razón social + RUC) when
+              set, else individual driver (cédula)
+            * placa from l10n_ec_vehicle
+            * motivoTraslado as SRI free-text (VENTA, TRASLADO INTERNO...)
+            * destinatario identification type via SRI Table 07 codes
+          TODO: validate final XML against the SRI "Guía de Remisión"
+          schema (v1.1.0) with a live celcer submission.
+        -->
         <template id="l10n_ec_guia_xml">
             <guiaRemision id="comprobante" version="1.1.0">
                 <infoTributaria>
@@ -17,26 +30,26 @@
                     <dirMatriz t-out="company.street[:300]"/>
                 </infoTributaria>
                 <infoGuiaRemision>
-                    <dirEstablecimiento t-out="picking.picking_type_id.warehouse_id.partner_id.street[:300] or company.street[:300]"/>
-                    <dirPartida t-out="picking.picking_type_id.warehouse_id.partner_id.street[:300] or company.street[:300]"/>
-                    <razonSocialTransportista t-out="picking.l10n_ec_driver_id.name[:300]"/>
-                    <tipoIdentificacionTransportista t-out="'05' if picking.l10n_ec_driver_id.identifier_type == 'cedula' else '04'"/>
-                    <rucTransportista t-out="picking.l10n_ec_driver_id.license_number"/> <!-- Assuming license is ID -->
-                    <placa t-out="picking.l10n_ec_vehicle_id.license_plate"/>
-                    <fechaIniTransporte t-out="picking.l10n_ec_start_date.strftime('%d/%m/%Y')"/>
-                    <fechaFinTransporte t-out="picking.l10n_ec_end_date.strftime('%d/%m/%Y')"/>
+                    <dirEstablecimiento t-out="(picking.picking_type_id.warehouse_id.partner_id.street or company.street or '')[:300]"/>
+                    <dirPartida t-out="(picking.picking_type_id.warehouse_id.partner_id.street or company.street or '')[:300]"/>
+                    <razonSocialTransportista t-out="picking.l10n_ec_guia_transport_name[:300]"/>
+                    <tipoIdentificacionTransportista t-out="picking.l10n_ec_guia_transport_ident_code"/>
+                    <rucTransportista t-out="picking.l10n_ec_guia_transport_ident"/>
+                    <placa t-out="picking.l10n_ec_guia_placa"/>
+                    <fechaIniTransporte t-out="picking.l10n_ec_guia_fecha_ini"/>
+                    <fechaFinTransporte t-out="picking.l10n_ec_guia_fecha_fin"/>
                 </infoGuiaRemision>
                 <destinatarios>
                     <destinatario>
-                        <identificacionDestinatario t-out="picking.partner_id.vat"/>
+                        <identificacionDestinatario t-out="picking.partner_id.vat or '9999999999999'"/>
+                        <tipoIdentificacionDestinatario t-out="picking.l10n_ec_destinatario_ident_code"/>
                         <razonSocialDestinatario t-out="picking.partner_id.name[:300]"/>
-                        <dirDestinatario t-out="picking.partner_id.street[:300]"/>
-                        <motivoTraslado t-out="picking.l10n_ec_transport_reason"/>
-                        <!-- If imported, add DAU logic here -->
+                        <dirDestinatario t-out="(picking.partner_id.street or company.street or '')[:300]"/>
+                        <motivoTraslado t-out="picking.l10n_ec_guia_motivo"/>
                         <detalles>
                             <t t-foreach="picking.move_ids" t-as="move">
-                                <detalle>
-                                    <codigoInterno t-out="move.product_id.default_code or move.product_id.id"/>
+                                <detalle t-if="move.quantity > 0">
+                                    <codigoInterno t-out="move.product_id.default_code or str(move.product_id.id)"/>
                                     <descripcion t-out="move.product_id.name[:300]"/>
                                     <cantidad t-out="format_float(move.quantity, 2)"/>
                                 </detalle>

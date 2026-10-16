@@ -23,6 +23,9 @@ class ResPartner(models.Model):
             ("rimpe_p", "RIMPE Negocio Popular"),
             ("general", "Régimen General"),
             ("exporter", "Exportador Habitual"),
+            ("nonprofit", "Sin Fines de Lucro"),
+            ("zede", "ZEDE"),
+            ("public_sector", "Sector Público"),
         ],
         string="Taxpayer Type",
     )
@@ -254,73 +257,73 @@ class ResPartner(models.Model):
     def _validate_ec_document(self, document_number):
         """
         Validates Ecuadorian RUC or Cédula.
-        - Cédula (10 digits): Modulo 10
-        - RUC Natural (13 digits): Modulo 10 (first 10 digits) + '001'
-        - RUC Private (13 digits): Modulo 11 (3rd digit = 9)
-        - RUC Public (13 digits): Modulo 11 (3rd digit = 6)
+
+        CHG-2026-004: port fiel de mcp_server/rules.py (`_ci_ok` /
+        `ruc_check_digit_ok`), implementación equivalente a stdnum.ec.ci +
+        stdnum.ec.ruc, cross-checkeada contra stdnum con 20.195 casos y 0
+        diferencias (ISO-EC-11 §3.1). Correcciones vs. la versión anterior:
+        provincias especiales 30/50, 3er dígito de cédula hasta 6 (no solo
+        0-5), fallback natural del sector público (stdnum) y dispatch por
+        largo exacto (10 / 13).
+
+          - Cédula (10 dígitos): provincia 01-24 + 30/50, 3er dígito <= 6,
+            mod-10 == 0.
+          - RUC (13 dígitos):
+              3er 0-5 natural : establecimiento != 000 + cédula de los 10
+              3er 6   público : mod-11 (3,2,7,6,5,4,3,2,1) sobre 9 dígitos;
+                                si no, fallback natural de stdnum
+              3er 9   jurídica: mod-11 (4,3,2,7,6,5,4,3,2,1) sobre 10 dígitos
+              3er 7 u 8       : inválido
         """
-        if not document_number or not document_number.isdigit():
+        if not isinstance(document_number, str) or not document_number.isdigit():
             return False
-
-        province = int(document_number[:2])
-        if province < 1 or province > 24 and province != 30:
-            return False
-
-        third_digit = int(document_number[2])
-
-        # Case 1: Cédula or RUC Natural Person (Third digit < 6)
-        if third_digit < 6:
-            # Modulo 10
-            base = document_number[:9]
-            verifier = int(document_number[9])
-            coefficients = [2, 1, 2, 1, 2, 1, 2, 1, 2]
-            total = 0
-            for i in range(9):
-                val = int(base[i]) * coefficients[i]
-                total += val - 9 if val >= 10 else val
-
-            check_digit = (10 - (total % 10)) % 10
-            check_ok = check_digit == verifier
-
-            if len(document_number) == 13:
-                return check_ok and document_number[10:] != "000"  # RUC Natural
-            return check_ok  # Cédula
-
-        # Case 2: Public Entity (Third digit = 6)
-        elif third_digit == 6:
-            # Modulo 11 with specific coefficients
-            # Digits 0-8 (9 digits)
-            # Verifier is digit 9 (10th digit) - Index 8
-            # Coefficients: 3, 2, 7, 6, 5, 4, 3, 2
-            if len(document_number) < 13:
-                return False
-            base = document_number[:8]
-            verifier = int(document_number[8])
-            coefficients = [3, 2, 7, 6, 5, 4, 3, 2]
-            total = sum(int(base[i]) * coefficients[i] for i in range(8))
-            remainder = total % 11
-            check_digit = 11 - remainder if remainder != 0 else 0
-
-            return check_digit == verifier and document_number[9:] != "0000"
-
-        # Case 3: Private Entity (Third digit = 9)
-        elif third_digit == 9:
-            # Modulo 11
-            # Digits 0-9 (10 digits)
-            # Verifier is digit 10 (11th digit) - Index 9
-            # Coefficients: 4, 3, 2, 7, 6, 5, 4, 3, 2
-            if len(document_number) < 13:
-                return False
-            base = document_number[:9]
-            verifier = int(document_number[9])
-            coefficients = [4, 3, 2, 7, 6, 5, 4, 3, 2]
-            total = sum(int(base[i]) * coefficients[i] for i in range(9))
-            remainder = total % 11
-            check_digit = 11 - remainder if remainder != 0 else 0
-
-            return check_digit == verifier and document_number[10:] != "000"
-
+        if len(document_number) == 10:
+            return self._ec_ci_ok(document_number)
+        if len(document_number) == 13:
+            return self._ec_ruc_ok(document_number)
         return False
+
+    def _ec_province_ok(self, first2):
+        """Provincia 01..24 + códigos especiales 30/50 (stdnum)."""
+        return "01" <= first2 <= "24" or first2 in ("30", "50")
+
+    def _ec_ci_ok(self, number):
+        """stdnum.ec.ci: 10 dígitos, provincia válida, 3er dígito <= 6,
+        mod-10 == 0."""
+        if len(number) != 10:
+            return False
+        if not self._ec_province_ok(number[:2]):
+            return False
+        if number[2] > "6":
+            return False
+        total = 0
+        for i, n in enumerate(number):
+            p = (2, 1)[i % 2] * int(n)   # pesos alternados 2,1,2,1,...
+            total += p - 9 if p > 9 else p
+        return total % 10 == 0
+
+    def _ec_mod11_sum(self, number, weights):
+        """stdnum.ec.ruc._checksum: suma ponderada módulo 11 (válida == 0)."""
+        return sum(w * int(n) for w, n in zip(weights, number)) % 11
+
+    def _ec_ruc_ok(self, number):
+        """stdnum.ec.ruc: dispatch por 3er dígito (ver docstring madre)."""
+        if not self._ec_province_ok(number[:2]):
+            return False
+        third = number[2]
+        if third < "6":                                   # persona natural
+            return number[-3:] != "000" and self._ec_ci_ok(number[:10])
+        if third == "6":                                  # sector público
+            if (number[-4:] != "0000"
+                    and self._ec_mod11_sum(
+                        number[:9], (3, 2, 7, 6, 5, 4, 3, 2, 1)) == 0):
+                return True
+            return number[-3:] != "000" and self._ec_ci_ok(number[:10])
+        if third == "9":                                  # persona jurídica
+            return (number[-3:] != "000"
+                    and self._ec_mod11_sum(
+                        number[:10], (4, 3, 2, 7, 6, 5, 4, 3, 2, 1)) == 0)
+        return False                                      # 3er dígito 7 u 8
 
     # =========================================================================
     # SRI AUTO-LOAD: Carga automática de datos del SRI al ingresar RUC
@@ -382,13 +385,16 @@ class ResPartner(models.Model):
                 # Tipo de identificación
                 self.l10n_ec_identifier_type = "ruc"
 
-                # Tipo de contribuyente según SRI
-                if data.get("regimen_rimpe"):
-                    if "EMPRENDEDOR" in data.get("regimen_rimpe", "").upper():
-                        self.l10n_ec_taxpayer_type = "rimpe_e"
-                    elif "POPULAR" in data.get("regimen_rimpe", "").upper():
-                        self.l10n_ec_taxpayer_type = "rimpe_p"
-                elif data.get("contribuyente_especial"):
+                # Tipo de contribuyente según SRI (CHG-2026-003: los valores
+                # SRI son "SI"/"NO" — un "NO" no puede caer en "special" por
+                # ser truthy, y régimen GENERAL debe terminar en general).
+                regimen = (data.get("regimen_rimpe")
+                           or data.get("regimen") or "").upper()
+                if "EMPRENDEDOR" in regimen:
+                    self.l10n_ec_taxpayer_type = "rimpe_e"
+                elif "POPULAR" in regimen:
+                    self.l10n_ec_taxpayer_type = "rimpe_p"
+                elif str(data.get("contribuyente_especial") or "").upper() == "SI":
                     self.l10n_ec_taxpayer_type = "special"
                 else:
                     self.l10n_ec_taxpayer_type = "general"

@@ -43,7 +43,7 @@ Esta guía explica cómo usar los módulos de localización ecuatoriana para Odo
 
 | Campo | Descripción | Ejemplo |
 |-------|-------------|---------|
-| RUC | 13 dígitos | 1791234567001 |
+| RUC | 13 dígitos | 1793125212001 |
 | Razón Social | Nombre legal | Mi Empresa S.A. |
 | Dirección | Dirección fiscal | Av. Principal, Quito |
 

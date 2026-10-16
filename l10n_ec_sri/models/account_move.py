@@ -72,10 +72,13 @@ class AccountMove(models.Model):
                 if response.get("date"):
                     move.l10n_ec_authorization_date = response["date"]
 
-                if response.get("authorized_xml"):
-                    move.l10n_ec_xml_data = base64.b64encode(
-                        response["authorized_xml"].encode("utf-8")
-                    )
+                # The authorization service returns the authorized XML under
+                # the "xml" key (see l10n_ec.sri.service.check_authorization).
+                authorized_xml = response.get("xml")
+                if authorized_xml:
+                    if isinstance(authorized_xml, str):
+                        authorized_xml = authorized_xml.encode("utf-8")
+                    move.l10n_ec_xml_data = base64.b64encode(authorized_xml)
             elif response.get("status") == "NO AUTORIZADO":
                 move.l10n_ec_sri_status = "rejected"
                 move.l10n_ec_sri_error = "\n".join(response.get("messages", []))

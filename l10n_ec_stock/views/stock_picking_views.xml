@@ -18,6 +18,7 @@
                                 <field name="l10n_ec_end_date"/>
                             </group>
                             <group string="Fleet">
+                                <field name="l10n_ec_carrier_id"/>
                                 <field name="l10n_ec_driver_id"/>
                                 <field name="l10n_ec_vehicle_id"/>
                             </group>

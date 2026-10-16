@@ -1,0 +1,180 @@
+name: odoo-ec
+
+# =====================================================================
+# ODOO ECUADOR — PRODUCTION-LIKE CLUSTER
+#   * Odoo image built FROM SOURCE (github.com/odoo/odoo @ ${ODOO_REF})
+#   * Postgres 16 tuned for millions of transactions
+#   * All state on named volumes (live changes survive rebuilds)
+#   * Multi-tenant (SaaS): one database per tenant, dbfilter
+# =====================================================================
+
+x-odoo-env: &odoo-env
+  HOST: db
+  USER: ${POSTGRES_USER:-odoo}
+  PASSWORD: ${POSTGRES_PASSWORD:-change-me-pg}
+  ODOO_DB: ${ODOO_DB:-odooec}
+  ODOO_USER: ${ODOO_USER:-admin}
+  ODOO_PASSWORD: ${ODOO_PASSWORD:-change-me-admin}
+  ODOO_ADMIN_PASSWD: ${ODOO_ADMIN_PASSWD:-change-me-master}
+  ODOO_URL: http://odoo:8069
+  TZ: ${TZ:-America/Guayaquil}
+
+x-odoo-common: &odoo-common
+  build:
+    context: .
+    dockerfile: Dockerfile
+    args:
+      ODOO_REF: ${ODOO_REF:-18.0}
+  image: odoo-ecuador:${ODOO_REF:-18.0}
+  restart: unless-stopped
+  stop_grace_period: 60s
+  networks: [backend]
+  logging: &logging
+    driver: json-file
+    options: {max-size: "50m", max-file: "10"}
+
+services:
+  # ------------------------- DATA LAYER ---------------------------
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-odoo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-pg}
+      TZ: ${TZ:-America/Guayaquil}
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+    volumes:
+      - dbdata:/var/lib/postgresql/data          # LIVE: all transaction data
+      - ./config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - dblogs:/var/log/postgresql
+      - dbbackups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-odoo} -d $${POSTGRES_DB:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    networks: [backend]
+    restart: unless-stopped
+    stop_grace_period: 60s
+    logging: *logging
+    deploy:
+      resources:
+        limits: {memory: 3G}          # CLÚSTER TOPE 8G: db 3G + odoo 4G + mcp/backup 0.5G
+
+  # ------------------------- APPLICATION --------------------------
+  odoo:
+    <<: *odoo-common
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Secrets + connection only. TUNABLES (workers, proxy_mode, limits,
+      # dbfilter, list_db) live in the LIVE-mounted ./config/odoo.conf so
+      # they are edited there — single source of truth, no rebuild needed.
+      <<: *odoo-env
+    ports:
+      - "8069:8069"
+      - "8072:8072"          # longpolling / bus (enterprise-compatible port)
+    volumes:
+      # ---- MODULES (live: edits are visible without rebuild) -----
+      - ./l10n_ec:/mnt/extra-addons/l10n_ec
+      - ./l10n_ec_asset:/mnt/extra-addons/l10n_ec_asset
+      - ./l10n_ec_bank_transfer:/mnt/extra-addons/l10n_ec_bank_transfer
+      - ./l10n_ec_base:/mnt/extra-addons/l10n_ec_base
+      - ./l10n_ec_customs:/mnt/extra-addons/l10n_ec_customs
+      - ./l10n_ec_edi:/mnt/extra-addons/l10n_ec_edi
+      - ./l10n_ec_hr_payroll:/mnt/extra-addons/l10n_ec_hr_payroll
+      - ./l10n_ec_ice:/mnt/extra-addons/l10n_ec_ice
+      - ./l10n_ec_income_tax:/mnt/extra-addons/l10n_ec_income_tax
+      - ./l10n_ec_loans:/mnt/extra-addons/l10n_ec_loans
+      - ./l10n_ec_portal:/mnt/extra-addons/l10n_ec_portal
+      - ./l10n_ec_pos:/mnt/extra-addons/l10n_ec_pos
+      - ./l10n_ec_quality:/mnt/extra-addons/l10n_ec_quality
+      - ./l10n_ec_reports:/mnt/extra-addons/l10n_ec_reports
+      - ./l10n_ec_rimpe:/mnt/extra-addons/l10n_ec_rimpe
+      - ./l10n_ec_sri:/mnt/extra-addons/l10n_ec_sri
+      - ./l10n_ec_stock:/mnt/extra-addons/l10n_ec_stock
+      - ./l10n_ec_sut:/mnt/extra-addons/l10n_ec_sut
+      - ./l10n_ec_vacation:/mnt/extra-addons/l10n_ec_vacation
+      - ./l10n_ec_withholding:/mnt/extra-addons/l10n_ec_withholding
+      - ./tests:/mnt/extra-addons/tests
+      # ---- CONFIG (live: edit ./config/odoo.conf + restart odoo) ----
+      - ./config/odoo.conf:/etc/odoo/odoo.conf:ro
+      # ---- ENTRYPOINT (live: edit ./config/entrypoint.sh + restart) ---
+      # Overrides the COPY'd copy in the image => no rebuild for changes.
+      - ./config/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro
+      # ---- STATE (named volumes: survive rebuilds/down-up) ----------
+      - odoo-filestore:/var/lib/odoo/filestore   # LIVE: attachments, signed XML, RIDEs
+      - odoo-sessions:/var/lib/odoo/sessions
+      - odoo-logs:/var/log/odoo
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8069/web/health', timeout=6)"]
+      interval: 30s
+      timeout: 10s
+      retries: 15
+      start_period: 240s
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          memory: 4G          # CLÚSTER TOPE 8G
+
+  # --------------------- AI AGENT GATEWAY -------------------------
+  # El gateway MCP usa transporte stdio: OpenCode lo spawnea como proceso
+  # local (ver ~/.config/opencode/opencode.json) inyectando su stdin. NO es
+  # un servicio de Docker: si se levanta en compose, ve stdin cerrado, sale
+  # y `restart: unless-stopped` lo reinicia en bucle infinito. Para exponerlo
+  # en red futura, usar transporte streamable-http (MCP_TRANSPORT=http) aqui.
+  #
+  # mcp:  ->  proceso local (python3 mcp_server/server.py) via OpenCode MCP
+
+  # ------------------- BACKUP / RETENTION -------------------------
+  backup:
+    image: postgres:16-alpine
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-change-me-pg}
+      PGUSER: ${POSTGRES_USER:-odoo}
+      PGHOST: db
+      KEEP_DAYS: "14"
+      ODOO_DB: ${ODOO_DB:-odooec}
+    volumes:
+      - dbbackups:/backups
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        echo "[backup] cron started, retention=$${KEEP_DAYS}d"
+        while true; do
+          TS=$$(date +%Y%m%d-%H%M%S)
+          pg_dump -Fc -d $$ODOO_DB -f /backups/$${ODOO_DB}-$$TS.dump && echo "[backup] dumped $$TS"
+          find /backups -name '*.dump' -mtime +$$KEEP_DAYS -delete
+          find /backups -name '*.dump' | sort | tail -n +$$((KEEP_DAYS*4+1)) -delete 2>/dev/null || true
+          sleep 21600
+        done
+    restart: unless-stopped
+    networks: [backend]
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          memory: 128M        # CLÚSTER TOPE 8G
+
+networks:
+  backend:
+    driver: bridge
+    internal: false
+
+volumes:
+  dbdata:            # LIVE — Postgres data directory
+  dblogs:
+  dbbackups:
+  odoo-filestore:    # LIVE — attachments / signed XML / RIDE
+  odoo-sessions:
+  odoo-logs:

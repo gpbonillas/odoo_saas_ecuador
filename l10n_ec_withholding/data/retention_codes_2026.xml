@@ -2,84 +2,203 @@
 <odoo>
     <data noupdate="1">
         <!-- ========================================================= -->
-        # TABLA 19: RETENCIONES IMPUESTO A LA RENTA (2026)
+        <!-- TABLA 19: RETENCIONES IMPUESTO A LA RENTA                  -->
+        <!-- Rates are legal constants (SRI Tabla 19), verificadas     -->
+        <!-- contra Resolución NAC-DGERCGC26-00000009 (27-feb-2026,    -->
+        <!-- Registro Oficial 233) y Ficha Técnica SRI v2.33.          -->
         <!-- ========================================================= -->
 
+        <!-- Professional / services -->
+        <record id="tax_ret_ir_303" model="l10n_ec.withholding.tax">
+            <field name="code">303</field>
+            <field name="name">Honorarios profesionales (10%)</field>
+            <field name="type">renta</field>
+            <field name="percentage">10.0</field>
+        </record>
+        <record id="tax_ret_ir_304" model="l10n_ec.withholding.tax">
+            <field name="code">304</field>
+            <field name="name">Servicios donde predomina el intelecto (10%)</field>
+            <field name="type">renta</field>
+            <field name="percentage">10.0</field>
+        </record>
+        <record id="tax_ret_ir_307" model="l10n_ec.withholding.tax">
+            <field name="code">307</field>
+            <field name="name">Servicios donde predomina la mano de obra (3%)</field>
+            <field name="type">renta</field>
+            <field name="percentage">3.0</field>
+        </record>
+        <record id="tax_ret_ir_308" model="l10n_ec.withholding.tax">
+            <field name="code">308</field>
+            <field name="name">Uso o aprovechamiento de la imagen o renombre (10%)</field>
+            <field name="type">renta</field>
+            <field name="percentage">10.0</field>
+        </record>
+        <record id="tax_ret_ir_309" model="l10n_ec.withholding.tax">
+            <field name="code">309</field>
+            <field name="name">Publicidad y agencias de comunicación (3%)</field>
+            <field name="type">renta</field>
+            <field name="percentage">3.0</field>
+        </record>
+        <record id="tax_ret_ir_310" model="l10n_ec.withholding.tax">
+            <field name="code">310</field>
+            <field name="name">Transporte privado de pasajeros o carga (1%)</field>
+            <field name="type">renta</field>
+            <field name="percentage">1.0</field>
+        </record>
+
+        <!-- Goods -->
+        <record id="tax_ret_ir_312" model="l10n_ec.withholding.tax">
+            <field name="code">312</field>
+            <field name="name">Transferencia de bienes muebles (2%)</field>
+            <field name="type">renta</field>
+            <field name="percentage">2.0</field>
+        </record>
+
+        <!-- Leases / financial -->
+        <record id="tax_ret_ir_319" model="l10n_ec.withholding.tax">
+            <field name="code">319</field>
+            <field name="name">Arrendamiento mercantil (2%)</field>
+            <field name="type">renta</field>
+            <field name="percentage">2.0</field>
+        </record>
+        <record id="tax_ret_ir_320" model="l10n_ec.withholding.tax">
+            <field name="code">320</field>
+            <field name="name">Arrendamiento de bienes inmuebles (10%)</field>
+            <field name="type">renta</field>
+            <field name="percentage">10.0</field>
+        </record>
+        <record id="tax_ret_ir_322" model="l10n_ec.withholding.tax">
+            <field name="code">322</field>
+            <field name="name">Seguros y reaseguros (2%)</field>
+            <field name="type">renta</field>
+            <field name="percentage">2.0</field>
+        </record>
+        <record id="tax_ret_ir_323" model="l10n_ec.withholding.tax">
+            <field name="code">323</field>
+            <field name="name">Rendimientos financieros (3%)</field>
+            <field name="type">renta</field>
+            <field name="percentage">3.0</field>
+        </record>
+
+        <!-- Other -->
+        <record id="tax_ret_ir_340" model="l10n_ec.withholding.tax">
+            <field name="code">340</field>
+            <field name="name">Impuesto único a la exportación de banano (3%)</field>
+            <field name="type">renta</field>
+            <field name="percentage">3.0</field>
+        </record>
+        <!-- Nota: el código oficial del anticipo de utilidades es 325
+             (Tabla 19, 25%); el record id se conserva por compatibilidad. -->
+        <record id="tax_ret_ir_344" model="l10n_ec.withholding.tax">
+            <field name="code">325</field>
+            <field name="name">Anticipo de utilidades/dividendos (25%)</field>
+            <field name="type">renta</field>
+            <field name="percentage">25.0</field>
+        </record>
+        <record id="tax_ret_ir_500" model="l10n_ec.withholding.tax">
+            <field name="code">500</field>
+            <field name="name">Rentas pagadas a no residentes - rentas inmobiliarias (25% ó 37%)</field>
+            <field name="type">renta</field>
+            <field name="percentage">25.0</field>
+        </record>
+
         <!-- RIMPE -->
+        <!-- Nota: en Tabla 19 el código 332 (0%) incluye RIMPE Negocios
+             Populares; 332B corresponde a energía eléctrica (0%). -->
         <record id="tax_ret_ir_332b" model="l10n_ec.withholding.tax">
-            <field name="code">332B</field>
+            <field name="code">332</field>
             <field name="name">RIMPE Negocio Popular (0%)</field>
             <field name="type">renta</field>
             <field name="percentage">0.0</field>
         </record>
-
+        <!-- Nota: en Tabla 19 el código 343 (1%) es RIMPE Emprendedores;
+             343A corresponde a energía eléctrica (2%). -->
         <record id="tax_ret_ir_343a" model="l10n_ec.withholding.tax">
-            <field name="code">343A</field>
+            <field name="code">343</field>
             <field name="name">RIMPE Emprendedor (1%)</field>
             <field name="type">renta</field>
             <field name="percentage">1.0</field>
         </record>
 
-        <!-- GOODS / SERVICES -->
-        <record id="tax_ret_ir_312" model="l10n_ec.withholding.tax">
-            <field name="code">312</field>
-            <field name="name">Transferencia Bienes Muebles (1.75%)</field>
-            <field name="type">renta</field>
-            <field name="percentage">1.75</field>
-        </record>
+        <!-- ========================================================= -->
+        <!-- =========================================================
+             TABLA 21: RETENCIONES IVA — CASILLEROS FORMULARIO 104
+             =========================================================
+             Base: Resolución NAC-DGERCGC20-00000061 (RO 473,
+             29-sep-2020) y SUS REFORMAS (NAC-DGERCGC21-00000037,
+             NAC-DGERCGC23-00000026). VIGENTE en 2026: los porcentajes
+             de IVA NO cambiaron en la reforma de marzo-2026 (solo
+             cambió Impuesto a la Renta vía NAC-DGERCGC26-00000009).
 
-        <record id="tax_ret_ir_3440" model="l10n_ec.withholding.tax">
-            <field name="code">3440</field>
-            <field name="name">Otras Retenciones (2.75%)</field>
-            <field name="type">renta</field>
-            <field name="percentage">2.75</field>
-        </record>
+             Los casilleros del 104 son BÚSQUEDAS DE PORCENTAJE, no de
+             materia. Cada casillero fija un % del IVA causado retenido:
+                 721 = 10%   723 = 20%   725 = 30%
+                 727 = 50%   729 = 70%   731 = 100%
+             (Fuente: Guía SRI del Formulario 104 — "721, 723: retención
+             10% y 20%; 725, 727, 729 y 731: 30%, 50%, 70% y 100%").
 
-        <!-- PROFESSIONAL SERVICES -->
-        <record id="tax_ret_ir_303" model="l10n_ec.withholding.tax">
-            <field name="code">303</field>
-            <field name="name">Honorarios Profesionales (10%)</field>
-            <field name="type">renta</field>
+             ESCALA DOBLE: el % depende de la relación entre el AGENTE
+             de retención y el retenido (Res. 61 Arts. 3-5):
+               • CONTRIBUTUYENTE ESPECIAL → otro contribuyente especial:
+                   10% bienes (721), 20% servicios/consultoría (723),
+                   30% construcción (725).
+               • ESCALA GENERAL (demás casos):
+                   30% bienes y construcción (725),
+                   70% servicios/consultoría y arrendamiento a obligados
+                     a llevar contabilidad (729),
+                   100% servicios profesionales de personas naturales
+                     (excepto consultoría), arrendamiento a personas
+                     naturales NO obligadas, liquidación de compra,
+                     importación de servicios, combustibles (731).
+             • EXPORTADORES HABITUALES (agentes/especiales): retienen
+               100% en TODAS las adquisiciones (Art. 11) → siempre 731.
+             El motor (l10n_ec_withholding / mcp_server/rules.py
+             iva_retention_bucket) selecciona el casillero según estos
+             criterios; estas filas solo fijan % por casillero.
+        ========================================================== -->
+        <!-- 10% — bienes a contribuyentes especiales (Art. 5.a) -->
+        <record id="tax_ret_iva_721" model="l10n_ec.withholding.tax">
+            <field name="code">721</field>
+            <field name="name">Retención IVA 10% — bienes (contribuyente especial a contribuyente especial)</field>
+            <field name="type">iva</field>
             <field name="percentage">10.0</field>
         </record>
-
-        <record id="tax_ret_ir_304" model="l10n_ec.withholding.tax">
-            <field name="code">304</field>
-            <field name="name">Servicios Predomina Intelecto (8%)</field>
-            <field name="type">renta</field>
-            <field name="percentage">8.0</field>
+        <!-- 20% — servicios a contribuyentes especiales (Art. 5.b) -->
+        <record id="tax_ret_iva_723" model="l10n_ec.withholding.tax">
+            <field name="code">723</field>
+            <field name="name">Retención IVA 20% — servicios y consultoría (a contribuyente especial)</field>
+            <field name="type">iva</field>
+            <field name="percentage">20.0</field>
         </record>
-
-        <!-- ========================================================= -->
-        # TABLA 21: RETENCIONES IVA (2026)
-        <!-- ========================================================= -->
-
-        <record id="tax_ret_iva_1" model="l10n_ec.withholding.tax">
-            <field name="code">1</field>
-            <field name="name">Retención IVA 30% (Bienes)</field>
+        <!-- 30% — bienes (general) y TODA construcción (Arts. 3.a y 5.c) -->
+        <record id="tax_ret_iva_725" model="l10n_ec.withholding.tax">
+            <field name="code">725</field>
+            <field name="name">Retención IVA 30% — bienes (escala general) y contratos de construcción</field>
             <field name="type">iva</field>
             <field name="percentage">30.0</field>
         </record>
-
-        <record id="tax_ret_iva_2" model="l10n_ec.withholding.tax">
-            <field name="code">2</field>
-            <field name="name">Retención IVA 70% (Servicios)</field>
+        <!-- 50% — casillero previsto por la Res. 61 (casos específicos) -->
+        <record id="tax_ret_iva_727" model="l10n_ec.withholding.tax">
+            <field name="code">727</field>
+            <field name="name">Retención IVA 50% (casillero Res. 61)</field>
+            <field name="type">iva</field>
+            <field name="percentage">50.0</field>
+        </record>
+        <!-- 70% — servicios (general) y arrendamiento a obligados (Art. 3.b) -->
+        <record id="tax_ret_iva_729" model="l10n_ec.withholding.tax">
+            <field name="code">729</field>
+            <field name="name">Retención IVA 70% — servicios, consultoría y arrendamiento (escala general)</field>
             <field name="type">iva</field>
             <field name="percentage">70.0</field>
         </record>
-
-        <record id="tax_ret_iva_3" model="l10n_ec.withholding.tax">
-            <field name="code">3</field>
-            <field name="name">Retención IVA 100% (Profesionales/Arriendo)</field>
+        <!-- 100% — honorarios, arrendamiento a no obligados, liquidación
+             de compra, importación de servicios, combustibles, y TODAS
+             las adquisiciones de exportadores habituales (Art. 11) -->
+        <record id="tax_ret_iva_731" model="l10n_ec.withholding.tax">
+            <field name="code">731</field>
+            <field name="name">Retención IVA 100% — servicios profesionales personas naturales, arrendamiento a no obligados, liquidación de compra, importación de servicios y exportadores</field>
             <field name="type">iva</field>
             <field name="percentage">100.0</field>
-        </record>
-
-        <record id="tax_ret_iva_9" model="l10n_ec.withholding.tax">
-            <field name="code">9</field>
-            <field name="name">No Procede Retención IVA (0%)</field>
-            <field name="type">iva</field>
-            <field name="percentage">0.0</field>
         </record>
 
     </data>

@@ -6,25 +6,25 @@
                 <infoTributaria>
                     <ambiente t-out="environment"/>
                     <tipoEmision>1</tipoEmision>
-                    <razonSocial t-out="company.name[:300]"/>
-                    <nombreComercial t-if="company.l10n_ec_commercial_name" t-out="company.l10n_ec_commercial_name[:300]"/>
+                    <razonSocial t-out="(company.name or '')[:300]"/>
+                    <nombreComercial t-if="company.l10n_ec_commercial_name" t-out="(company.l10n_ec_commercial_name or '')[:300]"/>
                     <ruc t-out="company.vat"/>
                     <claveAcceso t-out="access_key"/>
                     <codDoc>07</codDoc>
                     <estab t-out="access_key[24:27]"/>
                     <ptoEmi t-out="access_key[27:30]"/>
                     <secuencial t-out="access_key[30:39]"/>
-                    <dirMatriz t-out="company.street[:300]"/>
+                    <dirMatriz t-out="(company.street or '')[:300]"/>
                     <agenteRetencion t-if="company.l10n_ec_withhold_agent" t-out="company.l10n_ec_withhold_resolution"/>
                 </infoTributaria>
                 <infoCompRetencion>
                     <fechaEmision t-out="retention.date.strftime('%d/%m/%Y')"/>
-                    <dirEstablecimiento t-out="company.street[:300]"/>
-                    <contribuyenteEspecial t-if="company.l10n_ec_taxpayer_type == 'special'" t-out="company.l10n_ec_special_resolution"/>
+                    <dirEstablecimiento t-out="(company.street or '')[:300]"/>
+                    <contribuyenteEspecial t-if="company.l10n_ec_special_resolution" t-out="company.l10n_ec_special_resolution"/>
                     <obligadoContabilidad t-out="'SI' if company.l10n_ec_forced_accounting else 'NO'"/>
                     <tipoIdentificacionSujetoRetenido t-out="identifier_code"/>
-                    <razonSocialSujetoRetenido t-out="partner.name[:300]"/>
-                    <identificacionSujetoRetenido t-out="partner.vat"/>
+                    <razonSocialSujetoRetenido t-out="(partner.name or '')[:300]"/>
+                    <identificacionSujetoRetenido t-out="partner.vat or ''"/>
                     <periodoFiscal t-out="retention.date.strftime('%m/%Y')"/>
                 </infoCompRetencion>
                 <impuestos>
@@ -35,7 +35,7 @@
                             <baseImponible t-out="format_monetary(line.base)"/>
                             <porcentajeRetener t-out="format_float(line.percentage, 2)"/>
                             <valorRetenido t-out="format_monetary(line.amount)"/>
-                            <codDocSustento>01</codDocSustento> <!-- Assumed Factura for now, need field on retention line if multi-doc -->
+                            <codDocSustento t-out="retention.invoice_id.l10n_latam_document_type_id.code or '01'"/>
                             <numDocSustento t-out="retention.invoice_id.l10n_latam_document_number.replace('-', '') if retention.invoice_id.l10n_latam_document_number else '000000000000000'"/>
                             <fechaEmisionDocSustento t-out="retention.invoice_id.invoice_date.strftime('%d/%m/%Y') if retention.invoice_id.invoice_date else ''"/>
                         </impuesto>

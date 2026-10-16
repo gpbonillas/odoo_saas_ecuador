@@ -18,8 +18,15 @@ Complete withholding management for Ecuador:
 * Retention document (Comprobante de Retención)
 * Income Tax withholdings (IR codes 303, 304, 312, etc.)
 * IVA withholdings (codes 721, 723, 725, 727, 729, 731)
-* 5-day rule enforcement (must issue within 5 days of invoice)
-* SRI electronic transmission
+* 5-business-day rule enforcement (LRTI art. 50; business days per
+  Código Tributario art. 12, Ecuadorian holidays excluded)
+* IVA withholdings posted in full to the SRI under the matching
+  Formulario 104 casillero (721=10%, 723=20%, 725=30%, 727=50%,
+  729=70%, 731=100%) — there is no SENAE/IESS split of the IVA
+  retention
+* Auto-detection on vendor bill confirmation (product codes + tariff
+  table by RUC 4th digit / activity)
+* SRI electronic transmission (codDoc 07, reception + authorization)
 * XML generation and XAdES signing
 
 **Regulatory Compliance**: SRI 2026
@@ -37,6 +44,8 @@ Complete withholding management for Ecuador:
         "security/ir.model.access.csv",
         "data/l10n_ec_withholding.xml",
         "data/retention_codes_2026.xml",
+        "data/retention_split_config.xml",
+        "data/retention_tariff_data.xml",
         "data/retention_template.xml",
         "views/account_retention_views.xml",
         "wizard/retention_wizard_views.xml",

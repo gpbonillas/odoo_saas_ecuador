@@ -27,6 +27,7 @@
                                 <field name="wage"/>
                                 <field name="overtime_hours"/>
                                 <field name="supplementary_hours"/>
+                                <field name="night_hours"/>
                                 <field name="commission"/>
                                 <field name="bonus"/>
                             </group>
@@ -36,11 +37,16 @@
                                 <field name="iess_personal"/>
                                 <field name="income_tax"/>
                                 <field name="advances"/>
+                                <field name="pension_alimenticia"/>
                             </group>
                         </page>
                         <page string="Employer Costs">
                             <group>
+                                <field name="iess_contribution_base"/>
                                 <field name="iess_employer"/>
+                                <field name="iess_secap"/>
+                                <field name="iess_iece"/>
+                                <field name="iess_employer_total"/>
                             </group>
                         </page>
                         <page string="Provisions">
@@ -53,6 +59,8 @@
                         <page string="Payout Details">
                             <group>
                                 <field name="total_benefits_cash"/>
+                                <field name="journal_entry"/>
+                                <field name="move_id" invisible="1"/>
                             </group>
                         </page>
                     </notebook>

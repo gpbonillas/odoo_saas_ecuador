@@ -4,22 +4,63 @@
     =========================
 
     Official Sources:
-    - SBU 2026: Ministerio de Trabajo, Acuerdo MDT-2025-227
-    - IESS: Resolución CD 655
-    - Código de Trabajo
+    - SBU 2026: Ministerio de Trabajo, Acuerdo MDT-2025-195 ($482),
+      Registro Oficial Suplemento 187 (2025)
+    - IESS: tasas de aportación oficiales publicadas en iess.gob.ec
+      (sector privado: personal 9.45% / patronal 11.15%)
+    - Código del Trabajo (RO Suplemento 906, 20-dic-2016):
+      décimo tercero art. 111, décimo cuarto art. 113,
+      utilidades art. 97 y 105, vacaciones art. 69, horas art. 55,
+      fondo de reserva art. 196, desahucio art. 186,
+      indemnización art. 188, maternidad/paternidad art. 152-153
 
     All values configurable via ir.config_parameter
 -->
 <odoo>
     <data noupdate="0">
 
-        <!-- SBU and IESS private sector rates are defined in l10n_ec_base/data/l10n_ec_sri_config.xml
-             to avoid duplicate ir.config_parameter keys across modules. -->
+        <!-- ================================================================
+             SALARIO BÁSICO UNIFICADO (SBU) y aportes IESS base
+             ================================================================
+             `l10n_ec.sbu`, `l10n_ec.iess_aporte_personal` y
+             `l10n_ec.iess_aporte_patronal` son parámetros COMPARTIDOS
+             (también los lee l10n_ec_reports, que solo depende de
+             l10n_ec_base). Se definen UNA sola vez, en
+             l10n_ec_base/data/l10n_ec_sri_config.xml — fuente canónica.
+             Este módulo depende de l10n_ec_base, por lo que garantiza su
+             existencia sin duplicar la clave (ir.config_parameter.key es
+             única). Valores idénticos: SBU $482 (MDT-2025-195),
+             personal 9.45% / patronal 11.15%.
+        ================================================================= -->
 
         <!-- ================================================================
-             IESS CONTRIBUTION RATES 2026 (Extended - not in l10n_ec_base)
-             Fuente: IESS Resolución CD 655 / iess.gob.ec
+             IESS CONTRIBUTION RATES 2026 (complementarias)
+             Fuente: tasas de aportación oficiales, iess.gob.ec
+             (sector privado: total personal 9.45% / patronal 11.15%)
         ================================================================= -->
+
+        <!-- SECAP (Capacitación) - Empleador: 0.50%
+             (aporte patronal adicional recaudado vía IESS; proyectos de ley
+             de 2026 en trámite proponen redirigirlo — sigue vigente) -->
+        <record id="l10n_ec_iess_secap" model="ir.config_parameter">
+            <field name="key">l10n_ec.iess_secap</field>
+            <field name="value">0.5</field>
+        </record>
+
+        <!-- IECE (Crédito Educativo) - Empleador: 0.50% -->
+        <record id="l10n_ec_iess_iece" model="ir.config_parameter">
+            <field name="key">l10n_ec.iess_iece</field>
+            <field name="value">0.5</field>
+        </record>
+
+        <!-- Techo de aportación: 25 × SBU = $12,050 (SBU $482).
+             Aplica a la BASE de cálculo, nunca al salario.
+             NO_VERIFICADO: no se localizó la norma que fije el múltiplo
+             25×SBU en las fuentes oficiales consultadas; verificar. -->
+        <record id="l10n_ec_iess_techo_sbu" model="ir.config_parameter">
+            <field name="key">l10n_ec.iess_ceiling_sbu_multiplicador</field>
+            <field name="value">25</field>
+        </record>
 
         <!-- Sector Público - Personal: 11.45% -->
         <record id="l10n_ec_iess_personal_publico" model="ir.config_parameter">
@@ -41,8 +82,9 @@
 
         <!-- ================================================================
              FONDOS DE RESERVA
-             8.33% del salario (equivalente a 1 mes por año)
-             Art. 196 Código de Trabajo
+             8.33% del salario (equivalente a 1 mes por año de servicio
+             posterior al primero)
+             Art. 196 Código del Trabajo (RO Supl. 906, 20-dic-2016)
         ================================================================= -->
 
         <record id="l10n_ec_fondos_reserva" model="ir.config_parameter">
@@ -50,10 +92,20 @@
             <field name="value">8.33</field>
         </record>
 
+        <!-- Elegibilidad: después de 13 meses de servicio continuo.
+             El art. 196 otorga el derecho "por más de un año" y por cada
+             año completo posterior al primero; el cómputo mensual 8.33%
+             desde el mes 13 es práctica habitual. NO_VERIFICADO: no se
+             localizó norma expresa que fije "13 meses". -->
+        <record id="l10n_ec_fondos_reserva_meses" model="ir.config_parameter">
+            <field name="key">l10n_ec.fondos_reserva_meses</field>
+            <field name="value">13</field>
+        </record>
+
         <!-- ================================================================
              DÉCIMO TERCER SUELDO
              Equivalente a 1/12 del salario mensual
-             Art. 111 Código de Trabajo
+             Art. 111 Código del Trabajo
         ================================================================= -->
 
         <record id="l10n_ec_decimo_tercero" model="ir.config_parameter">
@@ -70,7 +122,7 @@
         <!-- ================================================================
              DÉCIMO CUARTO SUELDO (Bono Escolar)
              = 1 SBU anual ($482 en 2026)
-             Art. 113 Código de Trabajo
+             Art. 113 Código del Trabajo
         ================================================================= -->
 
         <!-- Fecha límite Sierra/Oriente: 15 agosto -->
@@ -85,10 +137,17 @@
             <field name="value">03-15</field>
         </record>
 
+        <!-- Región por defecto cuando el empleado no tiene provincia
+             asociada (Costa/Galápagos = 15 marzo, Sierra/Amazonía = 15 agosto) -->
+        <record id="l10n_ec_decimo_cuarto_region_default" model="ir.config_parameter">
+            <field name="key">l10n_ec.decimo_cuarto_region_default</field>
+            <field name="value">sierra</field>
+        </record>
+
         <!-- ================================================================
              UTILIDADES
              15% de utilidades al trabajador
-             Art. 97 Código de Trabajo
+             Art. 97 Código del Trabajo
         ================================================================= -->
 
         <!-- 10% dividido para todos los trabajadores -->
@@ -103,7 +162,9 @@
             <field name="value">5</field>
         </record>
 
-        <!-- Fecha límite: 15 de abril -->
+        <!-- Plazo art. 105 Código del Trabajo: liquidación hasta el
+             31 de marzo; pago dentro de los 15 días siguientes
+             (prácticamente hasta el 15 de abril) -->
         <record id="l10n_ec_utilidades_deadline" model="ir.config_parameter">
             <field name="key">l10n_ec.utilidades_deadline</field>
             <field name="value">04-15</field>
@@ -113,7 +174,7 @@
              VACACIONES
              15 días laborables después de 1 año
              +1 día adicional por cada año después de 5 años (máx 30 días)
-             Art. 69 Código de Trabajo
+             Art. 69 Código del Trabajo
         ================================================================= -->
 
         <record id="l10n_ec_vacaciones_dias" model="ir.config_parameter">
@@ -128,7 +189,7 @@
 
         <!-- ================================================================
              HORAS EXTRAS Y SUPLEMENTARIAS
-             Art. 55 Código de Trabajo
+             Art. 55 Código del Trabajo
         ================================================================= -->
 
         <!-- Horas suplementarias (hasta 4h/día): 50% recargo -->
@@ -149,9 +210,82 @@
             <field name="value">25</field>
         </record>
 
+        <!-- Topes legales art. 55: 4 h suplementarias+extraordinarias
+             cada 24 h / 12 h por semana consecutiva -->
+        <record id="l10n_ec_horas_max_dia" model="ir.config_parameter">
+            <field name="key">l10n_ec.horas_max_dia</field>
+            <field name="value">4</field>
+        </record>
+
+        <record id="l10n_ec_horas_max_semana" model="ir.config_parameter">
+            <field name="key">l10n_ec.horas_max_semana</field>
+            <field name="value">12</field>
+        </record>
+
+        <!-- ================================================================
+             TOPES DE DESCUENTO
+             40% del salario líquido para IESS + otras obligaciones;
+             33.33% en casos generales de bienes y créditos.
+             Las pensiones alimenticias son derecho preferente: se descuentan
+             primero y quedan EXENTAS del tope.
+             NO_VERIFICADO: no se identificó el decreto/reglamento exacto
+             que fija los topes 40% / 33.33% en las fuentes oficiales
+             consultadas; verificar antes de producir.
+        ================================================================= -->
+
+        <record id="l10n_ec_tope_descuento" model="ir.config_parameter">
+            <field name="key">l10n_ec.tope_descuento_porcentaje</field>
+            <field name="value">40</field>
+        </record>
+
+        <record id="l10n_ec_tope_descuento_decreto" model="ir.config_parameter">
+            <field name="key">l10n_ec.tope_descuento_decreto</field>
+            <field name="value">33.33</field>
+        </record>
+
+        <!-- ================================================================
+             AUXILIO DE CESANTÍA — % del décimo tercero total devengado
+             por años de servicio cumplidos (>1 año):
+               1-5: 25% | 6-10: 50% | 11-15: 75% | 16-20: 100%
+               21-24: 110% | 25+: 120%
+
+             ⚠ NO_ES_LEY: esta escala NO existe en el Código del Trabajo
+             ecuatoriano (no hay "auxilio de cesantía" en la legislación
+             laboral ecuatoriana; el concepto cercano es el desahucio,
+             art. 186). Los registros se conservan SOLO por compatibilidad
+             con el asistente de liquidaciones (l10n_ec_liquidacion_wizard
+             los requiere); se recomienda deprecarlos. Ver
+             docs/legal_audit_2026.md.
+        ================================================================= -->
+
+        <record id="l10n_ec_cesantia_1_5" model="ir.config_parameter">
+            <field name="key">l10n_ec.cesantia_pct_1_5</field>
+            <field name="value">25</field>
+        </record>
+        <record id="l10n_ec_cesantia_6_10" model="ir.config_parameter">
+            <field name="key">l10n_ec.cesantia_pct_6_10</field>
+            <field name="value">50</field>
+        </record>
+        <record id="l10n_ec_cesantia_11_15" model="ir.config_parameter">
+            <field name="key">l10n_ec.cesantia_pct_11_15</field>
+            <field name="value">75</field>
+        </record>
+        <record id="l10n_ec_cesantia_16_20" model="ir.config_parameter">
+            <field name="key">l10n_ec.cesantia_pct_16_20</field>
+            <field name="value">100</field>
+        </record>
+        <record id="l10n_ec_cesantia_21_24" model="ir.config_parameter">
+            <field name="key">l10n_ec.cesantia_pct_21_24</field>
+            <field name="value">110</field>
+        </record>
+        <record id="l10n_ec_cesantia_25_mas" model="ir.config_parameter">
+            <field name="key">l10n_ec.cesantia_pct_25_mas</field>
+            <field name="value">120</field>
+        </record>
+
         <!-- ================================================================
              INDEMNIZACIONES
-             Art. 188 Código de Trabajo - Despido Intempestivo
+             Art. 188 Código del Trabajo - Despido Intempestivo
         ================================================================= -->
 
         <!-- Hasta 3 años: 3 meses -->

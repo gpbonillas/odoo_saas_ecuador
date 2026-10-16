@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 from odoo import models, _
 from odoo.exceptions import UserError
+from .sri_endpoints import (
+    sri_config_key,
+    sri_environment_key,
+    sri_fallback_url,
+)
 import logging
 
 # Trusted External Libs
@@ -32,15 +37,32 @@ class SriService(models.AbstractModel):
                 _("Could not connect to SRI WSDL at %s. Error: %s") % (url, str(e))
             )
 
+    def _get_service_url(self, service, environment=None):
+        """
+        Resolve the WSDL URL for a service in the requested environment.
+
+        Priority: ir.config_parameter (per ambiente, seeded by l10n_ec_base)
+        > official SRI fallback URL. The environment ALWAYS drives the host
+        (celcer = test, cel = production); the company URL fields are
+        environment-agnostic and previously forced production traffic to the
+        test host (celcer), so they are no longer used here.
+        """
+        ambiente = sri_environment_key(environment)
+        url = (
+            self.env["ir.config_parameter"]
+            .sudo()
+            .get_param(sri_config_key(service, ambiente))
+        )
+        return url or sri_fallback_url(service, ambiente)
+
     def send_document(self, signed_xml_bytes, environment="1"):
         """
         Send signed XML to SRI 'Recepcion' service.
         :param signed_xml_bytes: The XAdES-BES signed XML (bytes)
-        :param environment: '1' (Test) or '2' (Prod)
+        :param environment: '1'/'test' or '2'/'production'
         :return: Dict {status, message, details}
         """
-        company = self.env.company
-        url = company.l10n_ec_sri_reception_url
+        url = self._get_service_url("reception", environment)
 
         client = self._get_client(url)
 
@@ -71,14 +93,17 @@ class SriService(models.AbstractModel):
             _logger.exception("SRI Connection Error")
             return {"status": "ERROR", "messages": [f"Connection Fail: {str(e)}"]}
 
-    def check_authorization(self, access_key):
+    def check_authorization(self, access_key, environment=None):
         """
         Check authorization status in SRI 'Autorizacion' service.
         :param access_key: 49-digit key
+        :param environment: '1'/'test' or '2'/'production' (defaults to the
+                            company's configured environment)
         :return: Dict {status, date, xml}
         """
-        company = self.env.company
-        url = company.l10n_ec_sri_authorization_url
+        if environment is None:
+            environment = self.env.company.l10n_ec_sri_environment
+        url = self._get_service_url("authorization", environment)
 
         client = self._get_client(url)
 

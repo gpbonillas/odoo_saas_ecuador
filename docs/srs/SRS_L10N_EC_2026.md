@@ -332,12 +332,12 @@ l10n_ec_base/
 
 ### 7.1 Validaciones RUC/Cédula
 
-| Tipo | Longitud | Algoritmo | Ejemplo |
+| Tipo | Longitud | Algoritmo | Ejemplo (IDs exclusivos — D-04) |
 |:-----|:---------|:----------|:--------|
-| Cédula | 10 | Módulo 10 | 1710034065 |
-| RUC Natural | 13 | Módulo 10 + 001 | 1710034065001 |
-| RUC Sociedad | 13 | Módulo 11 | 1790016919001 |
-| RUC Público | 13 | Especial (6) | 1760001550001 |
+| Cédula | 10 | Módulo 10 (provincia 01–24/+30,50; 3er dígito 0–6) | 1713488185 |
+| RUC Natural | 13 | Cédula + `001` (despacho 0–5) | 1713488185001 |
+| RUC Sociedad | 13 | Módulo 11 (3er dígito 9) | 1793125212001 |
+| RUC Público | 13 | Módulo 11 (3er dígito 6) | PENDIENTE (D-04: sin ID público aprobado) |
 
 ### 7.2 Reglas de Negocio SRI
 
