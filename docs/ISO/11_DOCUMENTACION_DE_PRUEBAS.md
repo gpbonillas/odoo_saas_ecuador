@@ -54,6 +54,22 @@ requieren ORM). La trazabilidad a requisitos está en ISO-EC-10 §5.
 > `test_iva_split_30_70`→`test_iva_full_to_sri_no_iess_split` (**iess_share=0.0**),
 > + `test_iva_bucket_dual_scale` (**17 casos** escala doble), + `test_ir_override_eliminated_rate`.
 
+### 3.1b Bridge P1 — `mcp_server/test_bridge.py` (33 tests, OK) · CHG-2026-010
+
+| Bloque | Tema | Estado |
+|---|---|---|
+| TestTokenService | HMAC-SHA256 roundtrip, firma alterada, expiración, secreto incorrecto/ausente (SEC-01/02) | OK — 5 |
+| TestAuthAndNeedsData | forma de login (FR-BR-01), credenciales malas → 401, **`needs_data` cuando el tenant no tiene RUC** (FR-BR-07) | OK — 3 |
+| TestRbacMatrix | matriz rol→entidades **con negativos**: operario = 0 entidades, bodega sólo lotes, produccion sin analisis, rango más alto gana (FR-BR-02) | OK — 6 |
+| TestTenantIsolation | toda lectura usa el `db` portado por el token; fake truena si consulta otro tenant (FR-BR-03) | OK — 1 |
+| TestReadContracts | contratos `kpis`×3, whitelist de campos, paginación + tope 100, filtros, `detail` con drill de `analisis`, 404 (FR-BR-04) | OK — 10 |
+| TestHttpLayer | HTTP real en puerto efímero: login/kpis/list/detail, 401 sin token, 403 operario, 400 body, 404 ruta, `needs_data` (FR-BR-01..04) | OK — 8 |
+
+> **Smoke live (2026-10-16, CHG-2026-010):** `bridge_http.py` contra `odooec` real por JSON-RPC:
+> login admin → `role=admin, entities=[lotes,ciclos,analisis]` · `kpis` lotes `{"total":1,"por_estado_lab":{"passed":1},"bloqueados":0}` ·
+> `list` con whitelist real · **`detail/lotes/45` con sub-drill `analisis`** · filtro `lab_state=failed` → 0 · 401 sin token · 404 entidad desconocida ·
+> sin `needs_data` (CANNACHAIN `1793125212001` presente). Suite conjunta: **54 + 33 = 87 OK** (host).
+
 ### 3.2 Módulos Odoo (tests/unit + l10n_ec*/tests)
 
 > **Nota CHG-2026-006:** los tests de `l10n_ec_sri/tests/*` heredan `unittest.TestCase`

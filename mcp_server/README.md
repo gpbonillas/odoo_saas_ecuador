@@ -18,7 +18,10 @@ hábiles con feriados, tablas IR/IVA, IESS con techo 25×SBU.
 | `odoo_client.py` | Cliente JSON-RPC 2.0 de Odoo (`service/db|common|object`, auth por `session_id`) |
 | `tools.py` | 18 herramientas MCP + handlers; todo error vuelve estructurado |
 | `rules.py` | Motor de reglas ecuatoriano, **sin imports de Odoo** (unit-testeable offline) |
-| `test_server.py` | `unittest` stdlib: handshake real por subprocess + reglas |
+| `test_server.py` | `unittest` stdlib: handshake real por subprocess + reglas (54 tests) |
+| `bridge.py` | **SOMATECH-ODOO-BRIDGE P1**: tokens HMAC-SHA256, RBAC Odoo→rol→entidades (deny-by-default), lecturas `kpis/list/detail` con registry de entidades (33 tests) |
+| `bridge_http.py` | API HTTP/JSON stdlib del bridge (`/auth/login`, `/api/...`, `/healthz`) + conector Odoo JSON-RPC |
+| `test_bridge.py` | Contract tests del bridge: token/RBAC/aislamiento de tenant/contratos + capa HTTP real en puerto efímero |
 
 ## Requisitos
 
@@ -60,6 +63,39 @@ docker compose run --rm mcp
 # {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05"}}
 ```
 
+## Bridge SOMATECH (P1) — API HTTP/JSON
+
+Capa L1 del puente (`SRS_SOMATECH_ODOO_BRIDGE`, Option A): extiende esta misma
+carpeta con una API HTTP/JSON **stdlib** (sin dependencias nuevas) para
+lecturas `kpis → list → detail` con sesión y RBAC por token.
+
+```bash
+export BRIDGE_TOKEN_SECRET="$(openssl rand -hex 32)"   # SEC-01: sólo por env, nunca en repo
+export ODOO_URL=http://localhost:8069 ODOO_DB=odooec ODOO_USER=admin ODOO_PASSWORD=...
+python3 mcp_server/bridge_http.py --port 8090
+```
+
+| Endpoint | Body/Query | Respuesta |
+|---|---|---|
+| `POST /auth/login` | `{"db","login","password"}` | `{token, role, entities, uid, name}` (+`needs_data` si falta RUC — FR-BR-07) |
+| `GET /api/kpis/<ent>` | — | KPIs agregados de la entidad |
+| `GET /api/list/<ent>` | `?limit&offset&<filtros>` | `{items, total, limit, offset}` (whitelist de campos, tope 100) |
+| `GET /api/detail/<ent>/<id>` | — | `{record}`; en `lotes` incluye sub-drill `analisis` |
+| `GET /healthz` | — | `{"status":"ok"}` |
+
+Auth: `Authorization: Bearer <token>` (HMAC-SHA256, 8 h). El token porta el
+**tenant (`db`)** — toda lectura va a ese db (FR-BR-03). Roles por grupo Odoo
+(`DEFAULT_ROLE_MAP` en `bridge.py`): admin/gerente → 3 entidades, produccion →
+lotes+ciclos, bodega → lotes, operario → **nada** (deny-by-default). Entidades
+P1: `lotes`, `ciclos`, `analisis`.
+
+```bash
+T=$(curl -s -XPOST localhost:8090/auth/login -H 'Content-Type: application/json' \
+  -d '{"db":"odooec","login":"admin","password":"..."}' | python3 -c 'import json,sys;print(json.load(sys.stdin)["token"])')
+curl -s localhost:8090/api/kpis/lotes -H "Authorization: Bearer $T"
+curl -s localhost:8090/api/detail/lotes/45 -H "Authorization: Bearer $T"
+```
+
 ## Variables de entorno
 
 | Var | Default | Descripción |
@@ -69,6 +105,9 @@ docker compose run --rm mcp
 | `ODOO_USER` | `admin` | Usuario |
 | `ODOO_PASSWORD` | `admin` | Contraseña |
 | `ODOO_TIMEOUT` | `30` | Timeout HTTP (s) |
+| `BRIDGE_TOKEN_SECRET` | — (**obligatorio**) | Secreto HMAC de los tokens del bridge (SEC-01/02) |
+| `BRIDGE_HOST` | `127.0.0.1` | Bind del bridge HTTP |
+| `BRIDGE_PORT` | `8090` | Puerto del bridge HTTP |
 
 ## Herramientas
 
@@ -113,7 +152,8 @@ docker compose run --rm mcp
 ## Verificación
 
 ```bash
-python3 mcp_server/test_server.py     # 46 tests, sin Odoo
+python3 mcp_server/test_server.py     # 54 tests, sin Odoo
+python3 mcp_server/test_bridge.py     # 33 tests (bridge P1), sin Odoo
 ```
 
 El test de handshake arranca `server.py` como subprocess, habla MCP real por
