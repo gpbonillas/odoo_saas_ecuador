@@ -26,13 +26,14 @@ import base64
 import hashlib
 import hmac
 import json
+import re
 import time
 
 __all__ = [
     "BridgeError", "BridgeAuthError", "BridgeRbacError", "BridgeNotFound",
     "BridgeConfigError", "BridgeUpstreamError",
     "TokenService", "BridgeCore", "ENTITIES", "ROLE_ENTITIES", "DEFAULT_ROLE_MAP",
-    "MAX_LIMIT", "DEFAULT_TTL",
+    "NAV", "nav_for_role", "MAX_LIMIT", "DEFAULT_TTL",
 ]
 
 MAX_LIMIT = 100
@@ -97,10 +98,11 @@ DEFAULT_ROLE_MAP = {
 }
 
 # Entidades legibles por rol (vacío = nada; nada implícito fuera de esta tabla):
+# P3 (CHG-2026-013): predios (agro piso) y eventos (auditoría append-only).
 ROLE_ENTITIES = {
-    "admin": {"lotes", "ciclos", "analisis"},
-    "gerente": {"lotes", "ciclos", "analisis"},
-    "produccion": {"lotes", "ciclos"},
+    "admin": {"lotes", "ciclos", "analisis", "predios", "eventos"},
+    "gerente": {"lotes", "ciclos", "analisis", "predios", "eventos"},
+    "produccion": {"lotes", "ciclos", "predios"},
     "bodega": {"lotes"},
     "operario": set(),
 }
@@ -138,7 +140,8 @@ ENTITIES = {
             "l10n_ec_cycle_id", "l10n_ec_harvest_date", "l10n_ec_lab_state",
             "l10n_ec_sanitary_reg", "product_qty",
         ],
-        "filters": {"lab_state": "l10n_ec_lab_state", "cycle": "l10n_ec_cycle_id"},
+        "filters": {"lab_state": "l10n_ec_lab_state", "cycle": "l10n_ec_cycle_id",
+                    "crop": "l10n_ec_crop_type"},
         "groupby": "l10n_ec_lab_state",
         "order": "id desc",
     },
@@ -162,7 +165,56 @@ ENTITIES = {
         "groupby": None,
         "order": "id desc",
     },
+    "predios": {
+        "model": "l10n_ec.agro.plot",
+        "fields": [
+            "id", "name", "code", "hectares", "location",
+            "responsible_id", "active",
+        ],
+        "filters": {"active": "active"},
+        "groupby": None,
+        "order": "id desc",
+    },
+    "eventos": {
+        "model": "l10n_ec.agro.trace_event",
+        "fields": [
+            "id", "lot_id", "stage", "qty", "partner_id", "comprobante",
+            "event_date",
+        ],
+        "filters": {"stage": "stage"},
+        "groupby": "stage",
+        "order": "event_date desc, id desc",
+    },
 }
+
+# ---------------------------------------------------------------------------
+# Nav (SRS-BRIDGE §5.2) — el bridge sirve el árbol filtrado por rol; la UI
+# sólo renderiza lo que llega aquí. Cada item exige TODAS sus entidades.
+# ---------------------------------------------------------------------------
+NAV = [
+    {"key": "operacion", "label": "Operación", "entities": ["lotes"]},
+    {"key": "gestion", "label": "Gestión", "entities": ["ciclos", "analisis"]},
+    {"key": "lotes", "label": "Lotes", "entities": ["lotes"]},
+    {"key": "predios", "label": "Predios", "entities": ["predios"]},
+    {"key": "trazabilidad", "label": "Trazabilidad", "entities": ["lotes"]},
+    {"key": "eventos", "label": "Eventos", "entities": ["eventos"]},
+    {"key": "wizard", "label": "Wizard", "entities": [], "roles": ["admin", "gerente"]},
+    {"key": "chat", "label": "Agente", "entities": [], "roles": None},
+]
+
+
+def nav_for_role(role):
+    """Árbol de navegación permitido para el rol (deny-by-default)."""
+    allowed = entities_for_role(role)
+    out = []
+    for item in NAV:
+        roles = item.get("roles")
+        if roles is not None and role not in roles:
+            continue
+        if not set(item["entities"]) <= allowed:
+            continue
+        out.append({"key": item["key"], "label": item["label"]})
+    return out
 
 
 def _entity(name):
@@ -173,6 +225,22 @@ def _entity(name):
             hint="Entidades P1: %s" % ", ".join(sorted(ENTITIES)),
         )
     return spec
+
+
+def _m2o(value):
+    """Extrae el id de un many2one de Odoo (viene como [id, name] o escalar)."""
+    if isinstance(value, (list, tuple)):
+        return value[0] if value else None
+    return value
+
+
+# -- chat helpers (P3, CHG-2026-013) ------------------------------------------
+_DIGIT_RE = re.compile(r"\b(\d{10,13})\b")
+_LOT_RE = re.compile(r"lote\s+(\S+)")
+_ID_KEYWORDS = (
+    "ruc", "cedula", "cédula", "validar", "valida", "valido",
+    "identificacion", "identificación", "contribuyente", "cliente",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -318,6 +386,21 @@ class BridgeCore:
             return {"entity": entity,
                     "total": sum(por_estado.values()),
                     "por_estado": por_estado}
+        if entity == "eventos":
+            groups = self.connector.execute(
+                db, spec["model"], "read_group", [[]],
+                {"fields": [spec["groupby"]], "groupby": [spec["groupby"]],
+                 "lazy": False})
+            por_etapa = {str(g.get(spec["groupby"]) or "sin_etapa"): g.get("__count", 0)
+                         for g in groups}
+            return {"entity": entity,
+                    "total": sum(por_etapa.values()),
+                    "por_etapa": por_etapa}
+        if entity == "predios":
+            total = self.connector.execute(db, spec["model"], "search_count", [[]])
+            activos = self.connector.execute(
+                db, spec["model"], "search_count", [[("active", "=", True)]])
+            return {"entity": entity, "total": total, "activos": activos}
         # analisis: total + no conformes
         total = self.connector.execute(db, spec["model"], "search_count", [[]])
         fallidos = self.connector.execute(
@@ -365,4 +448,192 @@ class BridgeCore:
                 db, "l10n_ec.agro.analysis", "search_read",
                 [[("lot_id", "=", int(res_id))]],
                 {"fields": ENTITIES["analisis"]["fields"], "order": "id desc"})
+            row["trace"] = "/api/trace/lote/%d" % int(res_id)
         return {"entity": entity, "record": row}
+
+    # -- P3: nav por rol (SRS-BRIDGE §5.2) --------------------------------
+    def nav(self, token):
+        payload = self.tokens.verify(token)
+        role = payload.get("role")
+        return {"role": role, "items": nav_for_role(role)}
+
+    # -- P3: trazabilidad genealogía + recall (FR-AG-06/07) ----------------
+    def trace(self, token, lot_id):
+        """Genealogía up (ciclo→predio) + down (análisis/eventos/movimientos)
+        + recall (facturas del producto desde cosecha)."""
+        payload = self._authz(token, "lotes")
+        db = payload["db"]
+        spec = _entity("lotes")
+        try:
+            lot_pk = int(lot_id)
+        except (TypeError, ValueError):
+            raise BridgeError("lot_id inválido.")
+        rows = self.connector.execute(
+            db, spec["model"], "search_read", [[("id", "=", lot_pk)]],
+            {"fields": spec["fields"], "limit": 1})
+        if not rows:
+            raise BridgeNotFound("Lote %s no existe en %s." % (lot_pk, db))
+        lot = rows[0]
+
+        # -- up: ciclo → predio
+        cycle = plot = None
+        cycle_id = _m2o(lot.get("l10n_ec_cycle_id"))
+        if cycle_id:
+            cyc = self.connector.execute(
+                db, "l10n_ec.agro.cycle", "search_read", [[("id", "=", cycle_id)]],
+                {"fields": ENTITIES["ciclos"]["fields"], "limit": 1})
+            if cyc:
+                cycle = cyc[0]
+                plot_id = _m2o(cycle.get("plot_id"))
+                if plot_id:
+                    pl = self.connector.execute(
+                        db, "l10n_ec.agro.plot", "search_read",
+                        [[("id", "=", plot_id)]],
+                        {"fields": ENTITIES["predios"]["fields"], "limit": 1})
+                    plot = pl[0] if pl else None
+
+        # -- down: análisis + eventos + movimientos
+        analisis = self.connector.execute(
+            db, "l10n_ec.agro.analysis", "search_read",
+            [[("lot_id", "=", lot_pk)]],
+            {"fields": ENTITIES["analisis"]["fields"], "order": "id desc"})
+        eventos = self.connector.execute(
+            db, "l10n_ec.agro.trace_event", "search_read",
+            [[("lot_id", "=", lot_pk)]],
+            {"fields": ENTITIES["eventos"]["fields"], "limit": 50,
+             "order": ENTITIES["eventos"]["order"]})
+        movimientos = self.connector.execute(
+            db, "stock.move", "search_read", [[("lot_ids", "in", [lot_pk])]],
+            {"fields": ["id", "state", "date", "picking_id", "location_dest_id",
+                        "product_uom_qty"], "limit": 50,
+             "order": "date desc, id desc"})
+
+        # -- recall: facturas del producto desde la cosecha (FR-AG-06)
+        recall = {"invoices": [], "harvest_date": lot.get("l10n_ec_harvest_date")}
+        product_id = _m2o(lot.get("product_id"))
+        if product_id and lot.get("l10n_ec_harvest_date"):
+            domain = [("invoice_line_ids.product_id", "=", product_id),
+                      ("invoice_date", ">=", lot["l10n_ec_harvest_date"])]
+            try:
+                recall["invoices"] = self.connector.execute(
+                    db, "account.move", "search_read", [domain],
+                    {"fields": ["id", "name", "invoice_date", "amount_total",
+                                "state"], "limit": 50,
+                     "order": "invoice_date desc, id desc"})
+            except BridgeError:
+                recall["invoices"] = []
+
+        return {"entity": "lote_trace", "lot": lot,
+                "up": {"cycle": cycle, "plot": plot},
+                "down": {"analisis": analisis, "eventos": eventos,
+                         "movimientos": movimientos},
+                "recall": recall}
+
+    # -- P3: wizard (FR-AG-10/12 vía bridge; apply = acción ⚠ admin) -------
+    def wizard_templates(self, token):
+        payload = self._authz_roles(token, {"admin", "gerente"})
+        db = payload["db"]
+        rows = self.connector.execute(
+            db, "l10n_ec.vertical.template", "catalog_json", [])
+        return {"templates": rows}
+
+    def wizard_params(self, token):
+        payload = self._authz_roles(token, {"admin", "gerente"})
+        db = payload["db"]
+        rows = self.connector.execute(
+            db, "l10n_ec.vertical.param", "search_read", [[]],
+            {"fields": ["key", "value", "value_type", "source", "vertical"],
+             "limit": 200, "order": "key asc"})
+        return {"params": rows}
+
+    def wizard_preview(self, token, vertical, size="medium"):
+        payload = self._authz_roles(token, {"admin", "gerente"})
+        db = payload["db"]
+        plan = self.connector.execute(
+            db, "l10n_ec.vertical.template", "preview", [vertical, size])
+        return {"vertical": vertical, "size": size, "plan": plan}
+
+    def wizard_apply(self, token, vertical, size="medium"):
+        # AGT-01: apply muta el tenant ⇒ sólo admin (acciones ⚠)
+        payload = self._authz_roles(token, {"admin"})
+        db = payload["db"]
+        result = self.connector.execute(
+            db, "l10n_ec.vertical.template", "apply", [vertical, size])
+        return {"vertical": vertical, "size": size, "applied": result}
+
+    def _authz_roles(self, token, roles):
+        payload = self.tokens.verify(token)
+        role = payload.get("role")
+        if role not in roles:
+            raise BridgeRbacError(
+                "Requiere rol %s; su rol '%s' no puede ejecutar esta acción."
+                % ("|".join(sorted(roles)), role),
+                hint="Acciones wizard: preview/params=gerente+admin, apply=admin")
+        return payload
+
+    # -- P3: chat con tools reales (escenario 3, AGT-03) ------------------
+    def chat(self, token, message, context=None):
+        """Determinista: valida ID (rules) o ejecuta tools reales con el
+        MISMO token del usuario ⇒ el agente respeta el RBAC (AGT-03).
+        Siempre con pie de atribución; nada inventado."""
+        import rules as _rules  # stdlib puro, import perezoso
+        payload = self.tokens.verify(token)
+        db = payload["db"]
+        text = (message or "").strip()
+        low = text.lower()
+        attribution = "puente directo Odoo (sin LLM)"
+        tools_used = []
+
+        # tool 1: validar identificación (RUC/cédula) — rules deterministas
+        match = _DIGIT_RE.search(text)
+        if match and (text == match.group(1)
+                      or any(k in low for k in _ID_KEYWORDS)):
+            vat = match.group(1)
+            res = _rules.validate_vat(vat)
+            if res["valid"]:
+                kind = (res["id_type"] or "").upper()
+                formula = "mod-10" if res["id_type"] == "cedula" else "mod-11/mod-10"
+                reply = "%s %s: dígito verificador VÁLIDO (%s del SRI)." % (
+                    kind, vat, formula)
+            else:
+                reply = "%s: NO válido — %s." % (vat, "; ".join(res["errors"]))
+            return {"reply": reply, "engine": "rules",
+                    "attribution": "via validate_vat · bridge → rules",
+                    "context": context}
+
+        # tool 2: stock real de un lote (escenario 3)
+        lot_match = _LOT_RE.search(low)
+        if lot_match:
+            lot_name = lot_match.group(1)
+            ent = "lotes"
+            if ent not in entities_for_role(payload.get("role")):
+                return {"reply": "Su rol '%s' no tiene acceso a la entidad "
+                                 "'%s'; no puedo leer stock de lotes."
+                                 % (payload.get("role"), ent),
+                        "engine": "tools", "attribution": "RBAC denegado (deny-by-default)",
+                        "context": context}
+            rows = self.connector.execute(
+                db, "stock.lot", "search_read", [[("name", "ilike", lot_name)]],
+                {"fields": ["id", "name", "product_qty", "l10n_ec_lab_state",
+                            "l10n_ec_harvest_date"], "limit": 10,
+                 "order": "id desc"})
+            tools_used.append("stock.lot.search_read(ilike=%s)" % lot_name)
+            if not rows:
+                return {"reply": "No encontré lotes que coincidan con '%s' en "
+                                 "el tenant %s." % (lot_name, db),
+                        "engine": "tools", "attribution": attribution,
+                        "context": context, "tools": tools_used}
+            lines = ["%s: %.2f uds (%s)" % (
+                r.get("name"), r.get("product_qty") or 0.0,
+                r.get("l10n_ec_lab_state") or "sin estado") for r in rows]
+            return {"reply": "Stock real de lotes que coinciden con '%s':\n%s"
+                             % (lot_name, "\n".join(lines)),
+                    "engine": "tools", "attribution": attribution,
+                    "context": context, "tools": tools_used}
+
+        # sin tool aplicable: nunca inventar
+        return {"reply": "Puedo validar RUC/cédula o leer stock real de un "
+                         "lote. Ej: «validar RUC 1793125212001» o «stock lote "
+                         "CAF-SMOKE-01».",
+                "engine": "rules", "attribution": "sin tool aplicable",
+                "context": context}

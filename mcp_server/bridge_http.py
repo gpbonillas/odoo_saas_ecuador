@@ -25,7 +25,6 @@ import argparse
 import json
 import logging
 import os
-import re
 import sys
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -36,7 +35,6 @@ from bridge import (  # noqa: E402
     BridgeAuthError, BridgeCore, BridgeError, TokenService,
 )
 import odoo_client  # noqa: E402
-import rules  # noqa: E402 — motor legal determinista del chat (AGT-03)
 
 # -- UI estática (Option A, CHG-2026-012): servida por la propia puerta ------
 WEB_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
@@ -49,43 +47,9 @@ STATIC_FILES = {
     "app.js": ("app.js", "application/javascript; charset=utf-8"),
 }
 
-# -- Chat (P2 semilla): motor de reglas; LLM llega en P3 ---------------------
-_DIGIT_RE = re.compile(r"\b(\d{10,13})\b")
-_ID_KEYWORDS = (
-    "ruc", "cedula", "cédula", "validar", "valida", "valido",
-    "identificacion", "identificación", "contribuyente", "cliente",
-)
-
-
-def chat_reply(message):
-    """Respuesta determinista del panel de chat (AGT-03: no inventa)."""
-    text = (message or "").strip()
-    low = text.lower()
-    match = _DIGIT_RE.search(text)
-    if match and (text == match.group(1)
-                  or any(k in low for k in _ID_KEYWORDS)):
-        vat = match.group(1)
-        res = rules.validate_vat(vat)
-        if res["valid"]:
-            kind = (res["id_type"] or "").upper()
-            formula = "mod-10" if res["id_type"] == "cedula" else "mod-11/mod-10"
-            reply = "%s %s: dígito verificador VÁLIDO (%s del SRI)." % (
-                kind, vat, formula)
-        else:
-            reply = "%s: NO válido — %s." % (vat, "; ".join(res["errors"]))
-        return {
-            "reply": reply,
-            "engine": "rules",
-            "attribution": "via validate_vat · bridge → rules",
-        }
-    return {
-        "reply": "Puedo validar RUC y cédulas del SRI con el motor de reglas "
-                 "(ej: «validar RUC 1793125212001»). En P3 se conecta el agente "
-                 "con las herramientas del ERP. Si falta un dato legal, "
-                 "pregunto — nunca invento.",
-        "engine": "rules",
-        "attribution": "via help · bridge → rules",
-    }
+# -- Chat (P2/P3): la lógica vive en BridgeCore.chat() (CHG-2026-013) ------
+# El motor determinista + tools reales (RBAC por token del usuario) se
+# implementan en bridge.BridgeCore.chat; el handler sólo enruta.
 
 _log = logging.getLogger("bridge")
 logging.basicConfig(stream=sys.stderr, level=logging.INFO,
@@ -204,6 +168,17 @@ class BridgeHandler(BaseHTTPRequestHandler):
                     filters={k: v for k, v in query.items() if k not in ("limit", "offset")}))
             if len(parts) == 4 and parts[:2] == ["api", "detail"]:
                 return self._send(200, self.core.detail(self._token(), parts[2], parts[3]))
+            # -- P3: nav por rol (CHG-2026-013) -------------------------
+            if parts == ["api", "nav"]:
+                return self._send(200, self.core.nav(self._token()))
+            # -- P3: trazabilidad genealogía + recall --------------------
+            if len(parts) == 4 and parts[:2] == ["api", "trace"] and parts[2] == "lote":
+                return self._send(200, self.core.trace(self._token(), parts[3]))
+            # -- P3: wizard (sólo lectura; apply en POST) ----------------
+            if parts == ["api", "wizard", "templates"]:
+                return self._send(200, self.core.wizard_templates(self._token()))
+            if parts == ["api", "wizard", "params"]:
+                return self._send(200, self.core.wizard_params(self._token()))
             return self._not_found(parsed.path)
         except BridgeError as exc:
             self._error(exc)
@@ -222,13 +197,31 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 return self._send(200, self.core.login(
                     body["db"], body["login"], body["password"]))
             if parts == ["api", "chat"]:
-                # Cualquier rol autenticado usa el chat (contexto de rol se
-                # inyecta en P3 con el agente LLM); el token sólo autentica.
-                self._token()  # valida Bearer (401 si falta/malformado)
+                # Cualquier rol autenticado usa el chat; el token se pasa al
+                # core para que los tools respeten el RBAC del usuario.
+                token = self._token()  # valida Bearer (401 si falta/malformado)
                 body = self._json_body()
                 if not str(body.get("message") or "").strip():
                     return self._bad_request("Falta 'message'.")
-                return self._send(200, chat_reply(body["message"]))
+                context = body.get("context") if isinstance(body.get("context"), dict) else None
+                return self._send(200, self.core.chat(token, body["message"], context=context))
+            # -- P3: wizard preview/apply (CHG-2026-013) -------------------
+            if parts == ["api", "wizard", "preview"]:
+                body = self._json_body()
+                vertical = str(body.get("vertical") or "").strip()
+                if not vertical:
+                    return self._bad_request("Falta 'vertical'.")
+                size = str(body.get("size") or "medium").strip()
+                return self._send(200, self.core.wizard_preview(
+                    self._token(), vertical, size))
+            if parts == ["api", "wizard", "apply"]:
+                body = self._json_body()
+                vertical = str(body.get("vertical") or "").strip()
+                if not vertical:
+                    return self._bad_request("Falta 'vertical'.")
+                size = str(body.get("size") or "medium").strip()
+                return self._send(200, self.core.wizard_apply(
+                    self._token(), vertical, size))
             self._not_found(parsed.path)
         except BridgeError as exc:
             self._error(exc)

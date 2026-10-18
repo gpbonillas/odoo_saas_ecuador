@@ -75,11 +75,11 @@ class FakeOdoo:
                      "product_qty": 0.0},
                 ],
                 "l10n_ec.agro.cycle": [
-                    {"id": 1, "display_name": "Norte/CAFE/2026-08-01", "plot_id": "Norte",
+                    {"id": 1, "display_name": "Norte/CAFE/2026-08-01", "plot_id": [1, "Norte"],
                      "crop_id": "CAFE", "variety": "Typica", "sow_date": "2026-08-01",
                      "expected_harvest_date": "2026-11-01", "actual_harvest_date": False,
                      "state": "growing"},
-                    {"id": 2, "display_name": "Sur/CACAO/2026-03-01", "plot_id": "Sur",
+                    {"id": 2, "display_name": "Sur/CACAO/2026-03-01", "plot_id": [2, "Sur"],
                      "crop_id": "CACAO", "variety": "CCN-51", "sow_date": "2026-03-01",
                      "expected_harvest_date": "2026-08-01", "actual_harvest_date": "2026-08-05",
                      "state": "closed"},
@@ -92,6 +92,42 @@ class FakeOdoo:
                      "unit": "%", "limit": 12.0, "passed": False, "lab_name": "LAB-1",
                      "analysis_date": "2026-09-06"},
                 ],
+                # P3 (CHG-2026-013): predios + eventos + movimientos + recall
+                "l10n_ec.agro.plot": [
+                    {"id": 1, "name": "Norte", "code": "PN-01", "hectares": 5.5,
+                     "location": "Pichincha", "responsible_id": "Ada", "active": True},
+                    {"id": 2, "name": "Sur", "code": "PS-01", "hectares": 3.0,
+                     "location": "Los Ríos", "responsible_id": "Bo", "active": True},
+                ],
+                "l10n_ec.agro.trace_event": [
+                    {"id": 1, "lot_id": 2, "stage": "harvest", "qty": 120.0,
+                     "partner_id": "Camp", "comprobante": "GR-001",
+                     "event_date": "2026-09-02 08:00:00"},
+                    {"id": 2, "lot_id": 2, "stage": "analysis", "qty": 0.0,
+                     "partner_id": False, "comprobante": "LAB-001",
+                     "event_date": "2026-09-05 10:00:00"},
+                    {"id": 3, "lot_id": 3, "stage": "harvest", "qty": 80.0,
+                     "partner_id": "Camp", "comprobante": "GR-002",
+                     "event_date": "2026-09-03 09:00:00"},
+                ],
+                "stock.move": [
+                    {"id": 1, "state": "done", "date": "2026-09-03 12:00:00",
+                     "picking_id": "Pick-1", "location_dest_id": "Stock",
+                     "product_uom_qty": 100.0, "lot_ids": [1]},
+                    {"id": 2, "state": "done", "date": "2026-09-06 14:00:00",
+                     "picking_id": "Pick-2", "location_dest_id": "Stock",
+                     "product_uom_qty": 50.0, "lot_ids": [2]},
+                ],
+                "account.move": [
+                    {"id": 1, "name": "INV/2026/0001", "invoice_date": "2026-09-10",
+                     "amount_total": 1200.0, "state": "posted",
+                     "invoice_line_ids_product_id": "Cafe"},
+                    {"id": 2, "name": "INV/2026/0002", "invoice_date": "2026-09-12",
+                     "amount_total": 600.0, "state": "posted",
+                     "invoice_line_ids_product_id": "Cacao"},
+                ],
+                "l10n_ec.vertical.template": [],
+                "l10n_ec.vertical.param": [],
             },
             # tenant B: empresa SIN RUC => login debe incluir needs_data (FR-BR-07)
             "tenantb": {
@@ -99,6 +135,12 @@ class FakeOdoo:
                 "stock.lot": [{"id": 9, "name": "TB-UNICO", "l10n_ec_lab_state": "none"}],
                 "l10n_ec.agro.cycle": [],
                 "l10n_ec.agro.analysis": [],
+                "l10n_ec.agro.plot": [],
+                "l10n_ec.agro.trace_event": [],
+                "stock.move": [],
+                "account.move": [],
+                "l10n_ec.vertical.template": [],
+                "l10n_ec.vertical.param": [],
             },
         }
         self._lot_fields = lot_fields
@@ -126,6 +168,20 @@ class FakeOdoo:
             uid = args[0]
             user = self.users[uid]
             return [{k: user.get(k) for k in kwargs.get("fields", [])} or dict(user)]
+        # P3: métodos del loader de plantillas (wizard vía bridge)
+        if model == "l10n_ec.vertical.template" and method == "catalog_json":
+            return [{"id": 1, "code": "agro/medium", "name": "agro / medium",
+                     "vertical": "agro", "size": "medium", "version": "1.0.0",
+                     "checksum": "abc123", "changelog": "alta inicial",
+                     "applied_version": "", "applied_at": None}]
+        if model == "l10n_ec.vertical.template" and method == "preview":
+            return {"dry_run": True, "summary": {"create": 16, "update": 0, "skip": 0},
+                    "records": [], "params": [], "warnings": [], "auto_enable": [],
+                    "needs_data": [], "caps": {}, "template": {"code": "agro/medium"}}
+        if model == "l10n_ec.vertical.template" and method == "apply":
+            return {"applied": True, "summary": {"create": 16, "update": 0, "skip": 0},
+                    "records": [], "params": [], "warnings": [], "auto_enable": [],
+                    "needs_data": [], "caps": {}, "template": {"code": "agro/medium"}}
         rows = table.get(model, [])
         if method == "search_read":
             matched = _apply_domain(rows, args[0] if args else [])
@@ -157,8 +213,25 @@ def _apply_domain(rows, domain):
     out = rows
     for clause in domain or []:
         field, op, value = clause
+        # campo anidado (invoice_line_ids.product_id) ⇒ fake lo aplana con _
+        lookup = field.replace(".", "_")
         if op == "=":
-            out = [r for r in out if r.get(field) == value]
+            out = [r for r in out if r.get(lookup) == value]
+        elif op == "ilike":
+            needle = str(value or "").lower()
+            out = [r for r in out if needle in str(r.get(lookup) or "").lower()]
+        elif op == "in":
+            keep = []
+            for r in out:
+                row_val = r.get(lookup)
+                if isinstance(row_val, (list, tuple)):
+                    if set(row_val) & set(value):
+                        keep.append(r)
+                elif row_val in value:
+                    keep.append(r)
+            out = keep
+        elif op == ">=":
+            out = [r for r in out if str(r.get(lookup) or "") >= str(value)]
         else:
             raise AssertionError("operador fake no soportado: %s" % op)
     return out
@@ -212,7 +285,7 @@ class TestAuthAndNeedsData(unittest.TestCase):
         out = core.login("odooec", "gerente", "pw-gerente")
         self.assertIn("token", out)
         self.assertEqual(out["role"], "gerente")
-        self.assertEqual(out["entities"], ["analisis", "ciclos", "lotes"])
+        self.assertEqual(out["entities"], ["analisis", "ciclos", "eventos", "lotes", "predios"])
         self.assertNotIn("needs_data", out)  # odooec tiene RUC
 
     def test_bad_credentials_401(self):
@@ -498,6 +571,344 @@ class TestHttpLayer(unittest.TestCase):
         self.assertEqual(status, 200, out)
         self.assertEqual(out["engine"], "rules")
         self.assertIn("RUC", out["reply"])
+
+    # -- P3: nav / trace / wizard / chat-tools sobre HTTP (CHG-2026-013) --
+    def test_nav_over_http(self):
+        token = self._login("gerente")
+        status, out = self._req("/api/nav", token=token)
+        self.assertEqual(status, 200, out)
+        keys = {i["key"] for i in out["items"]}
+        self.assertIn("predios", keys)
+        self.assertIn("wizard", keys)
+
+    def test_nav_operario_over_http(self):
+        token = self._login("operario")
+        status, out = self._req("/api/nav", token=token)
+        self.assertEqual(status, 200, out)
+        keys = {i["key"] for i in out["items"]}
+        self.assertEqual(keys, {"chat"})
+
+    def test_trace_over_http(self):
+        token = self._login()
+        status, out = self._req("/api/trace/lote/2", token=token)
+        self.assertEqual(status, 200, out)
+        self.assertEqual(out["lot"]["name"], "LOTE-2")
+        self.assertEqual(out["up"]["plot"]["name"], "Norte")
+        self.assertEqual(len(out["recall"]["invoices"]), 1)
+
+    def test_trace_missing_over_http_404(self):
+        token = self._login()
+        status, out = self._req("/api/trace/lote/999", token=token)
+        self.assertEqual(status, 404)
+
+    def test_wizard_templates_over_http(self):
+        token = self._login()
+        status, out = self._req("/api/wizard/templates", token=token)
+        self.assertEqual(status, 200, out)
+        self.assertEqual(out["templates"][0]["code"], "agro/medium")
+
+    def test_wizard_params_over_http(self):
+        token = self._login()
+        status, out = self._req("/api/wizard/params", token=token)
+        self.assertEqual(status, 200, out)
+        self.assertIn("params", out)
+
+    def test_wizard_preview_over_http(self):
+        token = self._login()
+        status, out = self._req("/api/wizard/preview", token=token,
+                                body={"vertical": "agro", "size": "medium"})
+        self.assertEqual(status, 200, out)
+        self.assertIn("plan", out)
+
+    def test_wizard_preview_missing_vertical_400(self):
+        token = self._login()
+        status, out = self._req("/api/wizard/preview", token=token, body={})
+        self.assertEqual(status, 400)
+
+    def test_wizard_apply_admin_over_http(self):
+        token = self._login()
+        status, out = self._req("/api/wizard/apply", token=token,
+                                body={"vertical": "agro", "size": "medium"})
+        self.assertEqual(status, 200, out)
+        self.assertTrue(out["applied"]["applied"])
+
+    def test_wizard_apply_gerente_403_over_http(self):
+        token = self._login("gerente")
+        status, out = self._req("/api/wizard/apply", token=token,
+                                body={"vertical": "agro", "size": "medium"})
+        self.assertEqual(status, 403)
+        self.assertEqual(out["error"]["code"], "rbac_denied")
+
+    def test_chat_stock_tool_over_http(self):
+        status, out = self._req("/api/chat", token=self._login(), body={
+            "message": "stock lote LOTE-2"})
+        self.assertEqual(status, 200, out)
+        self.assertEqual(out["engine"], "tools")
+        self.assertIn("LOTE-2", out["reply"])
+        self.assertIn("50.00", out["reply"])
+
+    def test_chat_stock_tool_operario_denied_over_http(self):
+        status, out = self._req("/api/chat", token=self._login("operario"), body={
+            "message": "stock lote LOTE-2"})
+        self.assertEqual(status, 200, out)
+        self.assertIn("no tiene acceso", out["reply"])
+
+    def test_chat_context_echo_over_http(self):
+        status, out = self._req("/api/chat", token=self._login(), body={
+            "message": "stock lote LOTE-1",
+            "context": {"view": "trazabilidad", "entity": "lotes"}})
+        self.assertEqual(status, 200, out)
+        self.assertEqual(out["context"], {"view": "trazabilidad", "entity": "lotes"})
+
+
+class TestNavByRole(unittest.TestCase):
+    """P3 (CHG-2026-013): nav por rol, deny-by-default (SRS-BRIDGE §5.2)."""
+
+    def setUp(self):
+        self.core, _ = make_core()
+
+    def _token(self, login):
+        return login_token(self.core, login)
+
+    def test_admin_nav_has_all_items(self):
+        out = self.core.nav(self._token("admin"))
+        keys = {i["key"] for i in out["items"]}
+        self.assertIn("operacion", keys)
+        self.assertIn("predios", keys)
+        self.assertIn("trazabilidad", keys)
+        self.assertIn("eventos", keys)
+        self.assertIn("wizard", keys)
+        self.assertIn("chat", keys)
+
+    def test_gerente_nav_has_wizard(self):
+        out = self.core.nav(self._token("gerente"))
+        keys = {i["key"] for i in out["items"]}
+        self.assertIn("wizard", keys)
+
+    def test_produccion_nav_no_wizard_no_analisis(self):
+        out = self.core.nav(self._token("produccion"))
+        keys = {i["key"] for i in out["items"]}
+        self.assertNotIn("wizard", keys)        # roles=[admin,gerente]
+        self.assertNotIn("gestion", keys)       # gestion exige analisis
+        self.assertIn("lotes", keys)
+        self.assertIn("predios", keys)
+
+    def test_bodega_nav_only_lotes(self):
+        out = self.core.nav(self._token("bodega"))
+        keys = {i["key"] for i in out["items"]}
+        self.assertIn("lotes", keys)
+        self.assertNotIn("predios", keys)       # bodega sin predios
+        self.assertNotIn("eventos", keys)
+        self.assertNotIn("wizard", keys)
+
+    def test_operario_nav_empty_except_chat(self):
+        out = self.core.nav(self._token("operario"))
+        keys = {i["key"] for i in out["items"]}
+        self.assertEqual(keys, {"chat"})  # sólo chat (sin entidades)
+
+
+class TestNewEntities(unittest.TestCase):
+    """P3: predios + eventos en el registry con contrato kpis/list."""
+
+    def setUp(self):
+        self.core, self.fake = make_core()
+        self.token = login_token(self.core)
+
+    def test_predios_list_contract(self):
+        out = self.core.list(self.token, "predios", limit=10)
+        self.assertEqual(out["entity"], "predios")
+        self.assertEqual(out["total"], 2)
+        self.assertEqual([r["id"] for r in out["items"]], [2, 1])  # id desc
+        row = out["items"][0]
+        self.assertIn("name", row)
+        self.assertIn("hectares", row)
+
+    def test_eventos_list_contract(self):
+        out = self.core.list(self.token, "eventos", limit=10)
+        self.assertEqual(out["entity"], "eventos")
+        self.assertEqual(out["total"], 3)
+        row = out["items"][0]
+        self.assertIn("stage", row)
+        self.assertIn("event_date", row)
+
+    def test_eventos_kpis_por_etapa(self):
+        out = self.core.kpis(self.token, "eventos")
+        self.assertEqual(out["total"], 3)
+        self.assertEqual(out["por_etapa"], {"harvest": 2, "analysis": 1})
+
+    def test_predios_kpis(self):
+        out = self.core.kpis(self.token, "predios")
+        self.assertEqual(out["total"], 2)
+        self.assertEqual(out["activos"], 2)
+
+    def test_bodega_cannot_read_predios_or_eventos(self):
+        token = login_token(self.core, "bodega")
+        with self.assertRaises(BridgeRbacError):
+            self.core.list(token, "predios")
+        with self.assertRaises(BridgeRbacError):
+            self.core.list(token, "eventos")
+
+    def test_operario_cannot_read_new_entities(self):
+        token = login_token(self.core, "operario")
+        with self.assertRaises(BridgeRbacError):
+            self.core.list(token, "predios")
+        with self.assertRaises(BridgeRbacError):
+            self.core.list(token, "eventos")
+
+
+class TestTrace(unittest.TestCase):
+    """P3: trazabilidad genealogía up/down + recall (FR-AG-06/07)."""
+
+    def setUp(self):
+        self.core, self.fake = make_core()
+        self.token = login_token(self.core)
+
+    def test_trace_lot_2_up_down_recall(self):
+        out = self.core.trace(self.token, 2)
+        self.assertEqual(out["entity"], "lote_trace")
+        self.assertEqual(out["lot"]["name"], "LOTE-2")
+        # up: cycle → plot
+        self.assertEqual(out["up"]["cycle"]["id"], 1)
+        self.assertEqual(out["up"]["plot"]["name"], "Norte")
+        # down: analisis + eventos + movimientos
+        self.assertEqual(len(out["down"]["analisis"]), 1)
+        self.assertEqual(out["down"]["analisis"][0]["analyte"], "Humedad")
+        self.assertEqual(len(out["down"]["eventos"]), 2)
+        self.assertEqual(len(out["down"]["movimientos"]), 1)
+        # recall: facturas del producto (Cafe) desde cosecha (2026-09-02)
+        self.assertEqual(out["recall"]["harvest_date"], "2026-09-02")
+        self.assertEqual(len(out["recall"]["invoices"]), 1)
+        self.assertEqual(out["recall"]["invoices"][0]["name"], "INV/2026/0001")
+
+    def test_trace_missing_lot_404(self):
+        with self.assertRaises(BridgeNotFound):
+            self.core.trace(self.token, 999)
+
+    def test_trace_bodega_allowed(self):
+        token = login_token(self.core, "bodega")
+        out = self.core.trace(token, 1)
+        self.assertEqual(out["lot"]["name"], "LOTE-1")
+        # LOTE-1 tiene cycle_id=1 ⇒ cycle + plot deben venir
+        self.assertEqual(out["up"]["cycle"]["id"], 1)
+        self.assertEqual(out["up"]["plot"]["name"], "Norte")
+        self.assertEqual(len(out["down"]["movimientos"]), 1)  # move id=1 (lot_ids=[1])
+
+    def test_trace_operario_denied(self):
+        token = login_token(self.core, "operario")
+        with self.assertRaises(BridgeRbacError):
+            self.core.trace(token, 1)
+
+
+class TestWizard(unittest.TestCase):
+    """P3: wizard vía bridge; apply=admin-only (AGT-01)."""
+
+    def setUp(self):
+        self.core, self.fake = make_core()
+        self.token = login_token(self.core)
+
+    def test_templates_admin_ok(self):
+        out = self.core.wizard_templates(self.token)
+        self.assertEqual(len(out["templates"]), 1)
+        self.assertEqual(out["templates"][0]["code"], "agro/medium")
+
+    def test_templates_gerente_ok(self):
+        token = login_token(self.core, "gerente")
+        out = self.core.wizard_templates(token)
+        self.assertEqual(len(out["templates"]), 1)
+
+    def test_templates_produccion_denied(self):
+        token = login_token(self.core, "produccion")
+        with self.assertRaises(BridgeRbacError):
+            self.core.wizard_templates(token)
+
+    def test_params_admin_ok(self):
+        out = self.core.wizard_params(self.token)
+        self.assertIn("params", out)
+
+    def test_preview_admin_ok(self):
+        out = self.core.wizard_preview(self.token, "agro", "medium")
+        self.assertEqual(out["vertical"], "agro")
+        self.assertIn("plan", out)
+
+    def test_preview_gerente_ok(self):
+        token = login_token(self.core, "gerente")
+        out = self.core.wizard_preview(token, "agro", "medium")
+        self.assertIn("plan", out)
+
+    def test_apply_admin_ok(self):
+        out = self.core.wizard_apply(self.token, "agro", "medium")
+        self.assertTrue(out["applied"]["applied"])
+
+    def test_apply_gerente_denied(self):
+        # AGT-01: apply muta el tenant ⇒ sólo admin, gerente NO
+        token = login_token(self.core, "gerente")
+        with self.assertRaises(BridgeRbacError):
+            self.core.wizard_apply(token, "agro", "medium")
+
+
+class TestChatTools(unittest.TestCase):
+    """P3 (escenario 3): chat con tools reales; RBAC del agente."""
+
+    def setUp(self):
+        self.core, self.fake = make_core()
+        self.token = login_token(self.core)
+
+    def test_stock_lot_tool_returns_real_qty(self):
+        out = self.core.chat(self.token, "stock lote LOTE-2")
+        self.assertEqual(out["engine"], "tools")
+        self.assertIn("LOTE-2", out["reply"])
+        self.assertIn("50.00", out["reply"])
+        self.assertIn("stock.lot.search_read", out["tools"][0])
+
+    def test_stock_lot_tool_context_echo(self):
+        ctx = {"view": "lotes", "entity": "lotes"}
+        out = self.core.chat(self.token, "stock lote LOTE-2", context=ctx)
+        self.assertEqual(out["context"], ctx)
+
+    def test_stock_lot_tool_no_match(self):
+        out = self.core.chat(self.token, "stock lote NOEXISTE")
+        self.assertEqual(out["engine"], "tools")
+        self.assertIn("No encontré", out["reply"])
+
+    def test_operario_stock_tool_rbac_denied(self):
+        token = login_token(self.core, "operario")
+        out = self.core.chat(token, "stock lote LOTE-2")
+        self.assertEqual(out["engine"], "tools")
+        self.assertIn("no tiene acceso", out["reply"])
+
+    def test_bodega_stock_tool_allowed(self):
+        token = login_token(self.core, "bodega")
+        out = self.core.chat(token, "stock lote LOTE-1")
+        self.assertIn("LOTE-1", out["reply"])
+
+    def test_id_validation_still_works(self):
+        out = self.core.chat(self.token, "validar RUC 1793125212001")
+        self.assertEqual(out["engine"], "rules")
+        self.assertIn("VÁLIDO", out["reply"])
+
+    def test_help_when_no_tool(self):
+        out = self.core.chat(self.token, "hola")
+        self.assertEqual(out["engine"], "rules")
+        self.assertIn("Puedo", out["reply"])
+
+    def test_chat_context_over_http_with_tool(self):
+        # smoke: chat con contexto vía HTTP respeta tools + contexto
+        pass  # cubierto por TestHttpLayer.test_chat_stock_tool_over_http
+
+
+class TestScenario7Independence(unittest.TestCase):
+    """Escenario 7: chat caído ⇒ dashboards siguen leyendo (FR-BR-08)."""
+
+    def test_kpis_work_regardless_of_chat_state(self):
+        core, fake = make_core()
+        token = login_token(core)
+        # chat con mensaje sin tool (no toca Odoo) — el core no lanza
+        core.chat(token, "hola, ¿qué puedes hacer?")
+        # dashboards siguen leyendo normal
+        out = core.kpis(token, "lotes")
+        self.assertEqual(out["total"], 3)
+        out = core.list(token, "predios", limit=5)
+        self.assertEqual(out["total"], 2)
 
 
 if __name__ == "__main__":

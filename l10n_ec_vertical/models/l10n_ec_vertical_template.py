@@ -107,6 +107,24 @@ class L10nEcVerticalTemplate(models.Model):
         return found
 
     @api.model
+    def catalog_json(self):
+        """Catálogo JSON-safe para el bridge (P3, CHG-2026-013).
+
+        Se llama vía RPC; sincroniza el catálogo primero y devuelve una lista
+        de dicts serializables (nunca browse() que no es JSON-safe)."""
+        rows = self.sync_catalog()
+        return [
+            {
+                "id": r.id, "code": r.code, "name": r.name,
+                "vertical": r.vertical, "size": r.size, "version": r.version,
+                "checksum": r.checksum, "changelog": r.changelog or "",
+                "applied_version": r.applied_version or "",
+                "applied_at": r.applied_at.isoformat() if r.applied_at else None,
+            }
+            for r in rows
+        ]
+
+    @api.model
     def sync_catalog(self):
         """Idempotente: crea/actualiza la fila de catálogo por cada spec."""
         ids = []

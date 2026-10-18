@@ -54,18 +54,57 @@
       <div id="lote-detail"></div>
     </section>
 
+    <!-- P3: Predios -->
+    <section id="view-predios" hidden>
+      <p class="micro">Predios (l10n_ec.agro.plot) · CHG-2026-013</p>
+      <h1>Predios</h1>
+      <div class="grid" id="predios-kpis"></div>
+      <div id="predios-table" style="margin-top:18px"></div>
+    </section>
+
+    <!-- P3: Trazabilidad (genealogía up/down + recall) -->
+    <section id="view-trazabilidad" hidden>
+      <p class="micro">Trazabilidad · genealogía + recall (FR-AG-06/07)</p>
+      <h1 id="trace-title">Trazabilidad</h1>
+      <div class="chat-input" style="max-width:400px;margin-bottom:14px">
+        <input id="trace-lot-id" placeholder="ID del lote (ej: 1)"
+               autocomplete="off">
+        <button class="btn primary" id="trace-go">Ver trace</button>
+      </div>
+      <div id="trace-detail"></div>
+    </section>
+
+    <!-- P3: Eventos (append-only viewer) -->
+    <section id="view-eventos" hidden>
+      <p class="micro">Eventos de trazabilidad · append-only (FR-AG-05)</p>
+      <h1>Eventos</h1>
+      <div class="grid" id="eventos-kpis"></div>
+      <div id="eventos-table" style="margin-top:18px"></div>
+    </section>
+
+    <!-- P3: Wizard (template preview/apply + params) -->
+    <section id="view-wizard" hidden>
+      <p class="micro">Wizard de verticalización · preview/apply (AGT-01)</p>
+      <h1>Wizard</h1>
+      <h2 style="margin-top:14px">Plantillas del catálogo</h2>
+      <div id="wizard-templates"></div>
+      <div id="wizard-result" hidden style="margin-top:14px"></div>
+      <h2 style="margin-top:22px">Params activos</h2>
+      <div id="wizard-params"></div>
+    </section>
+
     <!-- Chat del agente -->
     <section id="view-chat" hidden>
-      <p class="micro">Escenario 5.5 · agente con atribución de herramienta</p>
+      <p class="micro">Escenario 3 · agente con tools reales + RBAC</p>
       <h1>Agente</h1>
-      <p class="kpi-sub">Pregunta en lenguaje natural. Motor actual: reglas EC
-        deterministas (RUC/cédula); LLM llega en P3. Siempre pregunta lo que no
-        sabe — nunca inventa (AGT-03).</p>
+      <p class="kpi-sub">Pregunta en lenguaje natural. El agente valida
+        RUC/cédula (rules) o lee stock real de lotes (con SU token ⇒ respeta
+        el RBAC). Siempre pregunta lo que no sabe — nunca inventa (AGT-03).</p>
       <div class="chat-box">
         <div class="chat-log" id="chat-log"></div>
         <div class="quick" id="chat-quick"></div>
         <form class="chat-input" id="chat-form">
-          <input id="chat-text" placeholder="Ej: validar RUC 1793125212001" autocomplete="off">
+          <input id="chat-text" placeholder="Ej: stock lote CAF-SMOKE-01" autocomplete="off">
           <button class="btn primary" type="submit">Enviar</button>
         </form>
       </div>
