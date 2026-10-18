@@ -81,6 +81,16 @@ class TestVerticalTemplateLoader(common.TransactionCase):
         cls.Template = cls.env["l10n_ec.vertical.template"]
         cls.Param = cls.env["l10n_ec.vertical.param"]
         cls.Category = cls.env["product.category"]
+        # Estado "primera aplicación": los tests son deterministas aunque el
+        # wizard ya se haya usado en esta BD (p.ej. smoke live del bridge);
+        # todo se revierte al final del test (TransactionCase).
+        cls.env["ir.model.data"].search([
+            ("module", "=", "l10n_ec_vertical"),
+            ("model", "=", "product.category"),
+        ]).unlink()
+        cls.Category.search([("name", "in", CAT_NAMES)]).unlink()
+        cls.Param.search([]).unlink()
+        cls.Template.search([]).unlink()
 
     def _categories(self):
         return self.Category.search([("name", "in", CAT_NAMES)])
@@ -115,6 +125,24 @@ class TestVerticalTemplateLoader(common.TransactionCase):
     def test_dry_run_apply_creates_nothing(self):
         self.Template.apply("agro", "medium", dry_run=True)
         self.assertEqual(len(self._categories()), 0)
+
+    # -- DEFECT-2026-014: sobrevivir al reload del módulo ----------------
+    def test_applied_records_survive_module_reload(self):
+        """Los registros aplicados NO deben borrarse al recargar el módulo.
+
+        Odoo borra al final de cada load los registros con xmlid del módulo
+        ausentes de sus data files (``ir.model.data._process_end``). Los
+        xmlids que ``apply()`` registra dinámicamente deben ir con
+        ``noupdate=True`` o una recarga del módulo (p.ej. ``-u`` con tests,
+        CHG-2026-014) se lleva puestas las categorías aplicadas.
+        """
+        self.Template.apply("agro", "medium")
+        self.assertEqual(len(self._categories()), 6)
+        self.env["ir.model.data"]._process_end({"l10n_ec_vertical"})
+        self.assertEqual(
+            len(self._categories()), 6,
+            "recargar el módulo borró las categorías aplicadas "
+            "(xmlids dinámicos sin noupdate=True)")
 
     # -- DES-03: update de divergencias ----------------------------------
     def test_reapply_repairs_edited_record(self):

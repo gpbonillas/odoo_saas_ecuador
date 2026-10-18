@@ -202,7 +202,20 @@ class L10nEcVerticalTemplate(models.Model):
                     "name": "%s_%s" % (XMLID_PREFIX, xmlid_tail),
                     "model": item["model"],
                     "res_id": rec.id,
+                    # DEFECT-2026-014: noupdate desde el INSERT (los writes del
+                    # ORM son diferidos y _process_end consulta en crudo).
+                    "noupdate": True,
                 })
+        # DEFECT-2026-014: los xmlids creados aquí NO están en los data files
+        # del módulo; sin ``noupdate=True`` el siguiente reload (``-u``,
+        # ``ir.model.data._process_end``) los borra junto con su registro —
+        # así se perdieron las categorías aplicadas el 2026-10-16 (CAPA).
+        stale = sudo["ir.model.data"].search([
+            ("module", "=", "l10n_ec_vertical"),
+            ("name", "=like", "%s_%%" % XMLID_PREFIX),
+        ])
+        stale.write({"noupdate": True})
+        stale.flush_recordset(["noupdate"])
         # 2) params + caps (nunca pisa USER — FR-AG-12)
         Param = sudo["l10n_ec.vertical.param"]
         for item in plan["params"]:
